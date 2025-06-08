@@ -42,7 +42,7 @@ const Scrollbar = styled(ScrollAreaBase.Scrollbar)(({ theme }) => ({
   justifyContent: "center",
   width: "5px",
   borderRadius: "2px",
-  margin: "0 2px",
+  margin: "1px 2px",
   opacity: 0,
   transition: "opacity 150ms 300ms",
   "&[data-hovering], &[data-scrolling]": {
