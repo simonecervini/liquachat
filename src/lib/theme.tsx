@@ -51,7 +51,7 @@ export const theme = createTheme({
       secondary: "#57534e", // neutral-600
     },
     background: {
-      default: "#fafafa", // neutral-50
+      default: "#FBFEFC",
       paper: "#fff",
     },
     divider: "rgba(0,0,0,.07)",
@@ -110,6 +110,16 @@ function createComponents(theme: Theme): Theme["components"] {
         root: {
           "& .lucide": {
             // fontSize: "1.25rem",
+            width: "1em",
+            height: "1em",
+          },
+        },
+      },
+    },
+    MuiInputAdornment: {
+      styleOverrides: {
+        root: {
+          "& .lucide": {
             width: "1em",
             height: "1em",
           },

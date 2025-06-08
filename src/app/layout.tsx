@@ -30,7 +30,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+      <body
+        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
+        translate="no"
+      >
         <TRPCReactProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
