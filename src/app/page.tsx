@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { createShadow } from "~/lib/theme";
+import { Markdown } from "~/components/markdown";
 
 export default function Home() {
   return (
@@ -66,21 +67,43 @@ export default function Home() {
           >
             <MessageStack
               messages={[
-                { type: "user", content: "Hello, how are you" },
+                { type: "user", content: "Hello, *how* are _you_?" },
                 {
                   type: "system",
                   content:
-                    "I'm doing well, thanks for asking! I'm currently assisting users and learning new things. How can I help you today?",
+                    "I'm doing **well**, thanks for asking! I'm __currently__ assisting users and learning new things. How can I help you today?",
                 },
                 {
                   type: "user",
-                  content:
-                    "I'm doing well, thanks for asking! I'm currently assisting users and learning new things. How can I help you today?",
+                  content: "I'm writing some serious `JavaScript` today",
                 },
                 {
                   type: "system",
                   content:
-                    "I am a chatbot that can help you with your questions. How can I help you today?",
+                    "Let me see if I can help you with that. I'm not sure if I can do that, but I'll try my best.",
+                },
+                {
+                  type: "user",
+                  content: `Here is some JavaScript code:
+~~~ts
+console.log('Hello world!')
+~~~`,
+                },
+                {
+                  type: "system",
+                  content: `Partial JavaScript code:
+~~~js
+console.log('It works!')`,
+                },
+                {
+                  type: "user",
+                  content: "I'm writing some serious `JavaScript` today",
+                },
+                {
+                  type: "system",
+                  content: `Partial JavaScript code:
+~~~js
+console.log('It`,
                 },
               ]}
             />
@@ -183,7 +206,7 @@ function MessageStack(
 ) {
   const { messages, ...rest } = props;
   return (
-    <Stack spacing={8} {...rest}>
+    <Stack spacing={8} {...rest} sx={{ pb: 16, ...rest.sx }}>
       {messages.map((message) => (
         <Message key={message.content} {...message} />
       ))}
@@ -229,15 +252,24 @@ function Message(props: { type: "user" | "system"; content: string }) {
 function MessageUser(props: { content: string }) {
   const { content } = props;
   return (
-    <Paper variant="outlined" sx={{ p: 2, maxWidth: "60%" }}>
-      <Typography variant="body1">{content}</Typography>
+    <Paper
+      role="article"
+      aria-label="Your message"
+      variant="outlined"
+      sx={{ p: 2, maxWidth: "60%" }}
+    >
+      <Markdown>{content}</Markdown>
     </Paper>
   );
 }
 
 function MessageSystem(props: { content: string }) {
   const { content } = props;
-  return <Typography variant="body1">{content}</Typography>;
+  return (
+    <Box role="article" aria-label="Assistant message" sx={{ width: "100%" }}>
+      <Markdown>{content}</Markdown>
+    </Box>
+  );
 }
 
 function MessageActionsUser() {

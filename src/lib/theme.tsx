@@ -61,7 +61,7 @@ export const theme = createTheme({
     ...Array.from({ length: 24 }, (_, index) => createShadow(index)),
   ] as Shadows,
   shape: {
-    borderRadius: 12,
+    borderRadius: 8,
   },
 });
 
