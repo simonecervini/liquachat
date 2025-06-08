@@ -7,4 +7,5 @@ body {
   display: flex;
   flex-direction: column;
   letter-spacing: 0.022em;
+  isolation: isolate;
 }

@@ -29,6 +29,7 @@ import {
 import { useState } from "react";
 import { createShadow } from "~/lib/theme";
 import { Markdown } from "~/components/markdown";
+import { ScrollArea } from "~/components/scroll-area";
 
 export default function Home() {
   return (
@@ -39,21 +40,11 @@ export default function Home() {
       }}
     >
       <Sidebar />
-      <Box sx={{ pt: 2, display: "flex", flex: 1 }}>
-        <Paper
-          variant="outlined"
+      <Box sx={{ display: "flex", flex: 1, position: "relative" }}>
+        <ScrollArea
           sx={{
+            height: "100vh",
             flex: 1,
-            borderEndEndRadius: 0,
-            borderEndStartRadius: 0,
-            borderStartEndRadius: 0,
-            boxShadow: (theme) =>
-              createShadow(2, { color: theme.palette.primary.light }),
-            border: (theme) =>
-              `1px solid ${alpha(theme.palette.primary.dark, 0.2)}`,
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
           }}
         >
           <Container
@@ -62,7 +53,7 @@ export default function Home() {
               display: "flex",
               flexDirection: "column",
               flex: 1,
-              pt: 4,
+              py: 4,
             }}
           >
             <MessageStack
@@ -108,39 +99,38 @@ console.log('It`,
               ]}
             />
           </Container>
-          <Paper
-            variant="outlined"
-            sx={{
-              position: "absolute",
-              bottom: (theme) => theme.spacing(2),
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "700px",
-              height: "150px",
-              p: 1,
-              boxShadow: (theme) =>
-                createShadow(3, { color: theme.palette.primary.light }),
-              border: (theme) =>
-                `1px solid ${alpha(theme.palette.primary.dark, 0.2)}`,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <InputBase
-              placeholder="Type your message here..."
-              multiline
-              sx={{ p: 1, flex: 1 }}
-            />
-            <Box sx={{ textAlign: "right" }}>
-              <Button
-                variant="contained"
-                size="small"
-                endIcon={<ArrowUpIcon />}
-              >
-                Send
-              </Button>
-            </Box>
-          </Paper>
+        </ScrollArea>
+        <Paper
+          variant="outlined"
+          sx={{
+            position: "absolute",
+            bottom: (theme) => theme.spacing(2),
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "700px",
+            height: "150px",
+            p: 1,
+            boxShadow: (theme) =>
+              createShadow(3, { color: theme.palette.primary.light }),
+            border: (theme) =>
+              `1px solid ${alpha(theme.palette.primary.dark, 0.2)}`,
+            display: "flex",
+            flexDirection: "column",
+            backdropFilter: "blur(10px)",
+            backgroundColor: (theme) =>
+              alpha(theme.palette.background.paper, 0.8),
+          }}
+        >
+          <InputBase
+            placeholder="Type your message here..."
+            multiline
+            sx={{ p: 1, flex: 1 }}
+          />
+          <Box sx={{ textAlign: "right" }}>
+            <Button variant="contained" size="small" endIcon={<ArrowUpIcon />}>
+              Send
+            </Button>
+          </Box>
         </Paper>
       </Box>
     </Box>
