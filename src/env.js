@@ -7,10 +7,13 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    DATABASE_URL: z.string().url(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    ZERO_UPSTREAM_DB: z.string().url(),
+    ZERO_REPLICA_FILE: z.string(),
+    ZERO_AUTH_JWKS_URL: z.string().url(),
+    ZERO_PUSH_URL: z.string().url(),
   },
 
   /**
@@ -19,7 +22,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_ZERO_SERVER_URL: z.string().url(),
   },
 
   /**
@@ -27,9 +30,14 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
+    // server
     NODE_ENV: process.env.NODE_ENV,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    ZERO_UPSTREAM_DB: process.env.ZERO_UPSTREAM_DB,
+    ZERO_REPLICA_FILE: process.env.ZERO_REPLICA_FILE,
+    ZERO_AUTH_JWKS_URL: process.env.ZERO_AUTH_JWKS_URL,
+    ZERO_PUSH_URL: process.env.ZERO_PUSH_URL,
+    // client
+    NEXT_PUBLIC_ZERO_SERVER_URL: process.env.NEXT_PUBLIC_ZERO_SERVER_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

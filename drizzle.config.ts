@@ -6,7 +6,7 @@ export default {
   schema: "./src/server/db/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: env.DATABASE_URL,
+    url: env.ZERO_UPSTREAM_DB,
   },
   tablesFilter: ["algachat_*"],
 } satisfies Config;

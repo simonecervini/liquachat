@@ -1,7 +1,7 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
-import { sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { index, pgTableCreator } from "drizzle-orm/pg-core";
 
 /**
@@ -12,16 +12,52 @@ import { index, pgTableCreator } from "drizzle-orm/pg-core";
  */
 export const createTable = pgTableCreator((name) => `algachat_${name}`);
 
-export const posts = createTable(
-  "post",
+export const users = createTable("user", (d) => ({
+  id: d.uuid().primaryKey(),
+}));
+
+export const chats = createTable(
+  "chat",
   (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
-    createdAt: d
-      .timestamp({ withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+    id: d.uuid().primaryKey(),
+    title: d.text(),
+    public: d.boolean().notNull(),
+    userId: d
+      .uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: d.timestamp().notNull(),
+    updatedAt: d.timestamp().notNull(),
   }),
-  (t) => [index("name_idx").on(t.name)],
+  (table) => [index("chat_user_id_idx").on(table.userId)],
 );
+
+export const chatsRelations = relations(chats, ({ many }) => ({
+  messages: many(messages),
+}));
+
+export const messages = createTable(
+  "message",
+  (d) => ({
+    id: d.uuid().primaryKey(),
+    chatId: d
+      .uuid()
+      .notNull()
+      .references(() => chats.id, { onDelete: "cascade" }),
+    userId: d.uuid().references(() => users.id, { onDelete: "cascade" }),
+    role: d.text({ enum: ["user", "assistant"] }).notNull(),
+    content: d.text().notNull(),
+    createdAt: d.timestamp().notNull(),
+  }),
+  (table) => [
+    index("message_chat_id_idx").on(table.chatId),
+    index("message_user_id_idx").on(table.userId),
+  ],
+);
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  chat: one(chats, {
+    fields: [messages.chatId],
+    references: [chats.id],
+  }),
+}));
