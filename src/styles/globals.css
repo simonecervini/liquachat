@@ -1,4 +1,8 @@
-/* Nothing here */
+@import "tailwindcss";
+
+:root {
+  --radius: 0.625rem;
+}
 
 body {
   margin: 0;
@@ -6,6 +10,34 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  letter-spacing: 0.022em;
+  letter-spacing: 0.02em;
   isolation: isolate;
+  background:
+    radial-gradient(
+      circle at 76% 89%,
+      var(--color-blue-100) 0%,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 47% 34%,
+      var(--color-sky-200) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 8% 86%,
+      var(--color-indigo-100) 0%,
+      transparent 50%
+    ),
+    var(--color-sky-50);
+}
+
+@theme {
+  --color-primary: var(--color-blue-500);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }

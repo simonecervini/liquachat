@@ -1,9 +1,9 @@
 "use client";
 
-import { alpha, Box, Paper, styled } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import MarkdownRoot from "react-markdown";
 import { codeToHtml } from "shiki";
+import { cn } from "~/lib/cn";
 
 const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
   code(props) {
@@ -18,9 +18,15 @@ const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
         </CodeBlock>
       </div>
     ) : (
-      <Code {...rest} className={className}>
+      <code
+        {...rest}
+        className={cn(
+          "bg-primary/20 rounded px-2 py-1 font-mono font-medium text-sm",
+          className,
+        )}
+      >
         {children}
-      </Code>
+      </code>
     );
   },
 };
@@ -42,43 +48,14 @@ function CodeBlock(props: { lang: string; children: string }) {
     },
   });
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        fontFamily: "var(--font-mono)",
-        fontSize: (theme) => theme.typography.body2.fontSize,
-        "& > div > pre": {
-          m: 0,
-          border: 0,
-          p: 1,
-          borderRadius: "inherit",
-        },
-      }}
-    >
-      <Box
-        sx={{
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-          px: 1,
-          py: 0.5,
-          borderRadius: "none",
-        }}
-      >
+    <div className="border border-gray-200 rounded-lg font-mono text-sm overflow-hidden">
+      <div className="border-b border-gray-200 px-2 py-1 bg-gray-50 text-gray-700 text-xs">
         {lang}
-      </Box>
-      <Box
+      </div>
+      <div
         dangerouslySetInnerHTML={{ __html: data ?? "" }}
-        className="formatted-code"
-        sx={{ borderRadius: "inherit", width: "100%" }}
+        className="w-full [&>div>pre]:m-0 [&>div>pre]:border-0 [&>div>pre]:p-2 [&>div>pre]:rounded-none"
       />
-    </Paper>
+    </div>
   );
 }
-
-const Code = styled("code")(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.primary.light, 0.2),
-  color: theme.vars.palette.primary.dark,
-  borderRadius: +theme.shape.borderRadius / 2,
-  padding: theme.spacing(0.5),
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-}));

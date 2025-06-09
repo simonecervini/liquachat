@@ -1,11 +1,9 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Poppins, IBM_Plex_Mono } from "next/font/google";
 
 import { TRPCReactProvider } from "~/lib/trpc";
-import { CssBaseline, ThemeProvider } from "@mui/material";
-import { theme } from "~/lib/theme";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -13,7 +11,7 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const ibmPlexSans = IBM_Plex_Sans({
+const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-sans",
@@ -31,15 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
+        className={`${poppins.variable} ${ibmPlexMono.variable} font-sans`}
         translate="no"
       >
-        <TRPCReactProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </TRPCReactProvider>
+        <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>
     </html>
   );

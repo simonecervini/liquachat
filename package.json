@@ -25,9 +25,6 @@
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-beta.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/material": "^7.1.1",
     "@rocicorp/zero": "^0.20.2025052100",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.69.0",
@@ -35,6 +32,8 @@
     "@trpc/react-query": "^11.0.0",
     "@trpc/server": "^11.0.0",
     "bun": "^1.2.15",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "drizzle-orm": "^0.41.0",
     "drizzle-zero": "^0.10.5",
     "lorem-ipsum": "^2.0.8",
@@ -48,10 +47,12 @@
     "server-only": "^0.0.1",
     "shiki": "^3.6.0",
     "superjson": "^2.2.1",
+    "tailwind-merge": "^3.3.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/bun": "^1.2.15",
     "@types/node": "^20.14.10",
     "@types/react": "^19.0.0",
@@ -60,7 +61,10 @@
     "eslint": "^9.23.0",
     "eslint-config-next": "^15.2.3",
     "eslint-plugin-drizzle": "^0.2.3",
+    "postcss": "^8.5.4",
     "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.12",
+    "tailwindcss": "^4.1.8",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0"
   },

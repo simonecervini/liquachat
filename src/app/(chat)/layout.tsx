@@ -1,18 +1,9 @@
 "use client";
 
 import * as React from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-} from "@mui/material";
-import { PanelLeftIcon, SearchIcon } from "lucide-react";
+import { PanelLeftIcon, SearchIcon, PlusIcon, DropletIcon } from "lucide-react";
 import { useState } from "react";
 import { useQuery, ZeroProvider } from "@rocicorp/zero/react";
-import { Logo } from "~/components/logo";
 import { schema, type AuthData } from "~/zero/schema";
 import { Zero } from "@rocicorp/zero";
 import { createMutators } from "~/zero";
@@ -37,24 +28,12 @@ export default function Layout(props: { children: React.ReactNode }) {
   const { children } = props;
   return (
     <ZeroProvider zero={zero}>
-      <Box
-        sx={{
-          display: "flex",
-          flex: 1,
-        }}
-      >
+      <div className="flex pr-4 h-screen gap-3">
         <Sidebar />
-        <Box
-          sx={{
-            display: "flex",
-            flex: 1,
-            position: "relative",
-            height: "100vh",
-          }}
-        >
+        <div className="mt-3 bg-gradient-to-tl grow from-white/70 to-white/80 w-60 rounded-t-3xl border-[3px] border-white shadow-2xl shadow-black/5 relative">
           {children}
-        </Box>
-      </Box>
+        </div>
+      </div>
     </ZeroProvider>
   );
 }
@@ -65,32 +44,20 @@ function Sidebar() {
   const z = useZero();
   const [chats] = useQuery(z.query.chats.where("userId", "=", authData.sub));
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          justifyContent: "space-between",
-          minWidth: 220,
-        }}
-      >
-        <IconButton
-          size="small"
-          color="primary"
+    <div className="flex flex-col w-60 border-r-2 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4 items-center">
+      <div className="flex items-center justify-between w-full mb-3">
+        <button
+          className="text-slate-900 hover:text-blue-500 transition-colors"
           onClick={() => setOpen((prev) => !prev)}
         >
-          <PanelLeftIcon />
-        </IconButton>
+          <PanelLeftIcon className="size-5" />
+        </button>
         <Logo />
-        <Box
-          sx={{
-            width: (theme) => theme.spacing(3), // TODO: adjust this
-          }}
-        />
-      </Box>
-      <Button
-        variant="contained"
+        <PanelLeftIcon className="text-blue-500 size-5 invisible" />
+      </div>
+
+      <button
+        className="flex font-medium gap-2 h-10 border-2 border-blue-50/20 bg-gradient-to-t shadow-md shadow-blue-800/20 from-blue-500 to-blue-400 rounded-xl text-white w-full items-center justify-center text-sm mb-4"
         onClick={async () => {
           const chatId = crypto.randomUUID();
           await zero.mutate.chats.new({ id: chatId, timestamp: Date.now() })
@@ -98,35 +65,42 @@ function Sidebar() {
           router.push(`/chat/${chatId}`);
         }}
       >
+        <PlusIcon className="size-4" />
         New Chat
-      </Button>
-      <TextField
-        variant="standard"
-        placeholder="Search your threads..."
-        size="small"
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            sx: {
-              typography: "body2",
-              "&:before": {
-                borderBottomColor: "rgba(0, 0, 0, 0.12)",
-              },
-            },
-          },
-        }}
-      />
-      <Stack spacing={1}>
+      </button>
+
+      <div className="relative w-full mb-4">
+        <input
+          type="text"
+          placeholder="Search your threads..."
+          className="w-full px-8 py-2 text-sm border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-600"
+        />
+        <SearchIcon
+          size={16}
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2 w-full">
         {chats.map((chat) => (
-          <Button href={`/chat/${chat.id}`} key={chat.id} LinkComponent={Link}>
+          <Link
+            href={`/chat/${chat.id}`}
+            key={chat.id}
+            className="text-left p-2 hover:bg-white/20 rounded-xl text-slate-700 hover:text-slate-900 transition-colors text-sm"
+          >
             {chat.title ?? "Untitled"}
-          </Button>
+          </Link>
         ))}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
+  );
+}
+
+function Logo() {
+  return (
+    <div className="flex items-center justify-center w-full h-10 font-extrabold gap-1 text-slate-900">
+      <DropletIcon className="text-blue-500 size-4" strokeWidth={3} />
+      Liquix
+    </div>
   );
 }

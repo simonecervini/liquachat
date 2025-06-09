@@ -1,19 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
-import {
-  alpha,
-  Box,
-  Button,
-  Container,
-  IconButton,
-  InputBase,
-  Paper,
-  Stack,
-  Tooltip,
-  type PaperProps,
-  type StackProps,
-} from "@mui/material";
 import {
   ArrowUpIcon,
   CopyIcon,
@@ -27,7 +13,6 @@ import { useParams } from "next/navigation";
 import { z } from "zod";
 import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
-import { createShadow } from "~/lib/theme";
 
 function useChat(id: string) {
   const z = useZero();
@@ -52,72 +37,33 @@ export default function ChatPage() {
   }
 
   return (
-    <Box sx={{ position: "relative", flex: 1 }}>
-      <ScrollArea
-        sx={{
-          height: "100vh",
-          flex: 1,
-        }}
-      >
-        <Container
-          maxWidth="md"
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            py: 4,
-          }}
-        >
+    <div className="relative flex-1 h-full">
+      <ScrollArea className="h-full flex-1">
+        <div className="max-w-4xl mx-auto flex flex-col flex-1 py-8 px-4">
           <MessageStack messages={chat.messages} />
-        </Container>
+        </div>
+        <SendMessageForm chatId={chatId} />
       </ScrollArea>
-      <SendMessageForm chatId={chatId} />
-    </Box>
+    </div>
   );
 }
 
-function SendMessageForm(
-  props: { chatId: string } & Omit<PaperProps, "children">,
-) {
+function SendMessageForm(props: { chatId: string; className?: string }) {
   const { chatId } = props;
   const [message, setMessage] = useState("");
   const z = useZero();
   // TODO: use tanstack/form
   return (
-    <Paper
-      variant="outlined"
-      {...props}
-      sx={{
-        position: "absolute",
-        bottom: (theme) => theme.spacing(2),
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "700px",
-        height: "150px",
-        p: 1,
-        boxShadow: (theme) =>
-          createShadow(3, { color: theme.palette.primary.light }),
-        border: (theme) =>
-          `1px solid ${alpha(theme.palette.primary.dark, 0.2)}`,
-        display: "flex",
-        flexDirection: "column",
-        backdropFilter: "blur(10px)",
-        backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.8),
-        ...props.sx,
-      }}
-    >
-      <InputBase
-        value={message}
-        onChange={(event) => setMessage(event.target.value)}
-        placeholder="Type your message here..."
-        multiline
-        sx={{ p: 1, flex: 1 }}
-      />
-      <Box sx={{ textAlign: "right" }}>
-        <Button
-          variant="contained"
-          size="small"
-          endIcon={<ArrowUpIcon />}
+    <div className="text-slate-500 absolute bottom-0 rounded-t-3xl shadow-2xl shadow-blue-700/10 h-[180px] text-sm max-w-2xl w-full left-1/2 -translate-x-1/2 bg-white/100">
+      <div className="w-full h-full relative">
+        <textarea
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          placeholder="Type your message here..."
+          className="p-4 w-full h-full resize-none border-none outline-none bg-transparent"
+        />
+        <button
+          className="absolute bottom-1.5 right-1.5 bg-gradient-to-t from-blue-500 to-blue-400 shadow-sm size-10 rounded-xl text-white flex items-center justify-center hover:from-blue-600 hover:to-blue-500 transition-colors"
           onClick={() => {
             z.mutate.chats.sendMessage({
               id: crypto.randomUUID(),
@@ -125,27 +71,27 @@ function SendMessageForm(
               content: message,
               timestamp: Date.now(),
             });
+            setMessage("");
           }}
         >
-          Send
-        </Button>
-      </Box>
-    </Paper>
+          <ArrowUpIcon />
+        </button>
+      </div>
+    </div>
   );
 }
 
-function MessageStack(
-  props: {
-    messages: readonly Message[];
-  } & StackProps,
-) {
-  const { messages, ...rest } = props;
+function MessageStack(props: {
+  messages: readonly Message[];
+  className?: string;
+}) {
+  const { messages, className } = props;
   return (
-    <Stack spacing={8} {...rest} sx={{ pb: 16, ...rest.sx }}>
+    <div className={`flex flex-col gap-8 pb-16 ${className ?? ""}`}>
       {messages.map((message) => (
         <Message key={message.id} message={message} />
       ))}
-    </Stack>
+    </div>
   );
 }
 
@@ -153,82 +99,76 @@ function Message(props: { message: Message }) {
   const { message } = props;
   const [showActions, setShowActions] = useState(false);
   return (
-    <Box
+    <div
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: message.role === "user" ? "flex-end" : "flex-start",
-        gap: 1.5,
-      }}
+      className={`flex flex-col gap-3 ${
+        message.role === "user" ? "items-end" : "items-start"
+      }`}
     >
       {message.role === "user" ? (
         <MessageUser content={message.content} />
       ) : (
         <MessageSystem content={message.content} />
       )}
-      <Box
-        component={motion.div}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showActions ? 1 : 0 }}
-        transition={{ duration: 0.1 }}
-        sx={{
-          display: "flex",
-          gap: 0.5,
-        }}
+      <div
+        className={`flex gap-1 transition-opacity duration-100 ${
+          showActions ? "opacity-100" : "opacity-0"
+        }`}
       >
         {message.role === "user" ? (
           <MessageActionsUser />
         ) : (
           <MessageActionsSystem />
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 
 function MessageUser(props: { content: string }) {
   const { content } = props;
   return (
-    <Paper
+    <div
       role="article"
       aria-label="Your message"
-      variant="outlined"
-      sx={{ p: 2, maxWidth: "60%" }}
+      className="p-4 max-w-[60%] bg-gradient-to-tl from-white/70 to-white/90 rounded-2xl border-2 border-white/50 backdrop-blur-lg shadow-xl shadow-black/5"
     >
       <Markdown>{content}</Markdown>
-    </Paper>
+    </div>
   );
 }
 
 function MessageSystem(props: { content: string }) {
   const { content } = props;
   return (
-    <Box role="article" aria-label="Assistant message" sx={{ width: "100%" }}>
+    <div role="article" aria-label="Assistant message" className="w-full">
       <Markdown>{content}</Markdown>
-    </Box>
+    </div>
   );
 }
 
 function MessageActionsUser() {
   return (
     <>
-      <Tooltip title="Retry message">
-        <IconButton size="small">
-          <RefreshCcwIcon />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Edit message">
-        <IconButton size="small">
-          <SquarePenIcon />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Copy message">
-        <IconButton size="small">
-          <CopyIcon />
-        </IconButton>
-      </Tooltip>
+      <button
+        title="Retry message"
+        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
+      >
+        <RefreshCcwIcon size={16} />
+      </button>
+      <button
+        title="Edit message"
+        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
+      >
+        <SquarePenIcon size={16} />
+      </button>
+      <button
+        title="Copy message"
+        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
+      >
+        <CopyIcon size={16} />
+      </button>
     </>
   );
 }
@@ -236,11 +176,12 @@ function MessageActionsUser() {
 function MessageActionsSystem() {
   return (
     <>
-      <Tooltip title="Copy message">
-        <IconButton size="small">
-          <CopyIcon />
-        </IconButton>
-      </Tooltip>
+      <button
+        title="Copy message"
+        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
+      >
+        <CopyIcon size={16} />
+      </button>
     </>
   );
 }
