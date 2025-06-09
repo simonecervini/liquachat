@@ -74,7 +74,7 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
         event.stopPropagation();
         await form.handleSubmit();
       }}
-      className="text-slate-500 absolute bottom-0 rounded-t-3xl border-3 shadow-2xl border-primary/10 shadow-blue-700/10 text-sm max-w-2xl w-full left-1/2 -translate-x-1/2 bg-white/100"
+      className="text-slate-500 absolute bottom-0 rounded-t-3xl border-t-3 border-x-3 shadow-2xl border-primary/10 shadow-blue-700/10 text-sm max-w-2xl w-full left-1/2 -translate-x-1/2 bg-white/100"
     >
       <div className="w-full h-full relative">
         <form.Field
