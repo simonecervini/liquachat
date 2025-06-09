@@ -27,6 +27,7 @@
     "@base-ui-components/react": "1.0.0-beta.0",
     "@rocicorp/zero": "^0.20.2025052100",
     "@t3-oss/env-nextjs": "^0.12.0",
+    "@tanstack/react-form": "^1.12.2",
     "@tanstack/react-query": "^5.69.0",
     "@trpc/client": "^11.0.0",
     "@trpc/react-query": "^11.0.0",

@@ -33,6 +33,7 @@ body {
 
 @theme {
   --color-primary: var(--color-blue-500);
+  --border-width-3: 3px;
 }
 
 @theme inline {
