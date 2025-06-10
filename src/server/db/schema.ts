@@ -22,7 +22,6 @@ export const chats = createTable(
   "chat",
   (d) => ({
     id: d.uuid().primaryKey(),
-    title: d.text(),
     public: d.boolean().notNull(),
     userId: d
       .uuid()

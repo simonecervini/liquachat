@@ -38,15 +38,6 @@ export const schema = {
             "id"
           >,
         },
-        title: {
-          type: "string",
-          optional: true,
-          customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
-            "chats",
-            "title"
-          >,
-        },
         public: {
           type: "boolean",
           optional: false,

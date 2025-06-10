@@ -35,23 +35,14 @@ import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
 import { cn } from "~/lib/cn";
 import type { ChatTreeNode } from "~/lib/types";
+import { useRouter } from "next/navigation";
 
-export const ChatTree = () => {
+export const ChatTree = (props: { className?: string }) => {
   const z = useZero();
   const [treeData, isPending] = useTreeData();
 
   React.useEffect(() => {
     if (isPending) return;
-    const toNodeItems = (items: TreeData["items"]): ChatTreeNode[] => {
-      return items.map((item) => {
-        return {
-          id: item.value.id,
-          name: item.value.name,
-          kind: item.value.kind,
-          childItems: item.children ? toNodeItems(item.children) : undefined,
-        };
-      });
-    };
     void z.mutate.users.update({
       id: z.userID,
       chatTree: toNodeItems(treeData.items),
@@ -108,11 +99,12 @@ export const ChatTree = () => {
   return (
     <Tree
       dragAndDropHooks={dragAndDropHooks}
-      className={styles.tree}
-      aria-label="Tree with drag and drop"
+      className={clsx(styles.tree, props.className)}
+      aria-label="Chat explorer tree view with folders"
       items={treeData.items}
       children={(item) => (
         <DynamicTreeItem
+          treeData={treeData}
           id={item.key}
           childItems={item.children ?? []}
           textValue={item.value.name}
@@ -127,6 +119,7 @@ export const ChatTree = () => {
 
 interface DynamicTreeItemProps extends TreeItemProps<object> {
   children: React.ReactNode;
+  treeData: TreeData;
   childItems?: Iterable<TreeData["items"][number]>;
   isLoading?: boolean;
   renderLoader?: (id: React.Key | undefined) => boolean;
@@ -134,11 +127,21 @@ interface DynamicTreeItemProps extends TreeItemProps<object> {
 }
 
 function DynamicTreeItem(props: DynamicTreeItemProps) {
-  const { childItems, renderLoader, supportsDragging } = props;
+  const { childItems, renderLoader, supportsDragging, treeData } = props;
+  const router = useRouter();
+
+  const item = treeData.getItem(props.id ?? "");
+  if (!item) return null;
 
   return (
     <TreeItem
       {...props}
+      onAction={() => {
+        // TODO: improve accessibility, we can't make everything a Link because we have buttons
+        if (item.value.kind === "chat") {
+          router.push(`/chat/${item.value.chatId}`);
+        }
+      }}
       className={({
         isFocused,
         isSelected,
@@ -157,72 +160,86 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
       }
     >
       <TreeItemContent>
-        {({ isExpanded, hasChildItems, level }) => (
-          <ContextMenu>
-            <ContextMenuTrigger
-              className={cn(
-                "flex items-center gap-2 text-sm py-2.5 px-2 hover:bg-primary/10 rounded-sm",
-              )}
-              style={{
-                marginInlineStart: `${(!hasChildItems ? 20 : 0) + (level - 1) * 15}px`,
-              }}
-            >
-              {hasChildItems && (
-                <Button slot="chevron">
-                  <ChevronDownIcon
-                    className="size-4 text-slate-500"
-                    style={{
-                      transform: `rotate(${isExpanded ? 0 : -90}deg)`,
-                    }}
-                  />
-                </Button>
-              )}
-              {supportsDragging && (
-                <Button slot="drag">
-                  {hasChildItems ? (
-                    <FolderIcon className="size-4 text-slate-500" />
-                  ) : (
-                    <MenuIcon className="size-4 text-slate-500" />
-                  )}
-                </Button>
-              )}
-              {props.children}
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem>
-                <CornerDownRightIcon />
-                Open
-              </ContextMenuItem>
-              <ContextMenuItem>
-                <FolderPlusIcon />
-                Move to new folder
-              </ContextMenuItem>
-              <ContextMenuItem>
-                <CopyIcon />
-                Duplicate
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem>
-                <ShareIcon />
-                Share
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem>
-                <TextCursorIcon />
-                Rename
-              </ContextMenuItem>
-              <ContextMenuItem>
-                <TrashIcon />
-                Delete
-              </ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
-        )}
+        {({ isExpanded, hasChildItems, level, id }) => {
+          return (
+            <ContextMenu>
+              <ContextMenuTrigger
+                className={cn(
+                  "flex items-center gap-2.5 text-sm py-2.5 px-2 hover:bg-primary/10 rounded-sm",
+                )}
+                style={{
+                  marginInlineStart: `${(!hasChildItems ? 20 : 0) + (level - 1) * 15}px`,
+                }}
+              >
+                {hasChildItems && (
+                  <Button slot="chevron">
+                    <ChevronDownIcon
+                      className="size-4 text-slate-500"
+                      style={{
+                        transform: `rotate(${isExpanded ? 0 : -90}deg)`,
+                      }}
+                    />
+                  </Button>
+                )}
+                {supportsDragging && (
+                  <Button slot="drag">
+                    {item.value.kind === "group" ? (
+                      <FolderIcon className="size-4 text-slate-500" />
+                    ) : (
+                      <MenuIcon className="size-4 text-slate-500" />
+                    )}
+                  </Button>
+                )}
+                <span className="text-ellipsis text-nowrap overflow-hidden">
+                  {props.children}
+                </span>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem>
+                  <CornerDownRightIcon />
+                  Open
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    treeData.update(id, {
+                      id: crypto.randomUUID(),
+                      name: "New folder",
+                      kind: "group",
+                      childItems: deepRegenerateIds([item.value]),
+                    });
+                  }}
+                >
+                  <FolderPlusIcon />
+                  Move to new folder
+                </ContextMenuItem>
+                <ContextMenuItem>
+                  <CopyIcon />
+                  Duplicate
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem>
+                  <ShareIcon />
+                  Share
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem>
+                  <TextCursorIcon />
+                  Rename
+                </ContextMenuItem>
+                <ContextMenuItem>
+                  <TrashIcon />
+                  Delete
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+          );
+        }}
       </TreeItemContent>
       <Collection
         items={childItems}
         children={(item) => (
           <DynamicTreeItem
+            treeData={treeData}
             supportsDragging={supportsDragging}
             renderLoader={renderLoader}
             isLoading={props.isLoading}
@@ -253,3 +270,38 @@ function useTreeData() {
 }
 
 type TreeData = ReturnType<typeof useTreeData>[0];
+
+function toNodeItems(items: TreeData["items"]): ChatTreeNode[] {
+  return items.map((item): ChatTreeNode => {
+    const childItems = item.children ? toNodeItems(item.children) : undefined;
+    if (item.value.kind === "group") {
+      return {
+        id: item.value.id,
+        name: item.value.name,
+        kind: "group",
+        childItems,
+      };
+    } else {
+      return {
+        id: item.value.id,
+        name: item.value.name,
+        kind: "chat",
+        chatId: item.value.chatId,
+        childItems,
+      };
+    }
+  });
+}
+
+// Required to avoid freezing the whole page
+function deepRegenerateIds(items: ChatTreeNode[]): ChatTreeNode[] {
+  return items.map((item) => {
+    return {
+      ...item,
+      id: crypto.randomUUID(),
+      childItems: item.childItems
+        ? deepRegenerateIds(item.childItems)
+        : undefined,
+    };
+  });
+}

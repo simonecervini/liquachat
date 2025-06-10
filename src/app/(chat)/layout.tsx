@@ -3,14 +3,13 @@
 import * as React from "react";
 import { PanelLeftIcon, SearchIcon, PlusIcon, DropletIcon } from "lucide-react";
 import { useState } from "react";
-import { useQuery, ZeroProvider } from "@rocicorp/zero/react";
+import { ZeroProvider } from "@rocicorp/zero/react";
 import { schema, type AuthData } from "~/zero/schema";
 import { Zero } from "@rocicorp/zero";
 import { createMutators } from "~/zero";
 import { env } from "~/env";
 import { useRouter } from "next/navigation";
-import { useZero } from "~/zero/react";
-import Link from "next/link";
+import { ChatTree } from "~/components/chat-tree";
 
 // TODO: this is for testing purposes
 const authData: AuthData = {
@@ -41,8 +40,6 @@ export default function Layout(props: { children: React.ReactNode }) {
 function Sidebar() {
   const [open, setOpen] = useState(false); // TODO: implement this
   const router = useRouter();
-  const z = useZero();
-  const [chats] = useQuery(z.query.chats.where("userId", "=", authData.sub));
   return (
     <div className="flex flex-col w-60 border-r-2 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4 items-center">
       <div className="flex items-center justify-between w-full mb-3">
@@ -60,7 +57,7 @@ function Sidebar() {
         className="flex font-medium gap-2 h-10 border-2 border-blue-50/20 bg-gradient-to-t shadow-md shadow-blue-800/20 from-blue-500 to-blue-400 rounded-xl text-white w-full items-center justify-center text-sm mb-4"
         onClick={async () => {
           const chatId = crypto.randomUUID();
-          await zero.mutate.chats.new({ id: chatId, timestamp: Date.now() })
+          await zero.mutate.chats.init({ id: chatId, timestamp: Date.now() })
             .client;
           router.push(`/chat/${chatId}`);
         }}
@@ -81,7 +78,9 @@ function Sidebar() {
         />
       </div>
 
-      <div className="flex flex-col gap-2 w-full">
+      <ChatTree className="w-full" />
+
+      {/* <div className="flex flex-col gap-2 w-full">
         {chats.map((chat) => (
           <Link
             href={`/chat/${chat.id}`}
@@ -91,7 +90,7 @@ function Sidebar() {
             {chat.title ?? "Untitled"}
           </Link>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -100,7 +99,7 @@ function Logo() {
   return (
     <div className="flex items-center justify-center w-full h-10 font-extrabold gap-1 text-slate-900">
       <DropletIcon className="text-blue-500 size-4" strokeWidth={3} />
-      Liquix
+      Azura
     </div>
   );
 }

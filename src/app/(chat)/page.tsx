@@ -4,7 +4,6 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
-import { type ZeroRow } from "~/zero/schema";
 
 export default function Page() {
   const z = useZero();
@@ -16,17 +15,10 @@ export default function Page() {
   React.useEffect(() => {
     if (result.type === "complete") {
       if (!lastChat) {
-        const newChat: ZeroRow<"chats"> = {
-          id: crypto.randomUUID(),
-          title: null,
-          public: false,
-          userId: z.userID,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        // TODO: use custom mutators
-        void z.mutate.chats.insert(newChat).then(() => {
-          router.replace(`/chat/${newChat.id}`);
+        const id = crypto.randomUUID();
+        const timestamp = Date.now();
+        void z.mutate.chats.init({ id, timestamp }).client.then(() => {
+          router.replace(`/chat/${id}`);
         });
       } else {
         router.replace(`/chat/${lastChat.id}`);

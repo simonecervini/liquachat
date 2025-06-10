@@ -1,11 +1,27 @@
 import type { CustomMutatorDefs, Transaction } from "@rocicorp/zero";
 import type { AuthData } from "./schema";
 import type { Schema } from "./schema";
+import type { ChatTreeNode } from "~/lib/types";
 
 export function createMutators(authData: AuthData) {
   return {
     chats: {
-      new: async (tx, input: { id: string; timestamp: number }) => {
+      init: async (tx, input: { id: string; timestamp: number }) => {
+        const user = await tx.query.users.where("id", "=", authData.sub).one();
+        if (!user) throw new ZeroMutatorError({ code: "UNAUTHORIZED" });
+        const newChatTree: ChatTreeNode[] = [
+          {
+            id: crypto.randomUUID(),
+            name: "New Chat",
+            kind: "chat",
+            chatId: input.id,
+          },
+          ...(user.chatTree ?? []),
+        ];
+        await tx.mutate.users.update({
+          id: authData.sub,
+          chatTree: newChatTree,
+        });
         await tx.mutate.chats.insert({
           id: input.id,
           userId: authData.sub,
