@@ -1,0 +1,14 @@
+.tree {
+  :global(.react-aria-DropIndicator) {
+    margin-inline-start: calc(var(--tree-item-level) * 17px);
+  }
+
+  :global(.react-aria-DropIndicator[data-drop-target]) {
+    outline: 1px solid var(--color-primary);
+  }
+}
+
+.tree [data-drop-target] {
+  box-shadow: 0 0 0 2px var(--color-primary);
+  border-radius: 4px;
+}

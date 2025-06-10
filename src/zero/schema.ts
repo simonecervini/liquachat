@@ -19,25 +19,26 @@ export type AuthData = {
 };
 
 export const permissions = definePermissions<AuthData, Schema>(schema, () => {
-  const allowIfSameUser = (
+  const _allowIfSameUser = (
     authData: AuthData,
     eb: ExpressionBuilder<Schema, "users">,
   ) => eb.cmp("id", authData.sub);
 
-  // TODO: Add permissions for other tables
+  // TODO: Add permissions
 
   return {
-    users: {
-      row: {
-        select: [allowIfSameUser],
-        delete: [allowIfSameUser],
-        insert: [allowIfSameUser],
-        update: {
-          preMutation: [allowIfSameUser],
-          postMutation: [allowIfSameUser],
-        },
-      },
-    },
+    users: ANYONE_CAN_DO_ANYTHING,
+    // users: {
+    //   row: {
+    //     select: [allowIfSameUser],
+    //     delete: [allowIfSameUser],
+    //     insert: [allowIfSameUser],
+    //     update: {
+    //       preMutation: [allowIfSameUser],
+    //       postMutation: [allowIfSameUser],
+    //     },
+    //   },
+    // },
     chats: ANYONE_CAN_DO_ANYTHING,
     messages: ANYONE_CAN_DO_ANYTHING,
   } satisfies CompletePermissionsConfig;

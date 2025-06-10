@@ -11,6 +11,65 @@ await $`pnpm run db:push`;
 
 await db.insert(users).values({
   id: "a167ca4e-8edb-4f24-a453-24d53be7179c",
+  chatTree: [
+    {
+      id: "projects",
+      name: "Projects",
+      kind: "group",
+      childItems: [
+        { id: "project-1", name: "Why is the sky blue?", kind: "chat" },
+        {
+          id: "project-2",
+          name: "Capital Cities",
+          kind: "group",
+          childItems: [
+            {
+              id: "project-2A",
+              name: "What is the capital of France?",
+              kind: "chat",
+            },
+            {
+              id: "project-2B",
+              name: "What is the capital of Germany?",
+              kind: "chat",
+            },
+            {
+              id: "project-2C",
+              name: "What is the capital of Italy?",
+              kind: "chat",
+            },
+          ],
+        },
+        {
+          id: "project-5",
+          name: "Physics",
+          kind: "group",
+          childItems: [
+            {
+              id: "project-5A",
+              name: "What is the speed of light?",
+              kind: "chat",
+            },
+            {
+              id: "project-5B",
+              name: "Is the universe infinite?",
+              kind: "chat",
+            },
+            {
+              id: "project-5C",
+              name: "What is the speed of an object?",
+              kind: "chat",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "How to make a sandwich",
+      kind: "chat",
+    },
+  ],
 });
 
 async function resetDatabase() {

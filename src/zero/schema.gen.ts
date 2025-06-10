@@ -160,6 +160,15 @@ export const schema = {
             "id"
           >,
         },
+        chatTree: {
+          type: "json",
+          optional: true,
+          customType: null as unknown as ZeroCustomType<
+            ZeroSchema,
+            "users",
+            "chatTree"
+          >,
+        },
       },
       primaryKey: ["id"],
       serverName: "algachat_user",

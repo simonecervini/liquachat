@@ -3,6 +3,7 @@
 
 import { relations } from "drizzle-orm";
 import { index, pgTableCreator } from "drizzle-orm/pg-core";
+import type { ChatTreeNode } from "~/lib/types";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -14,6 +15,7 @@ export const createTable = pgTableCreator((name) => `algachat_${name}`);
 
 export const users = createTable("user", (d) => ({
   id: d.uuid().primaryKey(),
+  chatTree: d.json().$type<ChatTreeNode[]>(),
 }));
 
 export const chats = createTable(
