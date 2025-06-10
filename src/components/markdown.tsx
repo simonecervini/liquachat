@@ -21,7 +21,7 @@ const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
       <code
         {...rest}
         className={cn(
-          "bg-primary/20 rounded px-2 py-1 font-mono font-medium text-sm",
+          "bg-primary/20 rounded px-2 py-1 font-mono font-medium",
           className,
         )}
       >
@@ -32,7 +32,11 @@ const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
 };
 
 export function Markdown(props: { children: string }) {
-  return <MarkdownRoot components={components}>{props.children}</MarkdownRoot>;
+  return (
+    <div className="flex flex-col gap-3 text-sm/loose">
+      <MarkdownRoot components={components}>{props.children}</MarkdownRoot>
+    </div>
+  );
 }
 
 function CodeBlock(props: { lang: string; children: string }) {
@@ -43,18 +47,19 @@ function CodeBlock(props: { lang: string; children: string }) {
     queryFn: async () => {
       return codeToHtml(children, {
         lang,
-        theme: "vitesse-light",
+        theme: "one-light",
       });
     },
   });
   return (
-    <div className="border border-gray-200 rounded-lg font-mono text-sm overflow-hidden">
-      <div className="border-b border-gray-200 px-2 py-1 bg-gray-50 text-gray-700 text-xs">
+    <div className="border border-primary/15 rounded-lg font-mono overflow-hidden my-1.5">
+      <div className="border-b border-primary/15 px-4 py-2.5 bg-white text-slate-800 text-xs">
         {lang}
       </div>
       <div
         dangerouslySetInnerHTML={{ __html: data ?? "" }}
-        className="w-full [&>div>pre]:m-0 [&>div>pre]:border-0 [&>div>pre]:p-2 [&>div>pre]:rounded-none"
+        // TODO: remove bg-white! when the custom theme is ready
+        className="w-full [&>pre]:m-0 [&>pre]:border-0 [&>pre]:p-2.5 [&>pre]:rounded-none [&>pre]:bg-white!"
       />
     </div>
   );

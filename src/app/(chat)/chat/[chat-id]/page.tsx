@@ -15,6 +15,7 @@ import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "~/lib/cn";
+import { ContainedButton } from "~/components/button";
 
 function useChat(id: string) {
   const z = useZero();
@@ -41,77 +42,12 @@ export default function ChatPage() {
   return (
     <div className="relative flex-1 h-full">
       <ScrollArea className="h-full flex-1">
-        <div className="max-w-4xl mx-auto flex flex-col flex-1 pt-8 pb-36 px-4">
+        <div className="max-w-4xl w-full mx-auto flex flex-col flex-1 pt-8 pb-36 px-4">
           <MessageStack messages={chat.messages} />
         </div>
         <SendMessageForm chatId={chatId} />
       </ScrollArea>
     </div>
-  );
-}
-
-function SendMessageForm(props: { chatId: string; className?: string }) {
-  const { chatId } = props;
-  const z = useZero();
-  const form = useForm({
-    defaultValues: {
-      message: "",
-    },
-    onSubmit: async ({ value }) => {
-      z.mutate.chats.sendMessage({
-        id: crypto.randomUUID(),
-        chatId: chatId,
-        content: value.message,
-        timestamp: Date.now(),
-      });
-      form.reset();
-    },
-  });
-  return (
-    <form
-      onSubmit={async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        await form.handleSubmit();
-      }}
-      className="text-slate-500 absolute bottom-0 rounded-t-3xl border-t-3 border-x-3 shadow-2xl border-primary/10 shadow-blue-700/10 text-sm max-w-2xl w-full left-1/2 -translate-x-1/2 bg-white/100"
-    >
-      <div className="w-full h-full relative">
-        <form.Field
-          name="message"
-          children={(field) => (
-            <textarea
-              name={field.name}
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              onKeyDown={async (event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  await form.handleSubmit();
-                }
-              }}
-              placeholder="Type your message here..."
-              className="p-6 w-full h-full resize-none border-none outline-none bg-transparent"
-              rows={4}
-            />
-          )}
-        />
-
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit]) => (
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="absolute bottom-1.5 right-1.5 bg-gradient-to-t from-blue-500 to-blue-400 shadow-sm size-10 rounded-xl text-white flex items-center justify-center hover:from-blue-600 hover:to-blue-500 transition-colors"
-            >
-              <ArrowUpIcon />
-            </button>
-          )}
-        />
-      </div>
-    </form>
   );
 }
 
@@ -166,7 +102,7 @@ function MessageUser(props: { content: string }) {
     <div
       role="article"
       aria-label="Your message"
-      className="p-4 max-w-[60%] bg-gradient-to-tl from-white/70 to-white/90 rounded-2xl border-2 border-white/50 backdrop-blur-lg shadow-xl shadow-black/5"
+      className="p-4 max-w-[60%] bg-gradient-to-tl from-white/70 to-white/90 rounded-2xl border-2 border-white/50 backdrop-blur-lg shadow-xl shadow-primary/5"
     >
       <Markdown>{content}</Markdown>
     </div>
@@ -217,6 +153,73 @@ function MessageActionsSystem() {
         <CopyIcon size={16} />
       </button>
     </>
+  );
+}
+
+function SendMessageForm(props: { chatId: string; className?: string }) {
+  const { chatId } = props;
+  const z = useZero();
+  const form = useForm({
+    defaultValues: {
+      message: "",
+    },
+    onSubmit: async ({ value }) => {
+      z.mutate.chats.sendMessage({
+        id: crypto.randomUUID(),
+        chatId: chatId,
+        content: value.message,
+        timestamp: Date.now(),
+      });
+      form.reset();
+    },
+  });
+  return (
+    <form
+      onSubmit={async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await form.handleSubmit();
+      }}
+      className="text-slate-500 absolute bottom-0 rounded-t-3xl border-t-3 border-x-3 shadow-2xl border-primary/10 shadow-blue-700/10 text-sm max-w-2xl w-full left-1/2 -translate-x-1/2 bg-white/100"
+    >
+      <div className="w-full h-full relative">
+        <form.Field
+          name="message"
+          children={(field) => (
+            <textarea
+              name={field.name}
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              onKeyDown={async (event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  await form.handleSubmit();
+                }
+              }}
+              placeholder="Type your message here..."
+              className="p-6 w-full h-full resize-none border-none outline-none bg-transparent"
+              rows={4}
+            />
+          )}
+        />
+
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          children={([canSubmit]) => (
+            <ContainedButton
+              type="submit"
+              disabled={!canSubmit}
+              className="absolute bottom-1.5 right-1.5"
+              $icon
+            >
+              <ArrowUpIcon />
+              <span className="sr-only">Send</span>
+            </ContainedButton>
+          )}
+        />
+      </div>
+    </form>
   );
 }
 

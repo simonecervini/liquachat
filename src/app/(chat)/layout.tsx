@@ -10,6 +10,7 @@ import { createMutators } from "~/zero";
 import { env } from "~/env";
 import { useRouter } from "next/navigation";
 import { ChatTree } from "~/components/chat-tree";
+import { ContainedButton } from "~/components/button";
 
 // TODO: this is for testing purposes
 const authData: AuthData = {
@@ -53,8 +54,8 @@ function Sidebar() {
         <PanelLeftIcon className="text-blue-500 size-5 invisible" />
       </div>
 
-      <button
-        className="flex font-medium gap-2 h-10 border-2 border-blue-50/20 bg-gradient-to-t shadow-md shadow-blue-800/20 from-blue-500 to-blue-400 rounded-xl text-white w-full items-center justify-center text-sm mb-4"
+      <ContainedButton
+        className="mb-4 w-full"
         onClick={async () => {
           const chatId = crypto.randomUUID();
           await zero.mutate.chats.init({ id: chatId, timestamp: Date.now() })
@@ -62,9 +63,9 @@ function Sidebar() {
           router.push(`/chat/${chatId}`);
         }}
       >
-        <PlusIcon className="size-4" />
+        <PlusIcon />
         New Chat
-      </button>
+      </ContainedButton>
 
       <div className="relative w-full mb-4">
         <input
