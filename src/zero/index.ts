@@ -48,8 +48,46 @@ export function createMutators(authData: AuthData) {
           userId: authData.sub,
         });
       },
+      updateMessage: async (
+        ...params: Parameters<typeof chats_updateMessageImpl>
+      ) => {
+        await chats_updateMessageImpl(...params);
+      },
     },
   } as const satisfies CustomMutatorDefs<Schema>;
+}
+
+export async function chats_updateMessageImpl(
+  tx: Transaction<Schema>,
+  input: {
+    id: string;
+    content: string;
+    timestamp: number;
+  },
+) {
+  const message = await tx.query.messages.where("id", "=", input.id).one();
+  if (!message) throw new ZeroMutatorError({ code: "NOT_FOUND" });
+  const oldTimestamp = message.createdAt;
+  const promises: Promise<unknown>[] = [
+    tx.mutate.messages.update({
+      id: input.id,
+      content: input.content,
+      createdAt: safeTimestamp(tx, input.timestamp),
+    }),
+  ];
+  // TODO: optimize this when "update .. where .." is supported in ZQL
+  const laterMessages = await tx.query.messages.where((eb) =>
+    eb.and(
+      eb.cmp("chatId", "=", message.chatId),
+      eb.cmp("id", "!=", message.id),
+      eb.cmp("createdAt", ">=", oldTimestamp),
+    ),
+  );
+  for (const laterMessage of laterMessages) {
+    promises.push(tx.mutate.messages.delete({ id: laterMessage.id }));
+  }
+  await Promise.all(promises);
+  return { newMessageContent: input.content, chatId: message.chatId };
 }
 
 export type ZeroMutatorErrorCode = "NOT_FOUND" | "UNAUTHORIZED";

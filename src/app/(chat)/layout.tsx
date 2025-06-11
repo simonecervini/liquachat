@@ -10,7 +10,7 @@ import { createMutators } from "~/zero";
 import { env } from "~/env";
 import { useRouter } from "next/navigation";
 import { ChatTree } from "~/components/chat-tree";
-import { ContainedButton } from "~/components/button";
+import { Button } from "~/components/system/button";
 
 // TODO: this is for testing purposes
 const authData: AuthData = {
@@ -54,8 +54,9 @@ function Sidebar() {
         <PanelLeftIcon className="text-blue-500 size-5 invisible" />
       </div>
 
-      <ContainedButton
+      <Button
         className="mb-4 w-full"
+        size="lg"
         onClick={async () => {
           const chatId = crypto.randomUUID();
           await zero.mutate.chats.init({ id: chatId, timestamp: Date.now() })
@@ -65,7 +66,7 @@ function Sidebar() {
       >
         <PlusIcon />
         New Chat
-      </ContainedButton>
+      </Button>
 
       <div className="relative w-full mb-4">
         <input
@@ -100,7 +101,7 @@ function Logo() {
   return (
     <div className="flex items-center justify-center w-full h-10 font-extrabold gap-1 text-slate-900">
       <DropletIcon className="text-blue-500 size-4" strokeWidth={3} />
-      Azura
+      Liqua
     </div>
   );
 }

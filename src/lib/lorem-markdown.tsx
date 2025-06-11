@@ -40,10 +40,8 @@ function generateParagraph() {
   const sentencesAmount = Math.floor(Math.random() * 10) + 4;
   let paragraph = "";
   for (let i = 0; i < sentencesAmount; i++) {
-    paragraph += generateSentence();
-    if (i < sentencesAmount - 1) {
-      paragraph += ". ";
-    }
+    const period = i < sentencesAmount - 1 ? ". " : ".";
+    paragraph += generateSentence() + period;
   }
   return paragraph;
 }

@@ -5,7 +5,7 @@ import {
   ZQLDatabase,
 } from "@rocicorp/zero/pg";
 import { schema, type AuthData } from "~/zero/schema";
-import { createMutators } from "~/zero";
+import { chats_updateMessageImpl, createMutators } from "~/zero";
 import { db } from "~/server/db";
 import { messages } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
@@ -62,48 +62,65 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
   const clientMutators = createMutators(authData);
   const task = createTaskFn(asyncTasks);
 
+  const pushResponseTokens = async (input: {
+    chatId: string;
+    question: string;
+  }) => {
+    const assistantMessageId = crypto.randomUUID();
+    const fullContent = `"${input.question}" is a very good question. Let's answer it.\n${loremMarkdown()}`;
+    let partialContent = "";
+
+    let i = 0;
+    while (i < fullContent.length) {
+      const increment = Math.floor(Math.random() * 3) + 1;
+      const token = fullContent.slice(i, i + increment);
+      partialContent += token;
+      if (i === 0) {
+        await db.insert(messages).values({
+          id: assistantMessageId,
+          chatId: input.chatId,
+          content: partialContent,
+          createdAt: new Date(),
+          role: "assistant",
+          userId: authData.sub,
+        });
+      } else {
+        await db
+          .update(messages)
+          .set({ content: partialContent })
+          .where(eq(messages.id, assistantMessageId));
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1));
+
+      i += increment;
+    }
+  };
+
   return {
     ...clientMutators,
     chats: {
       ...clientMutators.chats,
       sendMessage: async (tx, input) => {
         await clientMutators.chats.sendMessage(tx, input);
-
-        task(
-          "insert tokens from llm while they are being generated",
-          async () => {
-            const assistantMessageId = crypto.randomUUID();
-            const fullContent = loremMarkdown();
-            let partialContent = "";
-
-            let i = 0;
-            while (i < fullContent.length) {
-              const increment = Math.floor(Math.random() * 3) + 1;
-              const token = fullContent.slice(i, i + increment);
-              partialContent += token;
-
-              if (i === 0) {
-                await tx.mutate.messages.insert({
-                  id: assistantMessageId,
-                  chatId: input.chatId,
-                  content: partialContent,
-                  createdAt: Date.now(),
-                  role: "assistant",
-                  userId: authData.sub,
-                });
-              } else {
-                await db
-                  .update(messages)
-                  .set({ content: partialContent })
-                  .where(eq(messages.id, assistantMessageId));
-              }
-
-              await new Promise((resolve) => setTimeout(resolve, 3));
-
-              i += increment;
-            }
-          },
+        task("reply to user's message", async () => {
+          await pushResponseTokens({
+            chatId: input.chatId,
+            question: input.content,
+          });
+        });
+      },
+      updateMessage: async (tx, input) => {
+        const { newMessageContent, chatId } = await chats_updateMessageImpl(
+          tx,
+          input,
         );
+        task("reply to user's updated message", async () => {
+          await pushResponseTokens({
+            chatId,
+            question: newMessageContent,
+          });
+        });
       },
     },
   } as const satisfies typeof clientMutators;

@@ -1,12 +1,13 @@
 "use client";
 
+import * as React from "react";
 import {
   ArrowUpIcon,
+  CheckIcon,
   CopyIcon,
   RefreshCcwIcon,
   SquarePenIcon,
 } from "lucide-react";
-import { useState } from "react";
 import { Markdown } from "~/components/markdown";
 import { ScrollArea } from "~/components/scroll-area";
 import { useParams } from "next/navigation";
@@ -15,7 +16,9 @@ import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "~/lib/cn";
-import { ContainedButton } from "~/components/button";
+import { Button } from "~/components/system/button";
+import { useCopyButton } from "~/lib/use-copy-button";
+import type { ZeroRow } from "~/zero/schema";
 
 function useChat(id: string) {
   const z = useZero();
@@ -67,45 +70,146 @@ function MessageStack(props: {
 
 function Message(props: { message: Message }) {
   const { message } = props;
-  const [showActions, setShowActions] = useState(false);
+  const [editMode, setEditMode] = React.useState(false);
   return (
     <div
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
       className={`flex flex-col gap-3 ${
         message.role === "user" ? "items-end" : "items-start"
       }`}
     >
       {message.role === "user" ? (
-        <MessageUser content={message.content} />
+        <MessageUser
+          message={message}
+          editMode={editMode}
+          setEditMode={setEditMode}
+        />
       ) : (
         <MessageSystem content={message.content} />
       )}
-      <div
-        className={`flex gap-1 transition-opacity duration-100 ${
-          showActions ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      <div className="flex gap-1">
         {message.role === "user" ? (
-          <MessageActionsUser />
+          <MessageActionsUser
+            message={message}
+            editMode={editMode}
+            setEditMode={setEditMode}
+          />
         ) : (
-          <MessageActionsSystem />
+          <MessageActionsSystem message={message} />
         )}
       </div>
     </div>
   );
 }
 
-function MessageUser(props: { content: string }) {
-  const { content } = props;
+function MessageUser(props: {
+  message: Message;
+  editMode: boolean;
+  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const { message, editMode } = props;
   return (
     <div
       role="article"
       aria-label="Your message"
-      className="p-4 max-w-[60%] bg-gradient-to-tl from-white/70 to-white/90 rounded-2xl border-2 border-white/50 backdrop-blur-lg shadow-xl shadow-primary/5"
+      className={cn(
+        "p-4 max-w-[60%] flex bg-gradient-to-tl from-white/70 to-white/90 rounded-2xl backdrop-blur-lg",
+        editMode
+          ? "w-full outline-slate-400/60 outline-2 outline-dashed bg-transparent p-0"
+          : "shadow-xl shadow-primary/5",
+      )}
     >
-      <Markdown>{content}</Markdown>
+      {editMode ? (
+        <EditMessageForm {...props} />
+      ) : (
+        <Markdown>{message.content}</Markdown>
+      )}
     </div>
+  );
+}
+
+function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
+  const { message: originalMessage, setEditMode } = props;
+  const z = useZero();
+  const form = useForm({
+    defaultValues: {
+      message: originalMessage.content,
+    },
+    onSubmit: async ({ value }) => {
+      const newMessage = value.message.trim();
+      if (newMessage && newMessage !== originalMessage.content.trim()) {
+        await z.mutate.chats.updateMessage({
+          id: originalMessage.id,
+          content: value.message,
+          timestamp: Date.now(),
+        }).client;
+      }
+      setEditMode(false);
+    },
+  });
+  return (
+    <form
+      className="w-full relative"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await form.handleSubmit();
+      }}
+    >
+      <form.Field
+        name="message"
+        children={(field) => (
+          <textarea
+            autoFocus
+            value={field.state.value}
+            onChange={(e) => {
+              field.handleChange(e.target.value);
+            }}
+            placeholder="Type your message here..."
+            // The font size (text-sm/loose) is set to match the Markdown component
+            className="w-full placeholder:text-slate-400 focus-visible:outline-none border-none outline-none focus-visible:border-none text-sm/loose p-4 pb-12 field-sizing-content"
+            onBlur={field.handleBlur}
+            onFocus={(e) => {
+              // Move cursor to the end of the textarea
+              const tempValue = e.target.value;
+              e.target.value = "";
+              e.target.value = tempValue;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                setEditMode(false);
+              }
+            }}
+          />
+        )}
+      />
+
+      <div className="flex gap-1.5 absolute bottom-2 right-2">
+        <form.Subscribe
+          selector={(state) => [state.canSubmit]}
+          children={([canSubmit]) => (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-xs"
+                onClick={() => {
+                  setEditMode(false);
+                }}
+                disabled={!canSubmit}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" size="icon" disabled={!canSubmit}>
+                <ArrowUpIcon />
+                <span className="sr-only">Send</span>
+              </Button>
+            </>
+          )}
+        />
+      </div>
+    </form>
   );
 }
 
@@ -118,40 +222,42 @@ function MessageSystem(props: { content: string }) {
   );
 }
 
-function MessageActionsUser() {
+function MessageActionsUser(props: {
+  message: ZeroRow<"messages">;
+  editMode: boolean;
+  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const { message, editMode, setEditMode } = props;
+  const { buttonProps, copied } = useCopyButton(message.content);
   return (
     <>
-      <button
-        title="Retry message"
-        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
-      >
-        <RefreshCcwIcon size={16} />
-      </button>
-      <button
+      <Button title="Retry message" size="icon" variant="ghost">
+        <RefreshCcwIcon />
+      </Button>
+      <Button
         title="Edit message"
-        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
+        size="icon"
+        variant="ghost"
+        disabled={editMode}
+        onClick={() => setEditMode((prev) => !prev)}
       >
-        <SquarePenIcon size={16} />
-      </button>
-      <button
-        title="Copy message"
-        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
-      >
-        <CopyIcon size={16} />
-      </button>
+        <SquarePenIcon />
+      </Button>
+      <Button title="Copy message" size="icon" variant="ghost" {...buttonProps}>
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </Button>
     </>
   );
 }
 
-function MessageActionsSystem() {
+function MessageActionsSystem(props: { message: Message }) {
+  const { message } = props;
+  const { buttonProps, copied } = useCopyButton(message.content);
   return (
     <>
-      <button
-        title="Copy message"
-        className="p-2 text-slate-600 hover:bg-white/20 rounded-xl transition-colors"
-      >
-        <CopyIcon size={16} />
-      </button>
+      <Button title="Copy message" size="icon" variant="ghost" {...buttonProps}>
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </Button>
     </>
   );
 }
@@ -207,15 +313,15 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit]) => (
-            <ContainedButton
+            <Button
               type="submit"
               disabled={!canSubmit}
               className="absolute bottom-1.5 right-1.5"
-              $icon
+              size="icon-lg"
             >
               <ArrowUpIcon />
               <span className="sr-only">Send</span>
-            </ContainedButton>
+            </Button>
           )}
         />
       </div>

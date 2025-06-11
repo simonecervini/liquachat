@@ -8,6 +8,9 @@ dependencies:
   '@base-ui-components/react':
     specifier: 1.0.0-beta.0
     version: 1.0.0-beta.0(@types/react@19.1.6)(react-dom@19.1.0)(react@19.1.0)
+  '@radix-ui/react-slot':
+    specifier: ^1.2.3
+    version: 1.2.3(@types/react@19.1.6)(react@19.1.0)
   '@rocicorp/zero':
     specifier: ^0.20.2025052100
     version: 0.20.2025052100(@opentelemetry/core@2.0.1)(typescript@5.8.3)
@@ -83,6 +86,9 @@ dependencies:
   shiki:
     specifier: ^3.6.0
     version: 3.6.0
+  sonner:
+    specifier: ^2.0.5
+    version: 2.0.5(react-dom@19.1.0)(react@19.1.0)
   superjson:
     specifier: ^2.2.1
     version: 2.2.2
@@ -9268,6 +9274,16 @@ packages:
     resolution: {integrity: sha512-INb7TM37/mAcsGmc9hyyI6+QR3rR1zVRu36B0NeGXKnOOLiZOfER5SA+N7X7k3yUYRzLWafduTDvJAfDswwEww==}
     dependencies:
       atomic-sleep: 1.0.0
+    dev: false
+
+  /sonner@2.0.5(react-dom@19.1.0)(react@19.1.0):
+    resolution: {integrity: sha512-YwbHQO6cSso3HBXlbCkgrgzDNIhws14r4MO87Ofy+cV2X7ES4pOoAK3+veSmVTvqNx1BWUxlhPmZzP00Crk2aQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
     dev: false
 
   /source-map-js@1.2.1:

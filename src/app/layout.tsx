@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Poppins, IBM_Plex_Mono } from "next/font/google";
 
 import { TRPCReactProvider } from "~/lib/trpc";
+import { Toaster } from "~/components/system/sonner";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -33,6 +34,7 @@ export default function RootLayout({
         translate="no"
       >
         <TRPCReactProvider>{children}</TRPCReactProvider>
+        <Toaster />
       </body>
     </html>
   );

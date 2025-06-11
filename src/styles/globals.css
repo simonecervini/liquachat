@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.9rem;
 }
 
 body {
@@ -33,6 +33,7 @@ body {
 
 @theme {
   --color-primary: var(--color-blue-500);
+  --color-destructive: var(--color-red-500);
   --border-width-3: 3px;
 }
 
