@@ -20,11 +20,13 @@ import { Button } from "~/components/system/button";
 import { useCopyButton } from "~/lib/use-copy-button";
 import type { ZeroRow } from "~/zero/schema";
 
-function useChat(id: string) {
-  const z = useZero();
+function useChat() {
+  const params = useParams();
+  const chatId = z.string().min(1).parse(params["chat-id"]);
+  const zero = useZero();
   const [chat] = useQuery(
-    z.query.chats
-      .where("id", "=", id)
+    zero.query.chats
+      .where("id", "=", chatId)
       .related("messages", (q) => q.orderBy("createdAt", "asc"))
       .one(),
   );
@@ -35,8 +37,7 @@ type Chat = NonNullable<ReturnType<typeof useChat>>;
 type Message = Chat["messages"][number];
 
 export default function ChatPage() {
-  const chatId = useChatId();
-  const chat = useChat(chatId);
+  const chat = useChat();
 
   if (!chat) {
     return "loading...";
@@ -48,7 +49,7 @@ export default function ChatPage() {
         <div className="max-w-4xl w-full mx-auto flex flex-col flex-1 pt-8 pb-36 px-4">
           <MessageStack messages={chat.messages} />
         </div>
-        <SendMessageForm chatId={chatId} />
+        <SendMessageForm chatId={chat.id} />
       </ScrollArea>
     </div>
   );
@@ -229,9 +230,22 @@ function MessageActionsUser(props: {
 }) {
   const { message, editMode, setEditMode } = props;
   const { buttonProps, copied } = useCopyButton(message.content);
+  const z = useZero();
+
   return (
     <>
-      <Button title="Retry message" size="icon" variant="ghost">
+      <Button
+        title="Retry message"
+        size="icon"
+        variant="ghost"
+        onClick={() => {
+          z.mutate.chats.updateMessage({
+            id: message.id,
+            content: message.content,
+            timestamp: Date.now(),
+          });
+        }}
+      >
         <RefreshCcwIcon />
       </Button>
       <Button
@@ -253,10 +267,31 @@ function MessageActionsUser(props: {
 function MessageActionsSystem(props: { message: Message }) {
   const { message } = props;
   const { buttonProps, copied } = useCopyButton(message.content);
+  const chat = useChat();
+  const z = useZero();
   return (
     <>
       <Button title="Copy message" size="icon" variant="ghost" {...buttonProps}>
         {copied ? <CheckIcon /> : <CopyIcon />}
+      </Button>
+      <Button
+        title="Retry message"
+        size="icon"
+        variant="ghost"
+        onClick={() => {
+          const index =
+            chat?.messages.findIndex((m) => m.id === message.id) ?? -1;
+          const prevMessage = chat?.messages[index - 1];
+          if (prevMessage) {
+            z.mutate.chats.updateMessage({
+              id: prevMessage.id,
+              content: prevMessage.content,
+              timestamp: Date.now(),
+            });
+          }
+        }}
+      >
+        <RefreshCcwIcon />
       </Button>
     </>
   );
@@ -327,9 +362,4 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
       </div>
     </form>
   );
-}
-
-function useChatId() {
-  const params = useParams();
-  return z.string().min(1).parse(params["chat-id"]);
 }
