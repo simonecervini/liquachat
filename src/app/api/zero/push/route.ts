@@ -10,7 +10,7 @@ import invariant from "tiny-invariant";
 import { loremMarkdown } from "~/lib/lorem-markdown";
 import { db } from "~/server/db";
 import { messages } from "~/server/db/schema";
-import { chats_updateMessageImpl, createMutators, safeTimestamp } from "~/zero";
+import { createMutators, safeTimestamp } from "~/zero";
 import { schema, type AuthData } from "~/zero/schema";
 
 const zqlDb = new ZQLDatabase(new PostgresJSConnection(db.$client), schema);
@@ -120,18 +120,6 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
             [input.chunk, input.messageId],
           );
         }
-      },
-      updateMessage: async (tx, input) => {
-        const { newMessageContent, chatId } = await chats_updateMessageImpl(
-          tx,
-          input,
-        );
-        task("reply to user's updated message", async () => {
-          await pushResponseTokens({
-            chatId,
-            question: newMessageContent,
-          });
-        });
       },
     },
   } as const satisfies typeof clientMutators;

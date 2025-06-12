@@ -75,49 +75,71 @@ export function createMutators(authData: AuthData) {
         });
       },
       updateMessage: async (
-        ...params: Parameters<typeof chats_updateMessageImpl>
+        tx,
+        input: {
+          id: string;
+          content: string;
+          timestamp: number;
+        },
       ) => {
-        await chats_updateMessageImpl(...params);
+        const promises = await getDeleteLaterMessagesPromises(tx, {
+          messageId: input.id,
+          includeMessage: false,
+        });
+        promises.push(
+          tx.mutate.messages.update({
+            id: input.id,
+            content: input.content,
+            createdAt: safeTimestamp(tx, input.timestamp),
+          }),
+        );
+        await Promise.all(promises);
+      },
+      deleteLaterMessages: async (
+        tx,
+        input: {
+          messageId: string;
+          includeMessage: boolean;
+        },
+      ) => {
+        const promises = await getDeleteLaterMessagesPromises(tx, input);
+        await Promise.all(promises);
       },
     },
   } as const satisfies CustomMutatorDefs<Schema>;
 }
 
-export async function chats_updateMessageImpl(
+// -- Functions --
+
+export async function getDeleteLaterMessagesPromises(
   tx: Transaction<Schema>,
   input: {
-    id: string;
-    content: string;
-    timestamp: number;
+    messageId: string;
+    includeMessage: boolean;
   },
 ) {
-  const message = await tx.query.messages.where("id", "=", input.id).one();
+  const message = await tx.query.messages
+    .where("id", "=", input.messageId)
+    .one();
   if (!message) throw new ZeroMutatorError({ code: "NOT_FOUND" });
   const oldTimestamp = message.createdAt;
-  const promises: Promise<unknown>[] = [
-    tx.mutate.messages.update({
-      id: input.id,
-      content: input.content,
-      createdAt: safeTimestamp(tx, input.timestamp),
-    }),
-  ];
+  const promises: Promise<unknown>[] = [];
   // TODO: optimize this when "update .. where .." is supported in ZQL
   const laterMessages = await tx.query.messages.where((eb) =>
     eb.and(
       eb.cmp("chatId", "=", message.chatId),
-      eb.cmp("id", "!=", message.id),
-      eb.cmp("createdAt", ">=", oldTimestamp),
+      eb.cmp("createdAt", input.includeMessage ? ">=" : ">", oldTimestamp),
     ),
   );
   for (const laterMessage of laterMessages) {
     promises.push(tx.mutate.messages.delete({ id: laterMessage.id }));
   }
-  await Promise.all(promises);
-  return { newMessageContent: input.content, chatId: message.chatId };
+  return promises;
 }
 
-export type ZeroMutatorErrorCode = "NOT_FOUND" | "UNAUTHORIZED";
+// -- Utils --
 
+export type ZeroMutatorErrorCode = "NOT_FOUND" | "UNAUTHORIZED";
 export class ZeroMutatorError extends Error {
   public readonly code: ZeroMutatorErrorCode;
 

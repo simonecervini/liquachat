@@ -4,6 +4,7 @@ import * as React from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
+import { dequal } from "dequal";
 import {
   ArrowUpIcon,
   BookOpenIcon,
@@ -33,7 +34,6 @@ import { cn } from "~/lib/cn";
 import { useCopyButton } from "~/lib/use-copy-button";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
-import { dequal } from "dequal";
 
 function useChatId() {
   const params = useParams();
@@ -212,16 +212,15 @@ const Message = React.memo(function Message(props: { message: Message }) {
         <MessageSystem content={message.content} />
       )}
       <div className="flex gap-1">
-        {
-          message.role === "user" ? (
-            <MessageActionsUser
-              message={message}
-              editMode={editMode}
-              setEditMode={setEditMode}
-            />
-          ) : null
-          // <MessageActionsSystem message={message} />
-        }
+        {message.role === "user" ? (
+          <MessageActionsUser
+            message={message}
+            editMode={editMode}
+            setEditMode={setEditMode}
+          />
+        ) : (
+          <MessageActionsSystem message={message} />
+        )}
       </div>
     </div>
   );
@@ -256,6 +255,7 @@ function MessageUser(props: {
 function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
   const { message: originalMessage, setEditMode } = props;
   const z = useZero();
+  const pushAssistantMessage = usePushAssistantMessage();
   const form = useForm({
     defaultValues: {
       message: originalMessage.content,
@@ -268,6 +268,7 @@ function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
           content: value.message,
           timestamp: Date.now(),
         }).client;
+        await pushAssistantMessage({ prompt: newMessage });
       }
       setEditMode(false);
     },
@@ -358,7 +359,7 @@ function MessageActionsUser(props: {
     message.content,
   );
   const z = useZero();
-
+  const pushAssistantMessage = usePushAssistantMessage();
   return (
     <TooltipProvider>
       <Tooltip>
@@ -366,12 +367,12 @@ function MessageActionsUser(props: {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => {
-              z.mutate.chats.updateMessage({
-                id: message.id,
-                content: message.content,
-                timestamp: Date.now(),
-              });
+            onClick={async () => {
+              await z.mutate.chats.deleteLaterMessages({
+                messageId: message.id,
+                includeMessage: false,
+              }).client;
+              await pushAssistantMessage({ prompt: message.content });
             }}
           >
             <RefreshCcwIcon />
@@ -409,7 +410,7 @@ function MessageActionsSystem(props: { message: Message }) {
   const { buttonProps: copyButtonProps, copied } = useCopyButton(
     message.content,
   );
-  const [chat] = useChat();
+  const pushAssistantMessage = usePushAssistantMessage();
   const z = useZero();
   return (
     <TooltipProvider>
@@ -426,17 +427,12 @@ function MessageActionsSystem(props: { message: Message }) {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => {
-              const index =
-                chat?.messages.findIndex((m) => m.id === message.id) ?? -1;
-              const prevMessage = chat?.messages[index - 1];
-              if (prevMessage) {
-                z.mutate.chats.updateMessage({
-                  id: prevMessage.id,
-                  content: prevMessage.content,
-                  timestamp: Date.now(),
-                });
-              }
+            onClick={async () => {
+              await z.mutate.chats.deleteLaterMessages({
+                messageId: message.id,
+                includeMessage: true,
+              }).client;
+              await pushAssistantMessage({ prompt: message.content });
             }}
           >
             <RefreshCcwIcon />
@@ -451,6 +447,7 @@ function MessageActionsSystem(props: { message: Message }) {
 function SendMessageForm(props: { chatId: string; className?: string }) {
   const { chatId } = props;
   const z = useZero();
+  const pushAssistantMessage = usePushAssistantMessage();
   const form = useForm({
     defaultValues: {
       message: "",
@@ -462,22 +459,7 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
         content: value.message,
         timestamp: Date.now(),
       }).client;
-      const response = streamResponse(value.message, {
-        provider: "ollama",
-        modelId: "llama3.2", // usage: `ollama run llama3.2`
-      });
-      const messageId = crypto.randomUUID();
-      let isFirstChunk = true;
-      for await (const chunk of response) {
-        z.mutate.chats.pushAssistantMessageChunk({
-          chatId: chatId,
-          messageId,
-          chunk,
-          isFirstChunk,
-          timestamp: Date.now(),
-        });
-        isFirstChunk = false;
-      }
+      await pushAssistantMessage({ prompt: value.message });
       form.reset();
     },
   });
@@ -528,5 +510,31 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
         />
       </div>
     </form>
+  );
+}
+
+function usePushAssistantMessage() {
+  const z = useZero();
+  const chatId = useChatId();
+  return React.useCallback(
+    async (input: { prompt: string }) => {
+      const response = streamResponse(input.prompt, {
+        provider: "ollama",
+        modelId: "llama3.2", // usage: `ollama run llama3.2`
+      });
+      const messageId = crypto.randomUUID();
+      let isFirstChunk = true;
+      for await (const chunk of response) {
+        z.mutate.chats.pushAssistantMessageChunk({
+          chatId: chatId,
+          messageId,
+          chunk,
+          isFirstChunk,
+          timestamp: Date.now(),
+        });
+        isFirstChunk = false;
+      }
+    },
+    [chatId, z.mutate.chats],
   );
 }
