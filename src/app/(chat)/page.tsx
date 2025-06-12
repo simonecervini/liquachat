@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
+
+import { useZero } from "~/zero/react";
 
 export default function Page() {
   const z = useZero();

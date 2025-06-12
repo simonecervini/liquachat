@@ -14,7 +14,7 @@ export function ContextMenuContent(props: { children: React.ReactNode }) {
   return (
     <Base.Portal>
       <Base.Positioner className="outline-none">
-        <Base.Popup className="origin-[var(--transform-origin)] min-w-48 rounded-md bg-white py-1 shadow-xl shadow-black/5 outline-2 outline-primary/5 transition-[opacity] data-[ending-style]:opacity-0">
+        <Base.Popup className="outline-primary/5 min-w-48 origin-[var(--transform-origin)] rounded-md bg-white py-1 shadow-xl shadow-black/5 outline-2 transition-[opacity] data-[ending-style]:opacity-0">
           {children}
         </Base.Popup>
       </Base.Positioner>

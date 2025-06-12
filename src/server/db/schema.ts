@@ -3,6 +3,7 @@
 
 import { relations } from "drizzle-orm";
 import { index, pgTableCreator } from "drizzle-orm/pg-core";
+
 import type { ChatTreeNode } from "~/lib/types";
 
 /**

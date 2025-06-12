@@ -1,16 +1,17 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import {
   PostgresJSConnection,
   PushProcessor,
   ZQLDatabase,
 } from "@rocicorp/zero/pg";
-import { schema, type AuthData } from "~/zero/schema";
-import { chats_updateMessageImpl, createMutators, safeTimestamp } from "~/zero";
+import { eq } from "drizzle-orm";
+import invariant from "tiny-invariant";
+
+import { loremMarkdown } from "~/lib/lorem-markdown";
 import { db } from "~/server/db";
 import { messages } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
-import { loremMarkdown } from "~/lib/lorem-markdown";
-import invariant from "tiny-invariant";
+import { chats_updateMessageImpl, createMutators, safeTimestamp } from "~/zero";
+import { schema, type AuthData } from "~/zero/schema";
 
 const zqlDb = new ZQLDatabase(new PostgresJSConnection(db.$client), schema);
 

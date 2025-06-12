@@ -1,10 +1,10 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Poppins, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Poppins } from "next/font/google";
 
-import { TRPCReactProvider } from "~/lib/trpc";
 import { Toaster } from "~/components/system/sonner";
+import { TRPCReactProvider } from "~/lib/trpc";
 
 export const metadata: Metadata = {
   title: "Create T3 App",

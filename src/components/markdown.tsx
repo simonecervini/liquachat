@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import MarkdownRoot from "react-markdown";
 import { codeToHtml } from "shiki";
+
 import { cn } from "~/lib/cn";
 
 const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
@@ -52,14 +53,14 @@ function CodeBlock(props: { lang: string; children: string }) {
     },
   });
   return (
-    <div className="border border-primary/15 rounded-lg font-mono overflow-hidden my-1.5">
-      <div className="border-b border-primary/15 px-4 py-2.5 bg-white text-slate-800 text-xs">
+    <div className="border-primary/15 my-1.5 overflow-hidden rounded-lg border font-mono">
+      <div className="border-primary/15 border-b bg-white px-4 py-2.5 text-xs text-slate-800">
         {lang}
       </div>
       <div
         dangerouslySetInnerHTML={{ __html: data ?? "" }}
         // TODO: remove bg-white! when the custom theme is ready
-        className="w-full [&>pre]:m-0 [&>pre]:border-0 [&>pre]:p-2.5 [&>pre]:rounded-none [&>pre]:bg-white!"
+        className="w-full [&>pre]:m-0 [&>pre]:rounded-none [&>pre]:border-0 [&>pre]:bg-white! [&>pre]:p-2.5"
       />
     </div>
   );

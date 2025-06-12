@@ -1,16 +1,6 @@
 import * as React from "react";
-
-import {
-  Button,
-  Collection,
-  useDragAndDrop,
-  type TreeItemProps,
-  TreeItemContent,
-  Tree,
-  TreeItem,
-} from "react-aria-components";
-import { useTreeData as __useTreeData } from "~/lib/use-tree-data";
-
+import { useRouter } from "next/navigation";
+import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import {
   ChevronDownIcon,
@@ -23,6 +13,20 @@ import {
   TextCursorIcon,
   TrashIcon,
 } from "lucide-react";
+import {
+  Button,
+  Collection,
+  Tree,
+  TreeItem,
+  TreeItemContent,
+  useDragAndDrop,
+  type TreeItemProps,
+} from "react-aria-components";
+
+import { cn } from "~/lib/cn";
+import type { ChatTreeNode } from "~/lib/types";
+import { useTreeData as __useTreeData } from "~/lib/use-tree-data";
+import { useZero } from "~/zero/react";
 import styles from "./chat-tree.module.css";
 import {
   ContextMenu,
@@ -31,11 +35,6 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "./context-menu";
-import { useZero } from "~/zero/react";
-import { useQuery } from "@rocicorp/zero/react";
-import { cn } from "~/lib/cn";
-import type { ChatTreeNode } from "~/lib/types";
-import { useRouter } from "next/navigation";
 
 export const ChatTree = (props: { className?: string }) => {
   const z = useZero();
@@ -61,7 +60,7 @@ export const ChatTree = (props: { className?: string }) => {
     getAllowedDropOperations: () => ["move"],
     renderDragPreview(items) {
       return (
-        <div className="bg-primary/100 rounded-sm text-sm text-white px-2 py-0.5">
+        <div className="bg-primary/100 rounded-sm px-2 py-0.5 text-sm text-white">
           {items[0]?.["text/plain"]}
         </div>
       );
@@ -165,7 +164,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
             <ContextMenu>
               <ContextMenuTrigger
                 className={cn(
-                  "flex items-center gap-2.5 text-sm py-2.5 px-2 hover:bg-primary/10 rounded-sm",
+                  "hover:bg-primary/10 flex items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
                 )}
                 style={{
                   marginInlineStart: `${(!hasChildItems ? 20 : 0) + (level - 1) * 15}px`,
@@ -190,7 +189,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     )}
                   </Button>
                 )}
-                <span className="text-ellipsis text-nowrap overflow-hidden">
+                <span className="overflow-hidden text-nowrap text-ellipsis">
                   {props.children}
                 </span>
               </ContextMenuTrigger>

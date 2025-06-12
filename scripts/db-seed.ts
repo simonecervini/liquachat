@@ -2,9 +2,10 @@
 import { $ } from "bun";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "~/server/db";
-import { users, chats, messages } from "~/server/db/schema";
+
 import type { ChatTreeNode } from "~/lib/types";
+import { db } from "~/server/db";
+import { chats, messages, users } from "~/server/db/schema";
 import { chatDefinitions, type ChatDefinition } from "./seed-data/_chats";
 
 async function main() {

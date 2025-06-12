@@ -1,16 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { PanelLeftIcon, SearchIcon, PlusIcon, DropletIcon } from "lucide-react";
 import { useState } from "react";
-import { ZeroProvider } from "@rocicorp/zero/react";
-import { schema, type AuthData } from "~/zero/schema";
-import { Zero } from "@rocicorp/zero";
-import { createMutators } from "~/zero";
-import { env } from "~/env";
 import { useRouter } from "next/navigation";
+import { Zero } from "@rocicorp/zero";
+import { ZeroProvider } from "@rocicorp/zero/react";
+import { DropletIcon, PanelLeftIcon, PlusIcon, SearchIcon } from "lucide-react";
+
 import { ChatTree } from "~/components/chat-tree";
 import { Button } from "~/components/system/button";
+import { env } from "~/env";
+import { createMutators } from "~/zero";
+import { schema, type AuthData } from "~/zero/schema";
 
 // TODO: this is for testing purposes
 const authData: AuthData = {
@@ -28,9 +29,9 @@ export default function Layout(props: { children: React.ReactNode }) {
   const { children } = props;
   return (
     <ZeroProvider zero={zero}>
-      <div className="flex pr-4 h-screen gap-3">
+      <div className="flex h-screen gap-3 pr-4">
         <Sidebar />
-        <div className="mt-3 bg-gradient-to-tl grow from-white/70 to-white/80 w-60 rounded-t-3xl border-[3px] border-white shadow-2xl shadow-black/5 relative">
+        <div className="relative mt-3 w-60 grow rounded-t-3xl border-[3px] border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
           {children}
         </div>
       </div>
@@ -42,16 +43,16 @@ function Sidebar() {
   const [open, setOpen] = useState(false); // TODO: implement this
   const router = useRouter();
   return (
-    <div className="flex flex-col w-60 border-r-2 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4 items-center">
-      <div className="flex items-center justify-between w-full mb-3">
+    <div className="flex w-60 flex-col items-center border-r-2 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4">
+      <div className="mb-3 flex w-full items-center justify-between">
         <button
-          className="text-slate-900 hover:text-blue-500 transition-colors"
+          className="text-slate-900 transition-colors hover:text-blue-500"
           onClick={() => setOpen((prev) => !prev)}
         >
           <PanelLeftIcon className="size-5" />
         </button>
         <Logo />
-        <PanelLeftIcon className="text-blue-500 size-5 invisible" />
+        <PanelLeftIcon className="invisible size-5 text-blue-500" />
       </div>
 
       <Button
@@ -68,15 +69,15 @@ function Sidebar() {
         New Chat
       </Button>
 
-      <div className="relative w-full mb-4">
+      <div className="relative mb-4 w-full">
         <input
           type="text"
           placeholder="Search your threads..."
-          className="w-full px-8 py-2 text-sm border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-600"
+          className="w-full border-b border-gray-300 bg-transparent px-8 py-2 text-sm focus:border-blue-600 focus:outline-none"
         />
         <SearchIcon
           size={16}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400"
+          className="absolute top-1/2 left-0 -translate-y-1/2 transform text-gray-400"
         />
       </div>
 
@@ -99,8 +100,8 @@ function Sidebar() {
 
 function Logo() {
   return (
-    <div className="flex items-center justify-center w-full h-10 font-extrabold gap-1 text-slate-900">
-      <DropletIcon className="text-blue-500 size-4" strokeWidth={3} />
+    <div className="flex h-10 w-full items-center justify-center gap-1 font-extrabold text-slate-900">
+      <DropletIcon className="size-4 text-blue-500" strokeWidth={3} />
       Liqua
     </div>
   );

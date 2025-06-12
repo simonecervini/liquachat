@@ -1,7 +1,7 @@
 import type { CustomMutatorDefs, Transaction } from "@rocicorp/zero";
-import type { AuthData } from "./schema";
-import type { Schema } from "./schema";
+
 import type { ChatTreeNode } from "~/lib/types";
+import type { AuthData, Schema } from "./schema";
 
 export function createMutators(authData: AuthData) {
   return {

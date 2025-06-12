@@ -1,37 +1,38 @@
 "use client";
 
 import * as React from "react";
-import {
-  ArrowUpIcon,
-  CheckIcon,
-  CopyIcon,
-  RefreshCcwIcon,
-  SquarePenIcon,
-  SparklesIcon,
-  BookOpenIcon,
-  CodeIcon,
-  GraduationCapIcon,
-} from "lucide-react";
-import { Markdown } from "~/components/markdown";
-import { ScrollArea } from "~/components/scroll-area";
 import { useParams } from "next/navigation";
-import { z } from "zod";
-import { useZero } from "~/zero/react";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
-import { cn } from "~/lib/cn";
+import {
+  ArrowUpIcon,
+  BookOpenIcon,
+  CheckIcon,
+  CodeIcon,
+  CopyIcon,
+  GraduationCapIcon,
+  RefreshCcwIcon,
+  SparklesIcon,
+  SquarePenIcon,
+} from "lucide-react";
+import { motion } from "motion/react";
+import { Tabs } from "radix-ui";
+import { z } from "zod";
+
+import { Markdown } from "~/components/markdown";
+import { ScrollArea } from "~/components/scroll-area";
 import { Button } from "~/components/system/button";
-import { useCopyButton } from "~/lib/use-copy-button";
-import type { ZeroRow } from "~/zero/schema";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/system/tooltip";
-import { Tabs } from "radix-ui";
-import { motion } from "motion/react";
 import { streamResponse } from "~/lib/ai";
+import { cn } from "~/lib/cn";
+import { useCopyButton } from "~/lib/use-copy-button";
+import { useZero } from "~/zero/react";
+import type { ZeroRow } from "~/zero/schema";
 
 function useChat() {
   const params = useParams();
@@ -57,9 +58,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="relative flex-1 h-full">
+    <div className="relative h-full flex-1">
       <ScrollArea className="h-full flex-1">
-        <div className="max-w-4xl w-full mx-auto flex flex-col flex-1 pt-8 pb-36 px-4">
+        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
           <MessageStack messages={chat.messages} />
         </div>
         <SendMessageForm chatId={chat.id} />
@@ -135,20 +136,20 @@ function MessageStackEmpty() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.15 }}
-      className="flex flex-col items-left max-w-2xl w-full mx-auto py-20"
+      className="items-left mx-auto flex w-full max-w-2xl flex-col py-20"
     >
-      <h2 className="text-3xl font-semibold mb-8">
+      <h2 className="mb-8 text-3xl font-semibold">
         How can I help you, Simone?
       </h2>
       <Tabs.Root defaultValue="create" className="w-full">
-        <Tabs.List className="flex justify-start gap-2 mb-8">
+        <Tabs.List className="mb-8 flex justify-start gap-2">
           {Object.entries(tabs).map(([key, tab]) => {
             const Icon = tab.icon;
             return (
               <Tabs.Trigger
                 key={key}
                 value={key}
-                className="h-9 px-4 py-2 bg-gradient-to-t text-sm from-blue-500 to-blue-400 shadow-sm hover:from-blue-600 hover:to-blue-500 text-white rounded-md font-medium transition-all data-[state=inactive]:bg-none data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground data-[state=inactive]:shadow-none data-[state=inactive]:hover:bg-blue-200 inline-flex items-center gap-2"
+                className="data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground inline-flex h-9 items-center gap-2 rounded-md bg-gradient-to-t from-blue-500 to-blue-400 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-500 data-[state=inactive]:bg-none data-[state=inactive]:shadow-none data-[state=inactive]:hover:bg-blue-200"
               >
                 <Icon className="size-4" />
                 {tab.title}
@@ -233,10 +234,10 @@ function MessageUser(props: {
       role="article"
       aria-label="Your message"
       className={cn(
-        "p-4 max-w-[60%] flex bg-gradient-to-tl from-white/70 to-white/90 rounded-2xl backdrop-blur-lg",
+        "flex max-w-[60%] rounded-2xl bg-gradient-to-tl from-white/70 to-white/90 p-4 backdrop-blur-lg",
         editMode
-          ? "w-full outline-slate-400/60 outline-2 outline-dashed bg-transparent p-0"
-          : "shadow-xl shadow-primary/5",
+          ? "w-full bg-transparent p-0 outline-2 outline-slate-400/60 outline-dashed"
+          : "shadow-primary/5 shadow-xl",
       )}
     >
       {editMode ? (
@@ -269,7 +270,7 @@ function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
   });
   return (
     <form
-      className="w-full relative"
+      className="relative w-full"
       onSubmit={async (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -287,7 +288,7 @@ function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
             }}
             placeholder="Type your message here..."
             // The font size (text-sm/loose) is set to match the Markdown component
-            className="w-full placeholder:text-slate-400 focus-visible:outline-none border-none outline-none focus-visible:border-none text-sm/loose p-4 pb-12 field-sizing-content"
+            className="field-sizing-content w-full border-none p-4 pb-12 text-sm/loose outline-none placeholder:text-slate-400 focus-visible:border-none focus-visible:outline-none"
             onBlur={field.handleBlur}
             onFocus={(e) => {
               // Move cursor to the end of the textarea
@@ -306,7 +307,7 @@ function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
         )}
       />
 
-      <div className="flex gap-1.5 absolute bottom-2 right-2">
+      <div className="absolute right-2 bottom-2 flex gap-1.5">
         <form.Subscribe
           selector={(state) => [state.canSubmit]}
           children={([canSubmit]) => (
@@ -483,9 +484,9 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
         event.stopPropagation();
         await form.handleSubmit();
       }}
-      className="text-slate-500 absolute bottom-0 rounded-t-3xl border-t-3 border-x-3 shadow-2xl border-primary/10 shadow-blue-700/10 text-sm max-w-2xl w-full left-1/2 -translate-x-1/2 bg-white/100"
+      className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10"
     >
-      <div className="w-full h-full relative">
+      <div className="relative h-full w-full">
         <form.Field
           name="message"
           children={(field) => (
@@ -501,7 +502,7 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
                 }
               }}
               placeholder="Type your message here..."
-              className="p-6 w-full h-full resize-none border-none outline-none bg-transparent"
+              className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
               rows={4}
             />
           )}
@@ -513,7 +514,7 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
             <Button
               type="submit"
               disabled={!canSubmit}
-              className="absolute bottom-1.5 right-1.5"
+              className="absolute right-1.5 bottom-1.5"
               size="icon-lg"
             >
               <ArrowUpIcon />
