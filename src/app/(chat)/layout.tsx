@@ -31,7 +31,7 @@ export default function Layout(props: { children: React.ReactNode }) {
     <ZeroProvider zero={zero}>
       <div className="flex h-screen gap-3 pr-4">
         <Sidebar />
-        <div className="relative mt-3 w-60 grow rounded-t-3xl border-[3px] border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
+        <div className="relative mt-3 w-60 grow rounded-t-3xl border-3 border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
           {children}
         </div>
       </div>
@@ -43,7 +43,7 @@ function Sidebar() {
   const [open, setOpen] = useState(false); // TODO: implement this
   const router = useRouter();
   return (
-    <div className="flex w-60 flex-col items-center border-r-2 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4">
+    <div className="flex w-60 flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4">
       <div className="mb-3 flex w-full items-center justify-between">
         <button
           className="text-slate-900 transition-colors hover:text-blue-500"
