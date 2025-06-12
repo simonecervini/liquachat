@@ -33,49 +33,53 @@ import { cn } from "~/lib/cn";
 import { useCopyButton } from "~/lib/use-copy-button";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
+import { dequal } from "dequal";
 
-function useChat() {
+function useChatId() {
   const params = useParams();
   const chatId = z.string().min(1).parse(params["chat-id"]);
+  return chatId;
+}
+
+function useChat() {
+  const chatId = useChatId();
   const zero = useZero();
-  const [chat] = useQuery(
+  return useQuery(
     zero.query.chats
       .where("id", "=", chatId)
       .related("messages", (q) => q.orderBy("createdAt", "asc"))
       .one(),
   );
-  return chat;
 }
 
-type Chat = NonNullable<ReturnType<typeof useChat>>;
+type Chat = NonNullable<ReturnType<typeof useChat>[0]>;
 type Message = Chat["messages"][number];
 
 export default function ChatPage() {
-  const chat = useChat();
-
-  if (!chat) {
-    return "loading...";
-  }
+  const chatId = useChatId();
 
   return (
     <div className="relative h-full flex-1">
       <ScrollArea className="h-full flex-1">
         <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
-          <MessageStack messages={chat.messages} />
+          <MessageStack />
         </div>
-        <SendMessageForm chatId={chat.id} />
+        <SendMessageForm chatId={chatId} />
       </ScrollArea>
     </div>
   );
 }
 
-function MessageStack(props: {
-  messages: readonly Message[];
-  className?: string;
-}) {
-  const { messages, className } = props;
+function MessageStack(props: { className?: string }) {
+  const { className } = props;
+  const [chat, chatResult] = useChat();
+  const messages = chat?.messages ?? [];
   if (messages.length === 0) {
-    return <MessageStackEmpty />;
+    if (chatResult.type === "complete") {
+      return <MessageStackEmpty />;
+    } else {
+      return null;
+    }
   }
   return (
     <div className={cn("flex flex-col gap-8 pb-16", className)}>
@@ -87,7 +91,7 @@ function MessageStack(props: {
 }
 
 function MessageStackEmpty() {
-  const chat = useChat();
+  const chatId = useChatId();
   const z = useZero();
   const tabs = {
     create: {
@@ -170,10 +174,9 @@ function MessageStackEmpty() {
                   className="w-full justify-start"
                   size="lg"
                   onClick={() => {
-                    if (!chat) return;
                     z.mutate.chats.sendUserMessage({
                       id: crypto.randomUUID(),
-                      chatId: chat.id,
+                      chatId,
                       content: suggestion,
                       timestamp: Date.now(),
                     });
@@ -190,7 +193,7 @@ function MessageStackEmpty() {
   );
 }
 
-function Message(props: { message: Message }) {
+const Message = React.memo(function Message(props: { message: Message }) {
   const { message } = props;
   const [editMode, setEditMode] = React.useState(false);
   return (
@@ -209,19 +212,20 @@ function Message(props: { message: Message }) {
         <MessageSystem content={message.content} />
       )}
       <div className="flex gap-1">
-        {message.role === "user" ? (
-          <MessageActionsUser
-            message={message}
-            editMode={editMode}
-            setEditMode={setEditMode}
-          />
-        ) : (
-          <MessageActionsSystem message={message} />
-        )}
+        {
+          message.role === "user" ? (
+            <MessageActionsUser
+              message={message}
+              editMode={editMode}
+              setEditMode={setEditMode}
+            />
+          ) : null
+          // <MessageActionsSystem message={message} />
+        }
       </div>
     </div>
   );
-}
+}, dequal);
 
 function MessageUser(props: {
   message: Message;
@@ -405,7 +409,7 @@ function MessageActionsSystem(props: { message: Message }) {
   const { buttonProps: copyButtonProps, copied } = useCopyButton(
     message.content,
   );
-  const chat = useChat();
+  const [chat] = useChat();
   const z = useZero();
   return (
     <TooltipProvider>
