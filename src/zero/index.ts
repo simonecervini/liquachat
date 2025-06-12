@@ -30,7 +30,7 @@ export function createMutators(authData: AuthData) {
           public: false,
         });
       },
-      sendMessage: async (
+      sendUserMessage: async (
         tx,
         input: {
           id: string;
@@ -45,6 +45,32 @@ export function createMutators(authData: AuthData) {
           content: input.content,
           createdAt: safeTimestamp(tx, input.timestamp),
           role: "user",
+          userId: authData.sub,
+        });
+      },
+      pushAssistantMessageChunk: async (
+        tx,
+        input: {
+          messageId: string;
+          chatId: string;
+          chunk: string;
+          isFirstChunk: boolean;
+          timestamp: number;
+        },
+      ) => {
+        // This could be slow, but it's only called on the client side, so it's not a problem.
+        // - on the client side, we update the whole message content every time a token is received.
+        // - on the server side, we update the message content incrementally with a more efficient query.
+        const message = await tx.query.messages
+          .where("id", "=", input.messageId)
+          .one();
+        const prevContent = message?.content ?? "";
+        await tx.mutate.messages.upsert({
+          id: input.messageId,
+          chatId: input.chatId,
+          content: prevContent + input.chunk,
+          createdAt: safeTimestamp(tx, input.timestamp),
+          role: "assistant",
           userId: authData.sub,
         });
       },

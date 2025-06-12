@@ -5,11 +5,12 @@ import {
   ZQLDatabase,
 } from "@rocicorp/zero/pg";
 import { schema, type AuthData } from "~/zero/schema";
-import { chats_updateMessageImpl, createMutators } from "~/zero";
+import { chats_updateMessageImpl, createMutators, safeTimestamp } from "~/zero";
 import { db } from "~/server/db";
 import { messages } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { loremMarkdown } from "~/lib/lorem-markdown";
+import invariant from "tiny-invariant";
 
 const zqlDb = new ZQLDatabase(new PostgresJSConnection(db.$client), schema);
 
@@ -101,14 +102,23 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
     ...clientMutators,
     chats: {
       ...clientMutators.chats,
-      sendMessage: async (tx, input) => {
-        await clientMutators.chats.sendMessage(tx, input);
-        task("reply to user's message", async () => {
-          await pushResponseTokens({
+      pushAssistantMessageChunk: async (tx, input) => {
+        invariant(tx.location === "server");
+        if (input.isFirstChunk) {
+          await tx.mutate.messages.insert({
+            id: input.messageId,
             chatId: input.chatId,
-            question: input.content,
+            content: input.chunk,
+            createdAt: safeTimestamp(tx, input.timestamp),
+            role: "assistant",
+            userId: authData.sub,
           });
-        });
+        } else {
+          await tx.dbTransaction.query(
+            `UPDATE liquachat_message SET content = content || $1 WHERE id = $2`,
+            [input.chunk, input.messageId],
+          );
+        }
       },
       updateMessage: async (tx, input) => {
         const { newMessageContent, chatId } = await chats_updateMessageImpl(

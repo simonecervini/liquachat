@@ -31,6 +31,7 @@ import {
 } from "~/components/system/tooltip";
 import { Tabs } from "radix-ui";
 import { motion } from "motion/react";
+import { streamResponse } from "~/lib/ai";
 
 function useChat() {
   const params = useParams();
@@ -169,7 +170,7 @@ function MessageStackEmpty() {
                   size="lg"
                   onClick={() => {
                     if (!chat) return;
-                    z.mutate.chats.sendMessage({
+                    z.mutate.chats.sendUserMessage({
                       id: crypto.randomUUID(),
                       chatId: chat.id,
                       content: suggestion,
@@ -450,12 +451,28 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
       message: "",
     },
     onSubmit: async ({ value }) => {
-      z.mutate.chats.sendMessage({
+      await z.mutate.chats.sendUserMessage({
         id: crypto.randomUUID(),
         chatId: chatId,
         content: value.message,
         timestamp: Date.now(),
+      }).client;
+      const response = streamResponse(value.message, {
+        provider: "ollama",
+        modelId: "llama3.2", // usage: `ollama run llama3.2`
       });
+      const messageId = crypto.randomUUID();
+      let isFirstChunk = true;
+      for await (const chunk of response) {
+        z.mutate.chats.pushAssistantMessageChunk({
+          chatId: chatId,
+          messageId,
+          chunk,
+          isFirstChunk,
+          timestamp: Date.now(),
+        });
+        isFirstChunk = false;
+      }
       form.reset();
     },
   });
