@@ -5,6 +5,8 @@ import { IBM_Plex_Mono, Poppins } from "next/font/google";
 
 import { Toaster } from "~/components/system/sonner";
 import { TRPCReactProvider } from "~/lib/trpc";
+import { env } from "~/env";
+import { ReactScan } from "~/components/react-scan";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -29,6 +31,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      {env.NEXT_PUBLIC_ZERO_SERVER_URL.includes("localhost") && <ReactScan />}
       <body
         className={`${poppins.variable} ${ibmPlexMono.variable} font-sans`}
         translate="no"
