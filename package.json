@@ -1,7 +1,18 @@
 {
-  "name": "algachat",
+  "name": "liquachat",
   "version": "0.1.0",
-  "private": true,
+  "description": "Open Source alternative to ChatGPT with multi-model support",
+  "author": "Simone Cervini <simone@simonecervini.dev>",
+  "license": "MIT",
+  "homepage": "https://github.com/simonecervini/liquachat#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonecervini/liquachat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/simonecervini/liquachat/issues"
+  },
+  "private": false,
   "type": "module",
   "scripts": {
     "build": "next build",

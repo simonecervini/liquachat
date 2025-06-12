@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.ZERO_UPSTREAM_DB,
   },
-  tablesFilter: ["algachat_*"],
+  tablesFilter: ["liquachat_*"],
 } satisfies Config;

@@ -11,7 +11,7 @@ import type { ChatTreeNode } from "~/lib/types";
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `algachat_${name}`);
+export const createTable = pgTableCreator((name) => `liquachat_${name}`);
 
 export const users = createTable("user", (d) => ({
   id: d.uuid().primaryKey(),

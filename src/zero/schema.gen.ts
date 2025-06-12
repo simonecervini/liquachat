@@ -76,7 +76,7 @@ export const schema = {
         },
       },
       primaryKey: ["id"],
-      serverName: "algachat_chat",
+      serverName: "liquachat_chat",
     },
     messages: {
       name: "messages",
@@ -137,7 +137,7 @@ export const schema = {
         },
       },
       primaryKey: ["id"],
-      serverName: "algachat_message",
+      serverName: "liquachat_message",
     },
     users: {
       name: "users",
@@ -162,7 +162,7 @@ export const schema = {
         },
       },
       primaryKey: ["id"],
-      serverName: "algachat_user",
+      serverName: "liquachat_user",
     },
   },
   relationships: {
