@@ -19,6 +19,12 @@ import { cn } from "~/lib/cn";
 import { Button } from "~/components/system/button";
 import { useCopyButton } from "~/lib/use-copy-button";
 import type { ZeroRow } from "~/zero/schema";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/system/tooltip";
 
 function useChat() {
   const params = useParams();
@@ -229,71 +235,97 @@ function MessageActionsUser(props: {
   setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { message, editMode, setEditMode } = props;
-  const { buttonProps, copied } = useCopyButton(message.content);
+  const { buttonProps: copyButtonProps, copied } = useCopyButton(
+    message.content,
+  );
   const z = useZero();
 
   return (
-    <>
-      <Button
-        title="Retry message"
-        size="icon"
-        variant="ghost"
-        onClick={() => {
-          z.mutate.chats.updateMessage({
-            id: message.id,
-            content: message.content,
-            timestamp: Date.now(),
-          });
-        }}
-      >
-        <RefreshCcwIcon />
-      </Button>
-      <Button
-        title="Edit message"
-        size="icon"
-        variant="ghost"
-        disabled={editMode}
-        onClick={() => setEditMode((prev) => !prev)}
-      >
-        <SquarePenIcon />
-      </Button>
-      <Button title="Copy message" size="icon" variant="ghost" {...buttonProps}>
-        {copied ? <CheckIcon /> : <CopyIcon />}
-      </Button>
-    </>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => {
+              z.mutate.chats.updateMessage({
+                id: message.id,
+                content: message.content,
+                timestamp: Date.now(),
+              });
+            }}
+          >
+            <RefreshCcwIcon />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Retry message</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            size="icon"
+            variant="ghost"
+            disabled={editMode}
+            onClick={() => setEditMode((prev) => !prev)}
+          >
+            <SquarePenIcon />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Edit message</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button size="icon" variant="ghost" {...copyButtonProps}>
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Copy message</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
 function MessageActionsSystem(props: { message: Message }) {
   const { message } = props;
-  const { buttonProps, copied } = useCopyButton(message.content);
+  const { buttonProps: copyButtonProps, copied } = useCopyButton(
+    message.content,
+  );
   const chat = useChat();
   const z = useZero();
   return (
-    <>
-      <Button title="Copy message" size="icon" variant="ghost" {...buttonProps}>
-        {copied ? <CheckIcon /> : <CopyIcon />}
-      </Button>
-      <Button
-        title="Retry message"
-        size="icon"
-        variant="ghost"
-        onClick={() => {
-          const index =
-            chat?.messages.findIndex((m) => m.id === message.id) ?? -1;
-          const prevMessage = chat?.messages[index - 1];
-          if (prevMessage) {
-            z.mutate.chats.updateMessage({
-              id: prevMessage.id,
-              content: prevMessage.content,
-              timestamp: Date.now(),
-            });
-          }
-        }}
-      >
-        <RefreshCcwIcon />
-      </Button>
-    </>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button size="icon" variant="ghost" {...copyButtonProps}>
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Copy message</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => {
+              const index =
+                chat?.messages.findIndex((m) => m.id === message.id) ?? -1;
+              const prevMessage = chat?.messages[index - 1];
+              if (prevMessage) {
+                z.mutate.chats.updateMessage({
+                  id: prevMessage.id,
+                  content: prevMessage.content,
+                  timestamp: Date.now(),
+                });
+              }
+            }}
+          >
+            <RefreshCcwIcon />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Retry message</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

@@ -33,6 +33,8 @@ body {
 
 @theme {
   --color-primary: var(--color-blue-500);
+  --color-secondary: var(--color-blue-100);
+  --color-secondary-foreground: var(--color-slate-800);
   --color-destructive: var(--color-red-500);
   --border-width-3: 3px;
 }
