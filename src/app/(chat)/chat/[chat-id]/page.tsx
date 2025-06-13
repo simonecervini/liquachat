@@ -21,6 +21,7 @@ import { Tabs } from "radix-ui";
 import { z } from "zod";
 
 import { Markdown } from "~/components/markdown";
+import { ModelCombobox } from "~/components/model-combobox";
 import { ScrollArea } from "~/components/scroll-area";
 import { Button } from "~/components/system/button";
 import {
@@ -448,6 +449,7 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
   const { chatId } = props;
   const z = useZero();
   const pushAssistantMessage = usePushAssistantMessage();
+  const [model, setModel] = React.useState("o4-mini");
   const form = useForm({
     defaultValues: {
       message: "",
@@ -464,52 +466,66 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
     },
   });
   return (
-    <form
-      onSubmit={async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        await form.handleSubmit();
-      }}
-      className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10"
-    >
+    <div className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
       <div className="relative h-full w-full">
-        <form.Field
-          name="message"
-          children={(field) => (
-            <textarea
-              name={field.name}
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              onKeyDown={async (event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  await form.handleSubmit();
-                }
-              }}
-              placeholder="Type your message here..."
-              className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
-              rows={4}
-            />
-          )}
-        />
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            await form.handleSubmit();
+          }}
+        >
+          <form.Field
+            name="message"
+            children={(field) => (
+              <textarea
+                name={field.name}
+                value={field.state.value}
+                onChange={(event) => field.handleChange(event.target.value)}
+                onBlur={field.handleBlur}
+                onKeyDown={async (event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    await form.handleSubmit();
+                  }
+                }}
+                placeholder="Type your message here..."
+                className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
+                rows={4}
+              />
+            )}
+          />
 
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit]) => (
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="absolute right-1.5 bottom-1.5"
-              size="icon-lg"
-            >
-              <ArrowUpIcon />
-              <span className="sr-only">Send</span>
-            </Button>
-          )}
-        />
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+            children={([canSubmit]) => (
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                className="absolute right-1.5 bottom-1.5"
+                size="icon-lg"
+              >
+                <ArrowUpIcon />
+                <span className="sr-only">Send</span>
+              </Button>
+            )}
+          />
+        </form>
+        <div className="absolute bottom-1.5 left-1.5 flex gap-1">
+          <ModelCombobox
+            value={model}
+            onChange={(value) => {
+              setModel(value);
+            }}
+            slotProps={{
+              popoverContent: {
+                align: "start",
+              },
+            }}
+          />
+        </div>
       </div>
-    </form>
+    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
   --radius: 0.9rem;
@@ -32,11 +33,17 @@ body {
 }
 
 @theme {
+  --color-foreground: var(--color-slate-900);
   --color-primary: var(--color-blue-500);
+  --color-primary-foreground: var(--color-white);
   --color-secondary: var(--color-blue-100);
   --color-secondary-foreground: var(--color-slate-800);
   --color-destructive: var(--color-red-500);
   --border-width-3: 3px;
+  --color-popover: var(--color-white);
+  --color-popover-foreground: var(--color-slate-900);
+  --color-muted-foreground: var(--color-slate-500);
+  --color-border: var(--color-slate-200);
 }
 
 @theme inline {
@@ -44,4 +51,13 @@ body {
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground;
+  }
 }

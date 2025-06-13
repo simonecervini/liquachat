@@ -31,7 +31,7 @@ export default function Layout(props: { children: React.ReactNode }) {
     <ZeroProvider zero={zero}>
       <div className="flex h-screen gap-3 pr-4">
         <Sidebar />
-        <div className="relative mt-3 w-60 grow rounded-t-3xl border-3 border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
+        <div className="relative mt-3 w-60 grow rounded-t-3xl border-3 border-b-0 border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
           {children}
         </div>
       </div>
