@@ -1,12 +1,12 @@
 import "~/styles/globals.css";
 
+import { ReactScan } from "~/components/react-scan";
 import { type Metadata } from "next";
 import { IBM_Plex_Mono, Poppins } from "next/font/google";
 
 import { Toaster } from "~/components/system/sonner";
-import { TRPCReactProvider } from "~/lib/trpc";
 import { env } from "~/env";
-import { ReactScan } from "~/components/react-scan";
+import { TRPCReactProvider } from "~/lib/trpc";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -18,12 +18,14 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-sans",
+  subsets: ["latin"],
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-mono",
+  subsets: ["latin"],
 });
 
 export default function RootLayout({
