@@ -3,7 +3,7 @@ import {
   type LanguageModelV1,
 } from "@openrouter/ai-sdk-provider";
 import { streamText } from "ai";
-import { ollama } from "ollama-ai-provider";
+import { createOllama } from "ollama-ai-provider";
 
 type StreamResponseOptions =
   | {
@@ -39,6 +39,9 @@ function getModelFromOptions(options: StreamResponseOptions): LanguageModelV1 {
     });
     return openrouter.chat(options.modelId);
   } else {
+    const ollama = createOllama({
+      baseURL: "http://localhost:11434/api",
+    });
     return ollama.chat(options.modelId);
   }
 }

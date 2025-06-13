@@ -535,8 +535,10 @@ function usePushAssistantMessage() {
   return React.useCallback(
     async (input: { prompt: string }) => {
       const response = streamResponse(input.prompt, {
-        provider: "ollama",
-        modelId: "llama3.2", // usage: `ollama run llama3.2`
+        provider: "openrouter",
+        modelId: "deepseek/deepseek-r1-0528:free",
+        // provider: "ollama",
+        // modelId: "llama3.2", // usage: `ollama run llama3.2`
       });
       const messageId = crypto.randomUUID();
       let isFirstChunk = true;
