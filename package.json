@@ -22,7 +22,6 @@
     "db:dev": "./start-database.sh",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "bun run scripts/db-seed.ts",
     "dev": "next dev --turbo",
     "zero:dev": "zero-cache-dev -p src/zero/schema.ts",
     "zero:generate": "drizzle-zero generate --format --output src/zero/schema.gen.ts --schema src/server/db/schema.ts",

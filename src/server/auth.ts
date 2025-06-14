@@ -4,6 +4,7 @@ import { bearer, jwt, magicLink } from "better-auth/plugins";
 
 import { env } from "~/env";
 import { db } from "./db";
+import { insertDemoChats } from "./db/seed";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -29,6 +30,23 @@ export const auth = betterAuth({
         ]
       : []),
   ],
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await insertDemoChats(user.id);
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "Unknown error";
+            console.error(
+              `[Auth] Error inserting demo chats for user ${user.id}: ${message}`,
+            );
+          }
+        },
+      },
+    },
+  },
   advanced: {
     database: {
       generateId: () => {
