@@ -12,18 +12,6 @@ async function main() {
   await resetDatabase();
   await $`pnpm run db:push`;
 
-  const userId = "a167ca4e-8edb-4f24-a453-24d53be7179c";
-  const { chatTree, chatsToSeed } = buildChatTree(chatDefinitions);
-
-  await db.insert(users).values({ id: userId });
-  await db
-    .insert(chatTrees)
-    .values({ id: crypto.randomUUID(), userId, data: chatTree });
-
-  for (const chat of chatsToSeed) {
-    await seedChat(chat, userId);
-  }
-
   console.log("Database seeded successfully!");
 }
 

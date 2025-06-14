@@ -7,6 +7,7 @@ import { IBM_Plex_Mono, Poppins } from "next/font/google";
 import { Toaster } from "~/components/system/sonner";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/lib/trpc";
+import { ZeroAuthenticatedProvider } from "~/zero/react";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -38,7 +39,9 @@ export default function RootLayout({
         className={`${poppins.variable} ${ibmPlexMono.variable} font-sans`}
         translate="no"
       >
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <ZeroAuthenticatedProvider>{children}</ZeroAuthenticatedProvider>
+        </TRPCReactProvider>
         <Toaster />
       </body>
     </html>

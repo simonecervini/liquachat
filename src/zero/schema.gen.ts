@@ -15,10 +15,8 @@
  * ------------------------------------------------------------
  */
 
-import type { DrizzleToZeroSchema, ZeroCustomType } from "drizzle-zero";
-import type * as drizzleSchema from "../server/db/schema";
-
-type ZeroSchema = DrizzleToZeroSchema<typeof drizzleSchema>;
+import type { ZeroCustomType } from "drizzle-zero";
+import type { default as zeroSchema } from "../../drizzle-zero.config";
 
 /**
  * The Zero schema object.
@@ -33,7 +31,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chatTrees",
             "id"
           >,
@@ -42,7 +40,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chatTrees",
             "userId"
           >,
@@ -51,7 +49,7 @@ export const schema = {
           type: "json",
           optional: true,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chatTrees",
             "data"
           >,
@@ -67,7 +65,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chats",
             "id"
           >,
@@ -76,7 +74,7 @@ export const schema = {
           type: "boolean",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chats",
             "public"
           >,
@@ -85,7 +83,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chats",
             "userId"
           >,
@@ -94,7 +92,7 @@ export const schema = {
           type: "number",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chats",
             "createdAt"
           >,
@@ -103,7 +101,7 @@ export const schema = {
           type: "number",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "chats",
             "updatedAt"
           >,
@@ -119,7 +117,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "messages",
             "id"
           >,
@@ -128,7 +126,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "messages",
             "chatId"
           >,
@@ -137,7 +135,7 @@ export const schema = {
           type: "string",
           optional: true,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "messages",
             "userId"
           >,
@@ -146,7 +144,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "messages",
             "role"
           >,
@@ -155,7 +153,7 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "messages",
             "content"
           >,
@@ -164,7 +162,7 @@ export const schema = {
           type: "number",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "messages",
             "createdAt"
           >,
@@ -180,9 +178,63 @@ export const schema = {
           type: "string",
           optional: false,
           customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
+            typeof zeroSchema,
             "users",
             "id"
+          >,
+        },
+        name: {
+          type: "string",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "name"
+          >,
+        },
+        email: {
+          type: "string",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "email"
+          >,
+        },
+        emailVerified: {
+          type: "boolean",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "emailVerified"
+          >,
+        },
+        image: {
+          type: "string",
+          optional: true,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "image"
+          >,
+        },
+        createdAt: {
+          type: "number",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "createdAt"
+          >,
+        },
+        updatedAt: {
+          type: "number",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "updatedAt"
           >,
         },
       },
