@@ -18,9 +18,11 @@ export default function Page() {
       if (!lastChat) {
         const id = crypto.randomUUID();
         const timestamp = Date.now();
-        void z.mutate.chats.init({ id, timestamp }).client.then(() => {
-          router.replace(`/chat/${id}`);
-        });
+        void z.mutate.chats
+          .init({ id, timestamp, chatTreeId: null })
+          .client.then(() => {
+            router.replace(`/chat/${id}`);
+          });
       } else {
         router.replace(`/chat/${lastChat.id}`);
       }

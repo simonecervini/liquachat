@@ -41,6 +41,7 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
     // },
     chats: ANYONE_CAN_DO_ANYTHING,
     messages: ANYONE_CAN_DO_ANYTHING,
+    chatTrees: ANYONE_CAN_DO_ANYTHING,
   } satisfies CompletePermissionsConfig;
 });
 

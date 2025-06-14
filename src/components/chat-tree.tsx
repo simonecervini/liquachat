@@ -36,17 +36,18 @@ import {
   ContextMenuTrigger,
 } from "./context-menu";
 
-export const ChatTree = (props: { className?: string }) => {
+export const ChatTree = (props: { chatTreeId: string; className?: string }) => {
+  const { chatTreeId } = props;
   const z = useZero();
-  const [treeData, isPending] = useTreeData();
+  const [treeData, isPending] = useTreeData(props);
 
   React.useEffect(() => {
-    if (isPending) return;
-    void z.mutate.users.update({
-      id: z.userID,
-      chatTree: toNodeItems(treeData.items),
+    if (isPending || treeData.items.length === 0) return;
+    void z.mutate.chatTrees.update({
+      id: chatTreeId,
+      data: toNodeItems(treeData.items),
     });
-  }, [isPending, treeData.items, z.mutate.users, z.userID]);
+  }, [chatTreeId, isPending, treeData.items, z.mutate.chatTrees]);
 
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: (keys) => {
@@ -255,13 +256,13 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
   );
 }
 
-function useTreeData() {
+function useTreeData(options: { chatTreeId: string }) {
   const z = useZero();
-  const [user, { type }] = useQuery(
-    z.query.users.where("id", "=", z.userID).one(),
+  const [chatTree, { type }] = useQuery(
+    z.query.chatTrees.where("id", "=", options.chatTreeId).one(),
   );
   const treeData = __useTreeData({
-    initialItems: user?.chatTree ?? [],
+    initialItems: chatTree?.data ?? [],
     getKey: (item) => item.id,
     getChildren: (item) => item.childItems ?? [],
   });

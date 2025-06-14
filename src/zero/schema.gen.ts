@@ -16,7 +16,6 @@
  */
 
 import type { DrizzleToZeroSchema, ZeroCustomType } from "drizzle-zero";
-
 import type * as drizzleSchema from "../server/db/schema";
 
 type ZeroSchema = DrizzleToZeroSchema<typeof drizzleSchema>;
@@ -27,6 +26,40 @@ type ZeroSchema = DrizzleToZeroSchema<typeof drizzleSchema>;
  */
 export const schema = {
   tables: {
+    chatTrees: {
+      name: "chatTrees",
+      columns: {
+        id: {
+          type: "string",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            ZeroSchema,
+            "chatTrees",
+            "id"
+          >,
+        },
+        userId: {
+          type: "string",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            ZeroSchema,
+            "chatTrees",
+            "userId"
+          >,
+        },
+        data: {
+          type: "json",
+          optional: true,
+          customType: null as unknown as ZeroCustomType<
+            ZeroSchema,
+            "chatTrees",
+            "data"
+          >,
+        },
+      },
+      primaryKey: ["id"],
+      serverName: "liquachat_chat_tree",
+    },
     chats: {
       name: "chats",
       columns: {
@@ -152,21 +185,22 @@ export const schema = {
             "id"
           >,
         },
-        chatTree: {
-          type: "json",
-          optional: true,
-          customType: null as unknown as ZeroCustomType<
-            ZeroSchema,
-            "users",
-            "chatTree"
-          >,
-        },
       },
       primaryKey: ["id"],
       serverName: "liquachat_user",
     },
   },
   relationships: {
+    chatTrees: {
+      user: [
+        {
+          sourceField: ["userId"],
+          destField: ["id"],
+          destSchema: "users",
+          cardinality: "one",
+        },
+      ],
+    },
     chats: {
       messages: [
         {
@@ -184,6 +218,16 @@ export const schema = {
           destField: ["id"],
           destSchema: "chats",
           cardinality: "one",
+        },
+      ],
+    },
+    users: {
+      chatTrees: [
+        {
+          sourceField: ["id"],
+          destField: ["userId"],
+          destSchema: "chatTrees",
+          cardinality: "many",
         },
       ],
     },

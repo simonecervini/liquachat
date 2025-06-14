@@ -6,21 +6,33 @@ import type { AuthData, Schema } from "./schema";
 export function createMutators(authData: AuthData) {
   return {
     chats: {
-      init: async (tx, input: { id: string; timestamp: number }) => {
-        const user = await tx.query.users.where("id", "=", authData.sub).one();
-        if (!user) throw new ZeroMutatorError({ code: "UNAUTHORIZED" });
-        const newChatTree: ChatTreeNode[] = [
+      init: async (
+        tx,
+        // Pass `chatTreeId: null` to create a new chat tree with a new chat.
+        input: { id: string; timestamp: number; chatTreeId: string | null },
+      ) => {
+        const getChatTree = async () => {
+          if (!input.chatTreeId) return null;
+          const chatTree = await tx.query.chatTrees
+            .where("id", "=", input.chatTreeId)
+            .one();
+          if (!chatTree) throw new ZeroMutatorError({ code: "NOT_FOUND" });
+          return chatTree;
+        };
+        const chatTree = await getChatTree();
+        const newChatTreeData: ChatTreeNode[] = [
           {
             id: crypto.randomUUID(),
             name: "New Chat",
             kind: "chat",
             chatId: input.id,
           },
-          ...(user.chatTree ?? []),
+          ...(chatTree?.data ?? []),
         ];
-        await tx.mutate.users.update({
-          id: authData.sub,
-          chatTree: newChatTree,
+        await tx.mutate.chatTrees.upsert({
+          id: input.chatTreeId ?? crypto.randomUUID(),
+          userId: authData.sub, // TODO: change this
+          data: newChatTreeData,
         });
         await tx.mutate.chats.insert({
           id: input.id,

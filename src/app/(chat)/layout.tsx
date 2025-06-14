@@ -4,14 +4,15 @@ import * as React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Zero } from "@rocicorp/zero";
-import { ZeroProvider } from "@rocicorp/zero/react";
+import { useQuery, ZeroProvider } from "@rocicorp/zero/react";
 import { DropletIcon, PanelLeftIcon, PlusIcon, SearchIcon } from "lucide-react";
 
 import { ChatTree } from "~/components/chat-tree";
 import { Button } from "~/components/system/button";
 import { env } from "~/env";
 import { createMutators } from "~/zero";
-import { schema, type AuthData } from "~/zero/schema";
+import { useZero } from "~/zero/react";
+import { schema, type AuthData, type ZeroRow } from "~/zero/schema";
 
 // TODO: this is for testing purposes
 const authData: AuthData = {
@@ -40,8 +41,13 @@ export default function Layout(props: { children: React.ReactNode }) {
 }
 
 function Sidebar() {
+  const z = useZero();
   const [open, setOpen] = useState(false); // TODO: implement this
-  const router = useRouter();
+
+  const [chatTrees] = useQuery(
+    z.query.chatTrees.where("userId", "=", z.userID),
+  );
+
   return (
     <div className="flex w-60 flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4">
       <div className="mb-3 flex w-full items-center justify-between">
@@ -55,13 +61,27 @@ function Sidebar() {
         <PanelLeftIcon className="invisible size-5 text-blue-500" />
       </div>
 
+      {chatTrees.length > 0 && <SidebarContent chatTrees={chatTrees} />}
+    </div>
+  );
+}
+
+function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
+  const { chatTrees } = props;
+  const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id); // TODO: handle this
+  const router = useRouter();
+  return (
+    <>
       <Button
         className="mb-4 w-full"
         size="lg"
         onClick={async () => {
           const chatId = crypto.randomUUID();
-          await zero.mutate.chats.init({ id: chatId, timestamp: Date.now() })
-            .client;
+          await zero.mutate.chats.init({
+            id: chatId,
+            timestamp: Date.now(),
+            chatTreeId,
+          }).client;
           router.push(`/chat/${chatId}`);
         }}
       >
@@ -81,7 +101,7 @@ function Sidebar() {
         />
       </div>
 
-      <ChatTree className="w-full" />
+      <ChatTree className="w-full" chatTreeId={chatTreeId} />
 
       {/* <div className="flex flex-col gap-2 w-full">
         {chats.map((chat) => (
@@ -94,7 +114,7 @@ function Sidebar() {
           </Link>
         ))}
       </div> */}
-    </div>
+    </>
   );
 }
 

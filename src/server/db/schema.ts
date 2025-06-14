@@ -16,7 +16,26 @@ export const createTable = pgTableCreator((name) => `liquachat_${name}`);
 
 export const users = createTable("user", (d) => ({
   id: d.uuid().primaryKey(),
-  chatTree: d.json().$type<ChatTreeNode[]>(),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  chatTrees: many(chatTrees),
+}));
+
+export const chatTrees = createTable("chat_tree", (d) => ({
+  id: d.uuid().primaryKey(),
+  userId: d
+    .uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  data: d.json().$type<ChatTreeNode[]>(),
+}));
+
+export const chatTreesRelations = relations(chatTrees, ({ one }) => ({
+  user: one(users, {
+    fields: [chatTrees.userId],
+    references: [users.id],
+  }),
 }));
 
 export const chats = createTable(
