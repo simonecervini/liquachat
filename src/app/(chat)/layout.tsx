@@ -3,40 +3,23 @@
 import * as React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Zero } from "@rocicorp/zero";
-import { useQuery, ZeroProvider } from "@rocicorp/zero/react";
+import { useQuery } from "@rocicorp/zero/react";
 import { DropletIcon, PanelLeftIcon, PlusIcon, SearchIcon } from "lucide-react";
 
 import { ChatTree } from "~/components/chat-tree";
 import { Button } from "~/components/system/button";
-import { env } from "~/env";
-import { createMutators } from "~/zero";
 import { useZero } from "~/zero/react";
-import { schema, type AuthData, type ZeroRow } from "~/zero/schema";
-
-// TODO: this is for testing purposes
-const authData: AuthData = {
-  sub: "a167ca4e-8edb-4f24-a453-24d53be7179c",
-};
-const zero = new Zero({
-  userID: authData.sub,
-  server: env.NEXT_PUBLIC_ZERO_SERVER_URL,
-  schema,
-  kvStore: "mem",
-  mutators: createMutators(authData),
-});
+import type { ZeroRow } from "~/zero/schema";
 
 export default function Layout(props: { children: React.ReactNode }) {
   const { children } = props;
   return (
-    <ZeroProvider zero={zero}>
-      <div className="flex h-screen gap-3 pr-4">
-        <Sidebar />
-        <div className="relative mt-3 w-60 grow rounded-t-3xl border-3 border-b-0 border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
-          {children}
-        </div>
+    <div className="flex h-screen gap-3 pr-4">
+      <Sidebar />
+      <div className="relative mt-3 w-60 grow rounded-t-3xl border-3 border-b-0 border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
+        {children}
       </div>
-    </ZeroProvider>
+    </div>
   );
 }
 
@@ -69,6 +52,7 @@ function Sidebar() {
 function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
   const { chatTrees } = props;
   const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id); // TODO: handle this
+  const z = useZero();
   const router = useRouter();
   return (
     <>
@@ -77,7 +61,7 @@ function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
         size="lg"
         onClick={async () => {
           const chatId = crypto.randomUUID();
-          await zero.mutate.chats.init({
+          await z.mutate.chats.init({
             id: chatId,
             timestamp: Date.now(),
             chatTreeId,

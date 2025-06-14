@@ -6,6 +6,7 @@ import {
   type Row,
 } from "@rocicorp/zero";
 
+import type { Session } from "~/server/auth";
 import { schema, type Schema } from "./schema.gen";
 
 export { schema, type Schema };
@@ -14,15 +15,13 @@ export type ZeroRow<TTable extends keyof Schema["tables"]> = Row<
   Schema["tables"][TTable]
 >;
 
-export type AuthData = {
-  sub: string;
-};
+export type AuthData = Pick<Session, "user">;
 
 export const permissions = definePermissions<AuthData, Schema>(schema, () => {
   const _allowIfSameUser = (
     authData: AuthData,
     eb: ExpressionBuilder<Schema, "users">,
-  ) => eb.cmp("id", authData.sub);
+  ) => eb.cmp("id", authData.user.id);
 
   // TODO: Add permissions
 

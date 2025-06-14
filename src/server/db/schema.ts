@@ -2,21 +2,17 @@
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
 import { relations } from "drizzle-orm";
-import { index, pgTableCreator } from "drizzle-orm/pg-core";
+import { index } from "drizzle-orm/pg-core";
 
 import type { ChatTreeNode } from "~/lib/types";
+import { createTable } from "./create-table";
+import * as authSchema from "./schema-auth";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const createTable = pgTableCreator((name) => `liquachat_${name}`);
-
-export const users = createTable("user", (d) => ({
-  id: d.uuid().primaryKey(),
-}));
+export const users = authSchema.users;
+export const sessions = authSchema.sessions;
+export const accounts = authSchema.accounts;
+export const verifications = authSchema.verifications;
+export const jwkss = authSchema.jwkss;
 
 export const usersRelations = relations(users, ({ many }) => ({
   chatTrees: many(chatTrees),

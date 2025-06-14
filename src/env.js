@@ -14,6 +14,8 @@ export const env = createEnv({
     ZERO_REPLICA_FILE: z.string(),
     ZERO_AUTH_JWKS_URL: z.string().url(),
     ZERO_PUSH_URL: z.string().url(),
+    BETTER_AUTH_URL: z.string().url(),
+    BETTER_AUTH_SECRET: z.string(), // openssl rand -base64 32
   },
 
   /**
@@ -36,6 +38,8 @@ export const env = createEnv({
     ZERO_REPLICA_FILE: process.env.ZERO_REPLICA_FILE,
     ZERO_AUTH_JWKS_URL: process.env.ZERO_AUTH_JWKS_URL,
     ZERO_PUSH_URL: process.env.ZERO_PUSH_URL,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     // client
     NEXT_PUBLIC_ZERO_SERVER_URL: process.env.NEXT_PUBLIC_ZERO_SERVER_URL,
   },

@@ -5,11 +5,14 @@ import {
   ZQLDatabase,
 } from "@rocicorp/zero/pg";
 import { eq } from "drizzle-orm";
+import { createLocalJWKSet, jwtVerify, type JWTPayload } from "jose";
 import invariant from "tiny-invariant";
 
+import { env } from "~/env";
 import { loremMarkdown } from "~/lib/lorem-markdown";
+import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import { messages } from "~/server/db/schema";
+import { messages, users } from "~/server/db/schema";
 import { createMutators, safeTimestamp } from "~/zero";
 import { schema, type AuthData } from "~/zero/schema";
 
@@ -18,15 +21,47 @@ const zqlDb = new ZQLDatabase(new PostgresJSConnection(db.$client), schema);
 const pushProcessor = new PushProcessor(zqlDb);
 
 export const POST = async (req: NextRequest) => {
-  // TODO: get auth data from request
-  const authData: AuthData = {
-    sub: "a167ca4e-8edb-4f24-a453-24d53be7179c",
-  };
+  const authorization = req.headers.get("Authorization");
+
+  if (!authorization) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let jwtPayload: JWTPayload;
+  try {
+    const jwt = authorization.replace(/^Bearer /i, "");
+    const jwks = createLocalJWKSet(await auth.api.getJwks());
+    const verifyResult = await jwtVerify(jwt, jwks, {
+      issuer: env.BETTER_AUTH_URL,
+      audience: env.BETTER_AUTH_URL,
+    });
+    jwtPayload = verifyResult.payload;
+  } catch (error) {
+    console.error("Error verifying JWT", error);
+    return NextResponse.json(
+      { error: "Failed to verify JWT" },
+      { status: 401 },
+    );
+  }
+
+  const userId = jwtPayload.sub;
+  if (!userId) {
+    console.error("JWT payload does not contain a user ID (sub)");
+    return NextResponse.json(
+      { error: "JWT payload does not contain a user ID (sub)" },
+      { status: 401 },
+    );
+  }
+
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 500 });
+  }
 
   const asyncTasks: AsyncTask[] = [];
 
   const result = await pushProcessor.process(
-    createServerMutators(authData, asyncTasks),
+    createServerMutators({ user }, asyncTasks),
     req.nextUrl.searchParams,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await req.json(),
@@ -84,7 +119,7 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
           content: partialContent,
           createdAt: new Date(),
           role: "assistant",
-          userId: authData.sub,
+          userId: authData.user.id,
         });
       } else {
         await db
@@ -112,7 +147,7 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
             content: input.chunk,
             createdAt: safeTimestamp(tx, input.timestamp),
             role: "assistant",
-            userId: authData.sub,
+            userId: authData.user.id,
           });
         } else {
           await tx.dbTransaction.query(

@@ -31,12 +31,12 @@ export function createMutators(authData: AuthData) {
         ];
         await tx.mutate.chatTrees.upsert({
           id: input.chatTreeId ?? crypto.randomUUID(),
-          userId: authData.sub, // TODO: change this
+          userId: authData.user.id,
           data: newChatTreeData,
         });
         await tx.mutate.chats.insert({
           id: input.id,
-          userId: authData.sub,
+          userId: authData.user.id,
           createdAt: safeTimestamp(tx, input.timestamp),
           updatedAt: safeTimestamp(tx, input.timestamp),
           public: false,
@@ -57,7 +57,7 @@ export function createMutators(authData: AuthData) {
           content: input.content,
           createdAt: safeTimestamp(tx, input.timestamp),
           role: "user",
-          userId: authData.sub,
+          userId: authData.user.id,
         });
       },
       pushAssistantMessageChunk: async (
@@ -83,7 +83,7 @@ export function createMutators(authData: AuthData) {
           content: prevContent + input.chunk,
           createdAt: safeTimestamp(tx, input.timestamp),
           role: "assistant",
-          userId: authData.sub,
+          userId: authData.user.id,
         });
       },
       updateMessage: async (
