@@ -57,15 +57,13 @@ type Chat = NonNullable<ReturnType<typeof useChat>[0]>;
 type Message = Chat["messages"][number];
 
 export default function ChatPage() {
-  const chatId = useChatId();
-
   return (
     <div className="relative h-full flex-1">
       <ScrollArea className="h-full flex-1">
         <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
           <MessageStack />
         </div>
-        <SendMessageForm chatId={chatId} />
+        <SendMessageForm />
       </ScrollArea>
     </div>
   );
@@ -92,8 +90,7 @@ function MessageStack(props: { className?: string }) {
 }
 
 function MessageStackEmpty() {
-  const chatId = useChatId();
-  const z = useZero();
+  const sendUserMessage = useSendUserMessage();
   const tabs = {
     create: {
       title: "Create",
@@ -174,13 +171,8 @@ function MessageStackEmpty() {
                   variant="ghost"
                   className="w-full justify-start"
                   size="lg"
-                  onClick={() => {
-                    z.mutate.chats.sendUserMessage({
-                      id: crypto.randomUUID(),
-                      chatId,
-                      content: suggestion,
-                      timestamp: Date.now(),
-                    });
+                  onClick={async () => {
+                    await sendUserMessage(suggestion);
                   }}
                 >
                   {suggestion}
@@ -445,23 +437,15 @@ function MessageActionsSystem(props: { message: Message }) {
   );
 }
 
-function SendMessageForm(props: { chatId: string; className?: string }) {
-  const { chatId } = props;
-  const z = useZero();
-  const pushAssistantMessage = usePushAssistantMessage();
+function SendMessageForm() {
+  const sendUserMessage = useSendUserMessage();
   const [model, setModel] = React.useState("o4-mini");
   const form = useForm({
     defaultValues: {
       message: "",
     },
     onSubmit: async ({ value }) => {
-      await z.mutate.chats.sendUserMessage({
-        id: crypto.randomUUID(),
-        chatId: chatId,
-        content: value.message,
-        timestamp: Date.now(),
-      }).client;
-      await pushAssistantMessage({ prompt: value.message });
+      await sendUserMessage(value.message);
       form.reset();
     },
   });
@@ -526,6 +510,24 @@ function SendMessageForm(props: { chatId: string; className?: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function useSendUserMessage() {
+  const chatId = useChatId();
+  const pushAssistantMessage = usePushAssistantMessage();
+  const z = useZero();
+  return React.useCallback(
+    async (prompt: string) => {
+      await z.mutate.chats.sendUserMessage({
+        id: crypto.randomUUID(),
+        chatId: chatId,
+        content: prompt,
+        timestamp: Date.now(),
+      }).client;
+      await pushAssistantMessage({ prompt });
+    },
+    [chatId, pushAssistantMessage, z.mutate.chats],
   );
 }
 
