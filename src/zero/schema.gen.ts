@@ -70,6 +70,15 @@ export const schema = {
             "id"
           >,
         },
+        title: {
+          type: "string",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "chats",
+            "title"
+          >,
+        },
         public: {
           type: "boolean",
           optional: false,

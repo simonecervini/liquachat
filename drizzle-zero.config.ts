@@ -25,6 +25,7 @@ export default drizzleZeroConfig(drizzleSchema, {
     verifications: false,
     jwkss: false,
     chats: {
+      title: true,
       createdAt: true,
       id: true,
       public: true,

@@ -23,7 +23,6 @@ export function createMutators(authData: AuthData) {
         const newChatTreeData: ChatTreeNode[] = [
           {
             id: crypto.randomUUID(),
-            name: "New Chat",
             kind: "chat",
             chatId: input.id,
           },
@@ -36,6 +35,7 @@ export function createMutators(authData: AuthData) {
         });
         await tx.mutate.chats.insert({
           id: input.id,
+          title: "New Chat",
           userId: authData.user.id,
           createdAt: safeTimestamp(tx, input.timestamp),
           updatedAt: safeTimestamp(tx, input.timestamp),

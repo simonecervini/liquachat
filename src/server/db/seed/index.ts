@@ -118,7 +118,7 @@ export async function insertDemoChats(userId: string) {
 
 function buildChatTree(definitions: ChatDefinition[]) {
   const chatTree: ChatTreeNode[] = [];
-  const chatsToSeed: { id: string; contentFile: string }[] = [];
+  const chatsToSeed: { id: string; contentFile: string; title: string }[] = [];
 
   for (const def of definitions) {
     const id = crypto.randomUUID();
@@ -137,13 +137,16 @@ function buildChatTree(definitions: ChatDefinition[]) {
       const chatId = crypto.randomUUID();
       const node: ChatTreeNode = {
         id,
-        name: def.name,
         kind: "chat",
         chatId,
       };
 
       if (def.contentFile) {
-        chatsToSeed.push({ id: chatId, contentFile: def.contentFile });
+        chatsToSeed.push({
+          id: chatId,
+          contentFile: def.contentFile,
+          title: def.name,
+        });
       }
 
       chatTree.push(node);
@@ -154,11 +157,12 @@ function buildChatTree(definitions: ChatDefinition[]) {
 }
 
 async function seedChat(
-  chat: { id: string; contentFile: string },
+  chat: { id: string; contentFile: string; title: string },
   userId: string,
 ) {
   await db.insert(chats).values({
     id: chat.id,
+    title: chat.title,
     public: false,
     userId,
     createdAt: new Date(),

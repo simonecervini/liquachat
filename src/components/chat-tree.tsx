@@ -39,13 +39,15 @@ import {
 
 export interface ChatTreeProps {
   chatTreeId: string;
+  getChatTitle: (chatId: string) => string;
   className?: string;
   expanded?: Key[];
   onExpandedChange?: (expanded: Key[]) => void;
 }
 
 export function ChatTree(props: ChatTreeProps) {
-  const { chatTreeId, className, expanded, onExpandedChange } = props;
+  const { chatTreeId, getChatTitle, className, expanded, onExpandedChange } =
+    props;
 
   const z = useZero();
   const [treeData, isPending] = useTreeData(props);
@@ -58,12 +60,21 @@ export function ChatTree(props: ChatTreeProps) {
     });
   }, [chatTreeId, isPending, treeData.items, z.mutate.chatTrees]);
 
+  const getItemText = React.useCallback(
+    (item: TreeData["items"][number]) => {
+      return item.value.kind === "chat"
+        ? getChatTitle(item.value.chatId)
+        : item.value.name;
+    },
+    [getChatTitle],
+  );
+
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: (keys) => {
       return [...keys].map((key) => {
         const item = treeData.getItem(key)!;
         return {
-          "text/plain": item.value.name,
+          "text/plain": getItemText(item),
         };
       });
     },
@@ -120,10 +131,11 @@ export function ChatTree(props: ChatTreeProps) {
           treeData={treeData}
           id={item.key}
           childItems={item.children ?? []}
-          textValue={item.value.name}
+          textValue={getItemText(item)}
+          getItemText={getItemText}
           supportsDragging
         >
-          {item.value.name}
+          {getItemText(item)}
         </DynamicTreeItem>
       )}
     />
@@ -133,6 +145,7 @@ export function ChatTree(props: ChatTreeProps) {
 interface DynamicTreeItemProps extends TreeItemProps<object> {
   children: React.ReactNode;
   treeData: TreeData;
+  getItemText: (item: TreeData["items"][number]) => string;
   childItems?: Iterable<TreeData["items"][number]>;
   isLoading?: boolean;
   renderLoader?: (id: React.Key | undefined) => boolean;
@@ -140,7 +153,8 @@ interface DynamicTreeItemProps extends TreeItemProps<object> {
 }
 
 function DynamicTreeItem(props: DynamicTreeItemProps) {
-  const { childItems, renderLoader, supportsDragging, treeData } = props;
+  const { childItems, getItemText, renderLoader, supportsDragging, treeData } =
+    props;
   const router = useRouter();
 
   const item = treeData.getItem(props.id ?? "");
@@ -253,10 +267,11 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
             isLoading={props.isLoading}
             id={item.key}
             childItems={item.children ?? []}
-            textValue={item.value.name}
+            textValue={getItemText(item)}
             href={props.href}
+            getItemText={getItemText}
           >
-            {item.value.name}
+            {getItemText(item)}
           </DynamicTreeItem>
         )}
       />
@@ -292,7 +307,6 @@ function toNodeItems(items: TreeData["items"]): ChatTreeNode[] {
     } else {
       return {
         id: item.value.id,
-        name: item.value.name,
         kind: "chat",
         chatId: item.value.chatId,
         childItems,

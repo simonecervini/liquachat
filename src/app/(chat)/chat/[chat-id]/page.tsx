@@ -144,7 +144,7 @@ function MessageStackEmpty() {
       className="items-left mx-auto flex w-full max-w-2xl flex-col py-20"
     >
       <h2 className="mb-8 text-3xl font-semibold">
-        How can I help you, Simone?
+        How can I help you, YOUR_NAME?
       </h2>
       <Tabs.Root defaultValue="create" className="w-full">
         <Tabs.List className="mb-8 flex justify-start gap-2">

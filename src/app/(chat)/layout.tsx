@@ -19,6 +19,7 @@ import type { Key } from "react-aria-components";
 import { ChatTree } from "~/components/chat-tree";
 import { ChatCombobox } from "~/components/chat-tree-combobox";
 import { Button } from "~/components/system/button";
+import { cn } from "~/lib/cn";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
 
@@ -106,10 +107,7 @@ function SidebarContent(props: {
         <SearchIcon className="text-muted-foreground absolute top-1/2 left-0 size-4 -translate-y-1/2 transform" />
       </div>
 
-      <TabsPrimitive.Root
-        className="flex grow flex-col gap-1.5"
-        defaultValue="tree"
-      >
+      <TabsPrimitive.Root className="flex grow flex-col" defaultValue="tree">
         <TabsPrimitive.List className="text-muted-foreground flex justify-center gap-2 text-xs">
           <TabsPrimitive.Trigger
             className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
@@ -131,10 +129,14 @@ function SidebarContent(props: {
           className="flex grow flex-col justify-between"
         >
           <ChatTree
-            className="w-full"
+            className="w-full py-1.5"
             chatTreeId={chatTreeId}
             expanded={expanded}
             onExpandedChange={setExpanded}
+            getChatTitle={(chatId) => {
+              const chat = chats.find((chat) => chat.id === chatId);
+              return chat?.title ?? "?";
+            }}
           />
           <ChatCombobox
             value={chatTreeId}
@@ -147,20 +149,57 @@ function SidebarContent(props: {
           />
         </TabsPrimitive.Content>
         <TabsPrimitive.Content value="list">
-          <div className="flex w-full flex-col gap-2">
-            {chats.map((chat) => (
-              <Link
-                href={`/chat/${chat.id}`}
-                key={chat.id}
-                className="rounded-xl p-2 text-left text-sm text-slate-700 transition-colors hover:bg-white/20 hover:text-slate-900"
-                // TODO: add chat title
-              >
-                {chat.id.slice(0, 8)}
-              </Link>
-            ))}
-          </div>
+          <ChatList chats={chats} className="pt-3.5" />
         </TabsPrimitive.Content>
       </TabsPrimitive.Root>
+    </div>
+  );
+}
+
+function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
+  const { chats, className } = props;
+
+  const children = React.useMemo(() => {
+    const _items: Array<
+      | { kind: "DIVIDER"; id: string; title: string }
+      | { kind: "CHAT"; chat: ZeroRow<"chats"> }
+    > = [];
+    const sortedChats = [...chats].sort((a, b) => b.updatedAt - a.updatedAt);
+    let lastDividerTitle: string | undefined;
+    for (const chat of sortedChats) {
+      const date = new Date(chat.updatedAt);
+      const title = date.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+      if (title !== lastDividerTitle) {
+        _items.push({ kind: "DIVIDER", id: crypto.randomUUID(), title });
+        lastDividerTitle = title;
+      }
+      _items.push({ kind: "CHAT", chat });
+    }
+    return _items;
+  }, [chats]);
+
+  return (
+    <div className={cn("flex w-full min-w-0 flex-col gap-2", className)}>
+      {children.map((child) =>
+        child.kind === "CHAT" ? (
+          <Button
+            variant="ghost"
+            asChild
+            key={child.chat.id}
+            className="block justify-start truncate text-sm font-normal"
+            title={child.chat.title}
+          >
+            <Link href={`/chat/${child.chat.id}`}>{child.chat.title}</Link>
+          </Button>
+        ) : (
+          <div className="text-sm font-semibold" key={child.id}>
+            {child.title}
+          </div>
+        ),
+      )}
     </div>
   );
 }
