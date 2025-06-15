@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
+import { replaceEqualDeep } from "@tanstack/react-query";
 import { dequal } from "dequal";
 import {
   ArrowUpIcon,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Tabs } from "radix-ui";
-import { z } from "zod";
+import { createStore, useStore } from "zustand";
 
 import { Markdown } from "~/components/markdown";
 import { ModelCombobox } from "~/components/model-combobox";
@@ -36,14 +37,11 @@ import { useCopyButton } from "~/lib/use-copy-button";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
 
-function useChatId() {
-  const params = useParams();
-  const chatId = z.string().min(1).parse(params["chat-id"]);
-  return chatId;
-}
+// -- Query --
 
-function useChat() {
-  const chatId = useChatId();
+function useChatQuery() {
+  const params = useParams();
+  const chatId = String(params["chat-id"]);
   const zero = useZero();
   return useQuery(
     zero.query.chats
@@ -53,17 +51,84 @@ function useChat() {
   );
 }
 
-type Chat = NonNullable<ReturnType<typeof useChat>[0]>;
+type Chat = NonNullable<ReturnType<typeof useChatQuery>[0]>;
 type Message = Chat["messages"][number];
 
+// -- Global Store --
+
+type ChatStore = {
+  chat: Chat | null;
+  chatStatus: "pending" | "error" | "success";
+  storeChat: (chat: Chat) => void;
+};
+
+const chatStore = createStore<ChatStore>((set) => ({
+  chat: null,
+  chatStatus: "pending",
+  storeChat: (newChat: Chat) =>
+    set((state) => {
+      const currentChat = state.chat;
+      // We use `replaceEqualDeep` to optimize re-renders.
+      // Zero actually provides fine-grained updates, but they are not available with useQuery() because
+      // it needs to clone everything in order to follow the rules of React. We'll probably change this in the future.
+      const optimizedChat = replaceEqualDeep(currentChat, newChat);
+      if (currentChat === optimizedChat) {
+        return state;
+      }
+      return { chat: optimizedChat, chatStatus: "success" };
+    }),
+}));
+
+function useChatSelector<U>(selector: (chat: Chat) => U) {
+  return useStore(chatStore, (state) => {
+    const chat = state.chat;
+    if (!chat) {
+      throw new Error(
+        "Chat is not loaded: you are probably calling `useChatSelector` without using `useIsChatLoaded` first.",
+      );
+    }
+    return selector(chat);
+  });
+}
+
+function useIsChatLoaded() {
+  return useStore(chatStore, (state) => state.chatStatus === "success");
+}
+
+function useChatLoader() {
+  const [chat, chatResult] = useChatQuery();
+  const storeChat = useStore(chatStore, (state) => state.storeChat);
+
+  // I don't like this effect, but it's probably the best solution until Zero adds support for selectors.
+  // We want:
+  // - a global store with selectors
+  // - some form of structural sharing to optimize re-renders (useQuery() clones everything to follow the rules of React)
+  // We could technically use .materialize() and maintain the view, but it's probably not worth the complexity right now.
+  React.useEffect(() => {
+    if (chat) {
+      storeChat(chat);
+    } else if (chatResult.type === "complete") {
+      notFound();
+    }
+  }, [chat, chatResult.type, storeChat]);
+
+  return null;
+}
+
+// -- Page --
+
 export default function ChatPage() {
+  useChatLoader();
+
+  const isChatLoaded = useIsChatLoaded();
+
   return (
     <div className="relative h-full flex-1">
       <ScrollArea className="h-full flex-1">
         <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
-          <MessageStack />
+          {isChatLoaded && <MessageStack />}
         </div>
-        <SendMessageForm />
+        {isChatLoaded && <SendMessageForm />}
       </ScrollArea>
     </div>
   );
@@ -71,14 +136,9 @@ export default function ChatPage() {
 
 function MessageStack(props: { className?: string }) {
   const { className } = props;
-  const [chat, chatResult] = useChat();
-  const messages = chat?.messages ?? [];
+  const messages = useChatSelector((chat) => chat.messages);
   if (messages.length === 0) {
-    if (chatResult.type === "complete") {
-      return <MessageStackEmpty />;
-    } else {
-      return null;
-    }
+    return <MessageStackEmpty />;
   }
   return (
     <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
@@ -514,7 +574,7 @@ function SendMessageForm() {
 }
 
 function useSendUserMessage() {
-  const chatId = useChatId();
+  const chatId = useChatSelector((chat) => chat.id);
   const pushAssistantMessage = usePushAssistantMessage();
   const z = useZero();
   return React.useCallback(
@@ -533,7 +593,7 @@ function useSendUserMessage() {
 
 function usePushAssistantMessage() {
   const z = useZero();
-  const chatId = useChatId();
+  const chatId = useChatSelector((chat) => chat.id);
   return React.useCallback(
     async (input: { prompt: string }) => {
       const response = streamResponse(input.prompt, {
