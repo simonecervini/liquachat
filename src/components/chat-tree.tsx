@@ -6,6 +6,7 @@ import {
   CopyIcon,
   CornerDownRightIcon,
   FolderIcon,
+  FolderMinusIcon,
   FolderOpenDotIcon,
   FolderOpenIcon,
   FolderPlusIcon,
@@ -245,7 +246,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   {item.value.kind === "chat" ? (
                     <CornerDownRightIcon />
                   ) : isExpanded ? (
-                    <FolderIcon />
+                    <FolderMinusIcon />
                   ) : (
                     <FolderOpenIcon />
                   )}
