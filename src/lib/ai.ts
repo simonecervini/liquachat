@@ -5,7 +5,7 @@ import {
 import { streamText } from "ai";
 import { createOllama } from "ollama-ai-provider";
 
-type StreamResponseOptions =
+type StreamResponseOptions = { abortSignal: AbortSignal } & (
   | {
       provider: "ollama";
       modelId: string;
@@ -13,7 +13,8 @@ type StreamResponseOptions =
   | {
       provider: "openrouter";
       modelId: string;
-    };
+    }
+);
 
 export function streamResponse(prompt: string, options: StreamResponseOptions) {
   const model = getModelFromOptions(options);
@@ -21,6 +22,7 @@ export function streamResponse(prompt: string, options: StreamResponseOptions) {
   const result = streamText({
     model,
     prompt,
+    abortSignal: options.abortSignal,
   });
 
   return result.textStream;

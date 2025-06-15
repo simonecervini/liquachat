@@ -191,6 +191,7 @@ async function seedChat(
         chatId: chat.id,
         userId,
         role: "user",
+        status: "complete",
         content: messageContent,
         createdAt: messageDate,
       });
@@ -199,6 +200,7 @@ async function seedChat(
         id: crypto.randomUUID(),
         chatId: chat.id,
         role: "assistant",
+        status: "complete",
         content: messageContent,
         createdAt: messageDate,
       });

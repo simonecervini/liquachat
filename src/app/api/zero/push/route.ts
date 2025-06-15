@@ -9,10 +9,9 @@ import { createLocalJWKSet, jwtVerify, type JWTPayload } from "jose";
 import invariant from "tiny-invariant";
 
 import { env } from "~/env";
-import { loremMarkdown } from "~/lib/lorem-markdown";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import { messages, users } from "~/server/db/schema";
+import { users } from "~/server/db/schema";
 import { createMutators, safeTimestamp } from "~/zero";
 import { schema, type AuthData } from "~/zero/schema";
 
@@ -97,50 +96,19 @@ export const POST = async (req: NextRequest) => {
 
 function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
   const clientMutators = createMutators(authData);
-  const task = createTaskFn(asyncTasks);
-
-  const pushResponseTokens = async (input: {
-    chatId: string;
-    question: string;
-  }) => {
-    const assistantMessageId = crypto.randomUUID();
-    const fullContent = `"${input.question}" is a very good question. Let's answer it.\n${loremMarkdown()}`;
-    let partialContent = "";
-
-    let i = 0;
-    while (i < fullContent.length) {
-      const increment = Math.floor(Math.random() * 3) + 1;
-      const token = fullContent.slice(i, i + increment);
-      partialContent += token;
-      if (i === 0) {
-        await db.insert(messages).values({
-          id: assistantMessageId,
-          chatId: input.chatId,
-          content: partialContent,
-          createdAt: new Date(),
-          role: "assistant",
-          userId: authData.user.id,
-        });
-      } else {
-        await db
-          .update(messages)
-          .set({ content: partialContent })
-          .where(eq(messages.id, assistantMessageId));
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1));
-
-      i += increment;
-    }
-  };
+  const _task = createTaskFn(asyncTasks);
 
   return {
     ...clientMutators,
     chats: {
       ...clientMutators.chats,
       pushAssistantMessageChunk: async (tx, input) => {
+        const message = await tx.query.messages
+          .where("id", "=", input.messageId)
+          .one();
+        if (message && message.status !== "streaming") return;
         invariant(tx.location === "server");
-        if (input.isFirstChunk) {
+        if (input.chunkType === "first") {
           await tx.mutate.messages.insert({
             id: input.messageId,
             chatId: input.chatId,
@@ -148,7 +116,13 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
             createdAt: safeTimestamp(tx, input.timestamp),
             role: "assistant",
             userId: authData.user.id,
+            status: "streaming",
           });
+        } else if (input.chunkType === "last") {
+          await tx.dbTransaction.query(
+            `UPDATE liquachat_message SET content = content || $1, status = 'complete' WHERE id = $2`,
+            [input.chunk, input.messageId],
+          );
         } else {
           await tx.dbTransaction.query(
             `UPDATE liquachat_message SET content = content || $1 WHERE id = $2`,

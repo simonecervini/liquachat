@@ -167,6 +167,15 @@ export const schema = {
             "content"
           >,
         },
+        status: {
+          type: "string",
+          optional: false,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "messages",
+            "status"
+          >,
+        },
         createdAt: {
           type: "number",
           optional: false,

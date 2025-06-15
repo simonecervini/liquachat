@@ -2,7 +2,7 @@
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
 import { relations } from "drizzle-orm";
-import { index } from "drizzle-orm/pg-core";
+import { index, pgEnum } from "drizzle-orm/pg-core";
 
 import type { ChatTreeNode } from "~/lib/types";
 import { createTable } from "./create-table";
@@ -54,6 +54,13 @@ export const chatsRelations = relations(chats, ({ many }) => ({
   messages: many(messages),
 }));
 
+export const messageStatusEnum = pgEnum("message_status", [
+  "streaming",
+  "complete",
+  "aborted",
+  "error",
+]);
+
 export const messages = createTable(
   "message",
   (d) => ({
@@ -65,6 +72,7 @@ export const messages = createTable(
     userId: d.uuid().references(() => users.id, { onDelete: "cascade" }),
     role: d.text({ enum: ["user", "assistant"] }).notNull(),
     content: d.text().notNull(),
+    status: messageStatusEnum().notNull(),
     createdAt: d.timestamp().notNull(),
   }),
   (table) => [

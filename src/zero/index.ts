@@ -57,6 +57,7 @@ export function createMutators(authData: AuthData) {
           content: input.content,
           createdAt: safeTimestamp(tx, input.timestamp),
           role: "user",
+          status: "complete",
           userId: authData.user.id,
         });
       },
@@ -66,7 +67,7 @@ export function createMutators(authData: AuthData) {
           messageId: string;
           chatId: string;
           chunk: string;
-          isFirstChunk: boolean;
+          chunkType: "first" | "middle" | "last";
           timestamp: number;
         },
       ) => {
@@ -76,6 +77,7 @@ export function createMutators(authData: AuthData) {
         const message = await tx.query.messages
           .where("id", "=", input.messageId)
           .one();
+        if (message && message.status !== "streaming") return;
         const prevContent = message?.content ?? "";
         await tx.mutate.messages.upsert({
           id: input.messageId,
@@ -84,7 +86,26 @@ export function createMutators(authData: AuthData) {
           createdAt: safeTimestamp(tx, input.timestamp),
           role: "assistant",
           userId: authData.user.id,
+          status: input.chunkType === "last" ? "complete" : "streaming",
         });
+      },
+      abortChat: async (tx, input: { chatId: string }) => {
+        const pendingMessages = await tx.query.messages.where((eb) =>
+          eb.and(
+            eb.cmp("chatId", "=", input.chatId),
+            eb.cmp("status", "=", "streaming"),
+          ),
+        );
+        const promises: Promise<unknown>[] = [];
+        for (const message of pendingMessages) {
+          promises.push(
+            tx.mutate.messages.update({
+              id: message.id,
+              status: "aborted",
+            }),
+          );
+        }
+        await Promise.all(promises);
       },
       updateMessage: async (
         tx,

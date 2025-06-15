@@ -10,11 +10,14 @@ import {
   ArrowUpIcon,
   BookOpenIcon,
   CheckIcon,
+  CircleStopIcon,
+  CircleXIcon,
   CodeIcon,
   CopyIcon,
   GraduationCapIcon,
   RefreshCcwIcon,
   SparklesIcon,
+  SquareIcon,
   SquarePenIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -39,10 +42,14 @@ import type { ZeroRow } from "~/zero/schema";
 
 // -- Query --
 
-function useChatQuery() {
+function useChatId() {
   const params = useParams();
-  const chatId = String(params["chat-id"]);
+  return String(params["chat-id"]);
+}
+
+function useChatQuery() {
   const zero = useZero();
+  const chatId = useChatId();
   return useQuery(
     zero.query.chats
       .where("id", "=", chatId)
@@ -59,12 +66,15 @@ type Message = Chat["messages"][number];
 type ChatStore = {
   chat: Chat | null;
   chatStatus: "pending" | "error" | "success";
+  abortController: AbortController;
   storeChat: (chat: Chat) => void;
+  abort: () => void;
 };
 
 const chatStore = createStore<ChatStore>((set) => ({
   chat: null,
   chatStatus: "pending",
+  abortController: new AbortController(),
   storeChat: (newChat: Chat) =>
     set((state) => {
       const currentChat = state.chat;
@@ -75,7 +85,17 @@ const chatStore = createStore<ChatStore>((set) => ({
       if (currentChat === optimizedChat) {
         return state;
       }
-      return { chat: optimizedChat, chatStatus: "success" };
+      return {
+        chat: optimizedChat,
+        chatStatus: "success",
+      };
+    }),
+  abort: () =>
+    set((state) => {
+      try {
+        state.abortController.abort("cancel");
+      } catch {}
+      return { ...state, abortController: new AbortController() };
     }),
 }));
 
@@ -118,9 +138,25 @@ function useChatLoader() {
 // -- Page --
 
 export default function ChatPage() {
+  const chatId = useChatId();
+  const z = useZero();
+
   useChatLoader();
 
   const isChatLoaded = useIsChatLoaded();
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cb = () => {
+      z.mutate.chats.abortChat({
+        chatId: chatId,
+      });
+    };
+    window.addEventListener("beforeunload", cb);
+    return () => {
+      window.removeEventListener("beforeunload", cb);
+    };
+  }, [chatId, z.mutate.chats]);
 
   return (
     <div className="relative h-full flex-1">
@@ -128,7 +164,7 @@ export default function ChatPage() {
         <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
           {isChatLoaded && <MessageStack />}
         </div>
-        {isChatLoaded && <SendMessageForm />}
+        <SendMessageForm />
       </ScrollArea>
     </div>
   );
@@ -142,9 +178,9 @@ function MessageStack(props: { className?: string }) {
   }
   return (
     <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
-      {messages.map((message) => (
-        <Message key={message.id} message={message} />
-      ))}
+      {messages.map((message) =>
+        message.content ? <Message key={message.id} message={message} /> : null,
+      )}
     </div>
   );
 }
@@ -264,6 +300,23 @@ const Message = React.memo(function Message(props: { message: Message }) {
       ) : (
         <MessageSystem content={message.content} />
       )}
+
+      {(message.status === "aborted" || message.status === "error") && (
+        <div className="bg-secondary text-secondary-foreground w-full max-w-sm rounded-md p-4 text-xs font-medium">
+          {message.status === "aborted" ? (
+            <>
+              <CircleStopIcon className="mr-1.5 inline-block size-4 align-middle" />
+              Stopped by user
+            </>
+          ) : (
+            <>
+              <CircleXIcon className="mr-1.5 inline-block size-4 align-middle" />
+              Error while generating response, please try again.
+            </>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-1">
         {message.role === "user" ? (
           <MessageActionsUser
@@ -498,8 +551,16 @@ function MessageActionsSystem(props: { message: Message }) {
 }
 
 function SendMessageForm() {
+  const chatId = useChatId();
   const sendUserMessage = useSendUserMessage();
   const [model, setModel] = React.useState("o4-mini");
+  const pendingMessage = useStore(chatStore, (state) =>
+    state.chat?.messages.find((message) => message.status === "streaming"),
+  );
+  const isChatLoaded = useIsChatLoaded();
+  const abort = useStore(chatStore, (state) => state.abort);
+  const z = useZero();
+
   const form = useForm({
     defaultValues: {
       message: "",
@@ -509,6 +570,7 @@ function SendMessageForm() {
       form.reset();
     },
   });
+
   return (
     <div className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
       <div className="relative h-full w-full">
@@ -516,7 +578,14 @@ function SendMessageForm() {
           onSubmit={async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            await form.handleSubmit();
+            if (pendingMessage) {
+              abort();
+              await z.mutate.chats.abortChat({
+                chatId,
+              }).client;
+            } else {
+              await form.handleSubmit();
+            }
           }}
         >
           <form.Field
@@ -535,25 +604,30 @@ function SendMessageForm() {
                 }}
                 placeholder="Type your message here..."
                 className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
+                disabled={!!pendingMessage}
                 rows={4}
               />
             )}
           />
 
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isSubmitting]}
-            children={([canSubmit]) => (
-              <Button
-                type="submit"
-                disabled={!canSubmit}
-                className="absolute right-1.5 bottom-1.5"
-                size="icon-lg"
-              >
+          <Button
+            type="submit"
+            disabled={!isChatLoaded}
+            className="absolute right-1.5 bottom-1.5"
+            size="icon-lg"
+          >
+            {pendingMessage ? (
+              <>
+                <SquareIcon className="fill-current" />
+                <span className="sr-only">Stop</span>
+              </>
+            ) : (
+              <>
                 <ArrowUpIcon />
                 <span className="sr-only">Send</span>
-              </Button>
+              </>
             )}
-          />
+          </Button>
         </form>
         <div className="absolute bottom-1.5 left-1.5 flex gap-1">
           <ModelCombobox
@@ -574,7 +648,7 @@ function SendMessageForm() {
 }
 
 function useSendUserMessage() {
-  const chatId = useChatSelector((chat) => chat.id);
+  const chatId = useChatId();
   const pushAssistantMessage = usePushAssistantMessage();
   const z = useZero();
   return React.useCallback(
@@ -593,28 +667,42 @@ function useSendUserMessage() {
 
 function usePushAssistantMessage() {
   const z = useZero();
-  const chatId = useChatSelector((chat) => chat.id);
+  const chatId = useChatId();
+  const abortController = useStore(chatStore, (state) => state.abortController);
   return React.useCallback(
     async (input: { prompt: string }) => {
+      const messageId = crypto.randomUUID();
+      await z.mutate.chats.pushAssistantMessageChunk({
+        chatId: chatId,
+        messageId,
+        chunk: "",
+        chunkType: "first",
+        timestamp: Date.now(),
+      }).client;
       const response = streamResponse(input.prompt, {
         // provider: "openrouter",
         // modelId: "deepseek/deepseek-r1-0528:free",
         provider: "ollama",
         modelId: "llama3.2", // usage: `ollama run llama3.2`
+        abortSignal: abortController.signal,
       });
-      const messageId = crypto.randomUUID();
-      let isFirstChunk = true;
       for await (const chunk of response) {
-        z.mutate.chats.pushAssistantMessageChunk({
+        await z.mutate.chats.pushAssistantMessageChunk({
           chatId: chatId,
           messageId,
           chunk,
-          isFirstChunk,
+          chunkType: "middle",
           timestamp: Date.now(),
-        });
-        isFirstChunk = false;
+        }).client;
       }
+      await z.mutate.chats.pushAssistantMessageChunk({
+        chatId: chatId,
+        messageId,
+        chunk: "",
+        chunkType: "last",
+        timestamp: Date.now(),
+      }).client;
     },
-    [chatId, z.mutate.chats],
+    [abortController.signal, chatId, z.mutate.chats],
   );
 }
