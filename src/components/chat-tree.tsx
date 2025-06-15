@@ -3,10 +3,10 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import {
-  ChevronDownIcon,
   CopyIcon,
   CornerDownRightIcon,
   FolderIcon,
+  FolderOpenIcon,
   FolderPlusIcon,
   MenuIcon,
   ShareIcon,
@@ -20,6 +20,7 @@ import {
   TreeItem,
   TreeItemContent,
   useDragAndDrop,
+  type Key,
   type TreeItemProps,
 } from "react-aria-components";
 
@@ -36,8 +37,16 @@ import {
   ContextMenuTrigger,
 } from "./context-menu";
 
-export const ChatTree = (props: { chatTreeId: string; className?: string }) => {
-  const { chatTreeId } = props;
+export interface ChatTreeProps {
+  chatTreeId: string;
+  className?: string;
+  expanded?: Key[];
+  onExpandedChange?: (expanded: Key[]) => void;
+}
+
+export function ChatTree(props: ChatTreeProps) {
+  const { chatTreeId, className, expanded, onExpandedChange } = props;
+
   const z = useZero();
   const [treeData, isPending] = useTreeData(props);
 
@@ -99,9 +108,13 @@ export const ChatTree = (props: { chatTreeId: string; className?: string }) => {
   return (
     <Tree
       dragAndDropHooks={dragAndDropHooks}
-      className={clsx(styles.tree, props.className)}
+      className={clsx(styles.tree, className)}
       aria-label="Chat explorer tree view with folders"
       items={treeData.items}
+      expandedKeys={expanded}
+      onExpandedChange={(newExpanded) => {
+        onExpandedChange?.(Array.from(newExpanded));
+      }}
       children={(item) => (
         <DynamicTreeItem
           treeData={treeData}
@@ -115,7 +128,7 @@ export const ChatTree = (props: { chatTreeId: string; className?: string }) => {
       )}
     />
   );
-};
+}
 
 interface DynamicTreeItemProps extends TreeItemProps<object> {
   children: React.ReactNode;
@@ -149,7 +162,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
         isFocusVisible,
         isDropTarget,
       }) =>
-        // TODO: handle this styles
+        // TODO: handle these styles
         clsx("group", {
           focused: isFocused,
           "focus-visible": isFocusVisible,
@@ -168,26 +181,21 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   "hover:bg-primary/10 flex items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
                 )}
                 style={{
-                  marginInlineStart: `${(!hasChildItems ? 20 : 0) + (level - 1) * 15}px`,
+                  marginInlineStart: `${(level - 1) * 15}px`,
                 }}
               >
                 {hasChildItems && (
                   <Button slot="chevron">
-                    <ChevronDownIcon
-                      className="size-4 text-slate-500"
-                      style={{
-                        transform: `rotate(${isExpanded ? 0 : -90}deg)`,
-                      }}
-                    />
+                    {isExpanded ? (
+                      <FolderOpenIcon className="text-muted-foreground size-4" />
+                    ) : (
+                      <FolderIcon className="text-muted-foreground size-4" />
+                    )}
                   </Button>
                 )}
-                {supportsDragging && (
+                {supportsDragging && item.value.kind !== "group" && (
                   <Button slot="drag">
-                    {item.value.kind === "group" ? (
-                      <FolderIcon className="size-4 text-slate-500" />
-                    ) : (
-                      <MenuIcon className="size-4 text-slate-500" />
-                    )}
+                    <MenuIcon className="text-muted-foreground size-4" />
                   </Button>
                 )}
                 <span className="overflow-hidden text-nowrap text-ellipsis">

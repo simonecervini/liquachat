@@ -2,11 +2,22 @@
 
 import * as React from "react";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
-import { DropletIcon, PanelLeftIcon, PlusIcon, SearchIcon } from "lucide-react";
+import {
+  DropletIcon,
+  FolderTreeIcon,
+  ListIcon,
+  PanelLeftIcon,
+  PlusIcon,
+  SearchIcon,
+} from "lucide-react";
+import { Tabs as TabsPrimitive } from "radix-ui";
+import type { Key } from "react-aria-components";
 
 import { ChatTree } from "~/components/chat-tree";
+import { ChatCombobox } from "~/components/chat-tree-combobox";
 import { Button } from "~/components/system/button";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
@@ -27,6 +38,7 @@ function Sidebar() {
   const z = useZero();
   const [open, setOpen] = useState(false); // TODO: implement this
 
+  const [chats] = useQuery(z.query.chats.where("userId", "=", z.userID));
   const [chatTrees] = useQuery(
     z.query.chatTrees.where("userId", "=", z.userID),
   );
@@ -44,20 +56,27 @@ function Sidebar() {
         <PanelLeftIcon className="invisible size-5 text-blue-500" />
       </div>
 
-      {chatTrees.length > 0 && <SidebarContent chatTrees={chatTrees} />}
+      {chatTrees.length > 0 && (
+        <SidebarContent chatTrees={chatTrees} chats={chats} />
+      )}
     </div>
   );
 }
 
-function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
-  const { chatTrees } = props;
-  const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id); // TODO: handle this
+function SidebarContent(props: {
+  chatTrees: ZeroRow<"chatTrees">[];
+  chats: ZeroRow<"chats">[];
+}) {
+  const { chatTrees, chats } = props;
+  const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id);
+  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<Key[]>([]);
   const z = useZero();
   const router = useRouter();
   return (
-    <>
+    <div className="flex h-full w-full flex-col">
       <Button
-        className="mb-4 w-full"
+        className="w-full"
         size="lg"
         onClick={async () => {
           const chatId = crypto.randomUUID();
@@ -73,32 +92,76 @@ function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
         New Chat
       </Button>
 
-      <div className="relative mb-4 w-full">
+      <div className="relative mt-3.5 mb-4.5 w-full">
         <input
           type="text"
-          placeholder="Search your threads..."
-          className="w-full border-b border-gray-300 bg-transparent px-8 py-2 text-sm focus:border-blue-600 focus:outline-none"
+          placeholder="Search your chats..."
+          className="focus:border-primary w-full border-b border-gray-300 bg-transparent py-2 pl-6.5 text-xs focus:outline-none"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setExpanded([]);
+          }}
         />
-        <SearchIcon
-          size={16}
-          className="absolute top-1/2 left-0 -translate-y-1/2 transform text-gray-400"
-        />
+        <SearchIcon className="text-muted-foreground absolute top-1/2 left-0 size-4 -translate-y-1/2 transform" />
       </div>
 
-      <ChatTree className="w-full" chatTreeId={chatTreeId} />
-
-      {/* <div className="flex flex-col gap-2 w-full">
-        {chats.map((chat) => (
-          <Link
-            href={`/chat/${chat.id}`}
-            key={chat.id}
-            className="text-left p-2 hover:bg-white/20 rounded-xl text-slate-700 hover:text-slate-900 transition-colors text-sm"
+      <TabsPrimitive.Root
+        className="flex grow flex-col gap-1.5"
+        defaultValue="tree"
+      >
+        <TabsPrimitive.List className="text-muted-foreground flex justify-center gap-2 text-xs">
+          <TabsPrimitive.Trigger
+            className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
+            value="tree"
           >
-            {chat.title ?? "Untitled"}
-          </Link>
-        ))}
-      </div> */}
-    </>
+            <FolderTreeIcon className="size-4" />
+            Tree
+          </TabsPrimitive.Trigger>
+          <TabsPrimitive.Trigger
+            className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
+            value="list"
+          >
+            <ListIcon className="size-4" />
+            List
+          </TabsPrimitive.Trigger>
+        </TabsPrimitive.List>
+        <TabsPrimitive.Content
+          value="tree"
+          className="flex grow flex-col justify-between"
+        >
+          <ChatTree
+            className="w-full"
+            chatTreeId={chatTreeId}
+            expanded={expanded}
+            onExpandedChange={setExpanded}
+          />
+          <ChatCombobox
+            value={chatTreeId}
+            onChange={setChatTreeId}
+            options={chatTrees.map((chatTree) => ({
+              id: chatTree.id,
+              label: "Untitled",
+            }))}
+            className="w-full"
+          />
+        </TabsPrimitive.Content>
+        <TabsPrimitive.Content value="list">
+          <div className="flex w-full flex-col gap-2">
+            {chats.map((chat) => (
+              <Link
+                href={`/chat/${chat.id}`}
+                key={chat.id}
+                className="rounded-xl p-2 text-left text-sm text-slate-700 transition-colors hover:bg-white/20 hover:text-slate-900"
+                // TODO: add chat title
+              >
+                {chat.id.slice(0, 8)}
+              </Link>
+            ))}
+          </div>
+        </TabsPrimitive.Content>
+      </TabsPrimitive.Root>
+    </div>
   );
 }
 
