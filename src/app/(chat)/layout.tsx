@@ -27,17 +27,12 @@ export default function Layout(props: { children: React.ReactNode }) {
   const { children } = props;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   return (
-    <div
-      className={cn(
-        "flex h-screen transition-all",
-        sidebarOpen ? "gap-3 pr-4" : "gap-0",
-      )}
-    >
+    <div className="flex h-screen transition-all">
       <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
       <div
         className={cn(
-          "relative grow border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5",
-          sidebarOpen && "mt-3 rounded-t-3xl border-3 border-b-0",
+          "relative grow before:absolute before:top-3 before:right-3 before:bottom-0 before:left-4 before:rounded-t-3xl before:border-3 before:border-b-0 before:border-white before:bg-white before:bg-gradient-to-tl before:from-white/70 before:to-white/80 before:shadow-2xl before:shadow-black/5 before:content-['']",
+          !sidebarOpen && "before:inset-0 before:rounded-none",
         )}
       >
         {children}
