@@ -81,7 +81,7 @@ function MessageStack(props: { className?: string }) {
     }
   }
   return (
-    <div className={cn("flex flex-col gap-8 pb-16", className)}>
+    <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
       {messages.map((message) => (
         <Message key={message.id} message={message} />
       ))}

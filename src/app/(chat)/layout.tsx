@@ -52,17 +52,35 @@ function Sidebar(props: {
   const [chatTrees] = useQuery(
     z.query.chatTrees.where("userId", "=", z.userID),
   );
+  const startNewChat = useStartNewChat();
 
   return (
     <div className="relative flex h-full">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onOpenChange(!open)}
-        className={cn("absolute top-4 left-2 z-10", !open && "left-4")}
+      <div
+        className={cn(
+          "absolute top-4 left-2 z-10 flex gap-0.5 transition-all",
+          !open && "left-4",
+        )}
       >
-        <PanelLeftIcon />
-      </Button>
+        <Button variant="ghost" size="icon" onClick={() => onOpenChange(!open)}>
+          <PanelLeftIcon />
+        </Button>
+        {!open && (
+          <>
+            <Button
+              className="animate-in fade-in"
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                // TODO: use the last used chat tree
+                await startNewChat(chatTrees[0]!.id);
+              }}
+            >
+              <PlusIcon />
+            </Button>
+          </>
+        )}
+      </div>
       <div
         className={cn(
           "flex grow flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4 transition-all duration-300",
@@ -87,21 +105,14 @@ function SidebarContent(props: {
   const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Key[]>([]);
-  const z = useZero();
-  const router = useRouter();
+  const startNewChat = useStartNewChat();
   return (
     <div className="flex h-full w-full flex-col">
       <Button
         className="w-full"
         size="lg"
         onClick={async () => {
-          const chatId = crypto.randomUUID();
-          await z.mutate.chats.init({
-            id: chatId,
-            timestamp: Date.now(),
-            chatTreeId,
-          }).client;
-          router.push(`/chat/${chatId}`);
+          await startNewChat(chatTreeId);
         }}
       >
         <PlusIcon />
@@ -231,5 +242,22 @@ function Logo(props: { className?: string }) {
       <DropletIcon className="size-4 text-blue-500" strokeWidth={3} />
       Liqua
     </div>
+  );
+}
+
+function useStartNewChat() {
+  const z = useZero();
+  const router = useRouter();
+  return React.useCallback(
+    async (chatTreeId: string) => {
+      const chatId = crypto.randomUUID();
+      await z.mutate.chats.init({
+        id: chatId,
+        timestamp: Date.now(),
+        chatTreeId,
+      }).client;
+      router.push(`/chat/${chatId}`);
+    },
+    [router, z.mutate.chats],
   );
 }
