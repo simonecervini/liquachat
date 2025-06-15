@@ -9,6 +9,7 @@ import {
   FolderOpenDotIcon,
   FolderOpenIcon,
   FolderPlusIcon,
+  FoldersIcon,
   MenuIcon,
   TextCursorIcon,
   TrashIcon,
@@ -278,8 +279,17 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     });
                   }}
                 >
-                  <CopyIcon />
-                  Duplicate
+                  {item.value.kind === "group" ? (
+                    <>
+                      <FoldersIcon />
+                      Duplicate folder
+                    </>
+                  ) : (
+                    <>
+                      <CopyIcon />
+                      Duplicate
+                    </>
+                  )}
                 </ContextMenuItem>
                 {/* <ContextMenuSeparator />
                 <ContextMenuItem>
