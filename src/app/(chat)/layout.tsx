@@ -25,19 +25,33 @@ import type { ZeroRow } from "~/zero/schema";
 
 export default function Layout(props: { children: React.ReactNode }) {
   const { children } = props;
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   return (
-    <div className="flex h-screen gap-3 pr-4">
-      <Sidebar />
-      <div className="relative mt-3 w-60 grow rounded-t-3xl border-3 border-b-0 border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5">
+    <div
+      className={cn(
+        "flex h-screen transition-all",
+        sidebarOpen ? "gap-3 pr-4" : "gap-0",
+      )}
+    >
+      <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
+      <div
+        className={cn(
+          "relative grow border-white bg-gradient-to-tl from-white/70 to-white/80 shadow-2xl shadow-black/5",
+          sidebarOpen && "mt-3 rounded-t-3xl border-3 border-b-0",
+        )}
+      >
         {children}
       </div>
     </div>
   );
 }
 
-function Sidebar() {
+function Sidebar(props: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { open, onOpenChange } = props;
   const z = useZero();
-  const [open, setOpen] = useState(false); // TODO: implement this
 
   const [chats] = useQuery(z.query.chats.where("userId", "=", z.userID));
   const [chatTrees] = useQuery(
@@ -45,21 +59,27 @@ function Sidebar() {
   );
 
   return (
-    <div className="flex w-60 flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4">
-      <div className="mb-3 flex w-full items-center justify-between">
-        <button
-          className="text-slate-900 transition-colors hover:text-blue-500"
-          onClick={() => setOpen((prev) => !prev)}
-        >
-          <PanelLeftIcon className="size-5" />
-        </button>
-        <Logo />
-        <PanelLeftIcon className="invisible size-5 text-blue-500" />
-      </div>
+    <div className="relative flex h-full">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onOpenChange(!open)}
+        className={cn("absolute top-4 left-2 z-10", !open && "left-4")}
+      >
+        <PanelLeftIcon />
+      </Button>
+      <div
+        className={cn(
+          "flex grow flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4 transition-all duration-300",
+          open ? "w-60 px-4 opacity-100" : "w-0 px-0 opacity-0",
+        )}
+      >
+        <Logo className="mb-2" />
 
-      {chatTrees.length > 0 && (
-        <SidebarContent chatTrees={chatTrees} chats={chats} />
-      )}
+        {chatTrees.length > 0 && (
+          <SidebarContent chatTrees={chatTrees} chats={chats} />
+        )}
+      </div>
     </div>
   );
 }
@@ -204,9 +224,15 @@ function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
   );
 }
 
-function Logo() {
+function Logo(props: { className?: string }) {
+  const { className } = props;
   return (
-    <div className="flex h-10 w-full items-center justify-center gap-1 font-extrabold text-slate-900">
+    <div
+      className={cn(
+        "flex h-10 w-full items-center justify-center gap-1 font-extrabold text-slate-900",
+        className,
+      )}
+    >
       <DropletIcon className="size-4 text-blue-500" strokeWidth={3} />
       Liqua
     </div>
