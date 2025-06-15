@@ -44,6 +44,7 @@ body {
   --color-popover-foreground: var(--color-slate-900);
   --color-muted-foreground: var(--color-slate-500);
   --color-border: var(--color-slate-200);
+  --color-ring: var(--color-slate-800);
 }
 
 @theme inline {
@@ -55,7 +56,7 @@ body {
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border selection:bg-primary selection:text-primary-foreground;
   }
   body {
     @apply text-foreground;

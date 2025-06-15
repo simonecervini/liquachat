@@ -4,6 +4,8 @@ import { ReactScan } from "~/components/react-scan";
 import { type Metadata } from "next";
 import { IBM_Plex_Mono, Poppins } from "next/font/google";
 
+import { AlertEmitter } from "~/components/alert";
+import { RenameDialog } from "~/components/rename-dialog";
 import { Toaster } from "~/components/system/sonner";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/lib/trpc";
@@ -43,6 +45,8 @@ export default function RootLayout({
           <ZeroAuthenticatedProvider>{children}</ZeroAuthenticatedProvider>
         </TRPCReactProvider>
         <Toaster />
+        <AlertEmitter />
+        <RenameDialog />
       </body>
     </html>
   );

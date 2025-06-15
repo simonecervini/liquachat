@@ -6,10 +6,10 @@ import {
   CopyIcon,
   CornerDownRightIcon,
   FolderIcon,
+  FolderOpenDotIcon,
   FolderOpenIcon,
   FolderPlusIcon,
   MenuIcon,
-  ShareIcon,
   TextCursorIcon,
   TrashIcon,
 } from "lucide-react";
@@ -28,6 +28,7 @@ import { cn } from "~/lib/cn";
 import type { ChatTreeNode } from "~/lib/types";
 import { useTreeData as __useTreeData } from "~/lib/use-tree-data";
 import { useZero } from "~/zero/react";
+import { useAlertDialog } from "./alert";
 import styles from "./chat-tree.module.css";
 import {
   ContextMenu,
@@ -36,6 +37,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "./context-menu";
+import { useRename } from "./rename-dialog";
 
 export interface ChatTreeProps {
   chatTreeId: string;
@@ -156,6 +158,9 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
   const { childItems, getItemText, renderLoader, supportsDragging, treeData } =
     props;
   const router = useRouter();
+  const z = useZero();
+  const { openAlert } = useAlertDialog();
+  const { rename } = useRename();
 
   const item = treeData.getItem(props.id ?? "");
   if (!item) return null;
@@ -198,12 +203,17 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   marginInlineStart: `${(level - 1) * 15}px`,
                 }}
               >
-                {hasChildItems && (
+                {item.value.kind === "group" && (
                   <Button slot="chevron">
-                    {isExpanded ? (
-                      <FolderOpenIcon className="text-muted-foreground size-4" />
+                    {hasChildItems ? (
+                      isExpanded ? (
+                        <FolderOpenIcon className="text-muted-foreground size-4" />
+                      ) : (
+                        <FolderIcon className="text-muted-foreground size-4" />
+                      )
                     ) : (
-                      <FolderIcon className="text-muted-foreground size-4" />
+                      // Empty folder
+                      <FolderOpenDotIcon className="text-muted-foreground size-4" />
                     )}
                   </Button>
                 )}
@@ -212,8 +222,13 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     <MenuIcon className="text-muted-foreground size-4" />
                   </Button>
                 )}
-                <span className="overflow-hidden text-nowrap text-ellipsis">
+                <span className="truncate">
                   {props.children}
+                  {item.value.kind === "group" && !hasChildItems && (
+                    <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
+                      {" (empty)"}
+                    </span>
+                  )}
                 </span>
               </ContextMenuTrigger>
               <ContextMenuContent>
@@ -272,11 +287,60 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   Share
                 </ContextMenuItem> */}
                 <ContextMenuSeparator />
-                <ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    rename({
+                      initialValue: getItemText(item),
+                      title:
+                        item.value.kind === "chat"
+                          ? "Rename chat"
+                          : "Rename folder",
+                      description:
+                        item.value.kind === "chat"
+                          ? "Rename the chat to a new name."
+                          : "Rename the folder to a new name.",
+                      onSubmit: (value) => {
+                        if (item.value.kind === "chat") {
+                          void z.mutate.chats.update({
+                            id: item.value.chatId,
+                            title: value,
+                          });
+                          treeData.update(id, {
+                            ...item.value,
+                            // We need to change "something" in the tree data to trigger a re-render
+                            // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
+                            // The `key` prop on the DynamicTreeItem or Tree component is not enough because we need to sync the change across all clients
+                            // Regenerating the id is not very elegant, but it works and have zero impact on the user
+                            id: crypto.randomUUID(),
+                          });
+                        } else {
+                          treeData.update(id, {
+                            ...item.value,
+                            name: value,
+                          });
+                        }
+                      },
+                    });
+                  }}
+                >
                   <TextCursorIcon />
                   Rename
                 </ContextMenuItem>
-                <ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    openAlert({
+                      title: "Are you sure?",
+                      message:
+                        item.value.kind === "chat"
+                          ? "This action cannot be undone. This will permanently delete this chat."
+                          : "This action cannot be undone. This will permanently delete this folder and all its content.",
+                      confirmLabel: "Delete",
+                      onConfirm: () => {
+                        treeData.remove(id);
+                      },
+                    });
+                  }}
+                >
                   <TrashIcon />
                   Delete
                 </ContextMenuItem>
