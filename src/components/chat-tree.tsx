@@ -187,7 +187,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
       }
     >
       <TreeItemContent>
-        {({ isExpanded, hasChildItems, level, id }) => {
+        {({ isExpanded, hasChildItems, level, id, state }) => {
           return (
             <ContextMenu>
               <ContextMenuTrigger
@@ -217,9 +217,27 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                 </span>
               </ContextMenuTrigger>
               <ContextMenuContent>
-                <ContextMenuItem>
-                  <CornerDownRightIcon />
-                  Open
+                <ContextMenuItem
+                  onClick={() => {
+                    if (item.value.kind === "chat") {
+                      router.push(`/chat/${item.value.chatId}`);
+                    } else {
+                      state.toggleKey(id);
+                    }
+                  }}
+                >
+                  {item.value.kind === "chat" ? (
+                    <CornerDownRightIcon />
+                  ) : isExpanded ? (
+                    <FolderIcon />
+                  ) : (
+                    <FolderOpenIcon />
+                  )}
+                  {item.value.kind === "chat"
+                    ? "Open"
+                    : isExpanded
+                      ? "Close folder"
+                      : "Open folder"}
                 </ContextMenuItem>
                 <ContextMenuItem
                   onClick={() => {
@@ -234,15 +252,25 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   <FolderPlusIcon />
                   Move to new folder
                 </ContextMenuItem>
-                <ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    treeData.insertBefore(id, {
+                      ...item.value,
+                      id: crypto.randomUUID(),
+                      childItems: item.value.childItems
+                        ? deepRegenerateIds(item.value.childItems)
+                        : undefined,
+                    });
+                  }}
+                >
                   <CopyIcon />
                   Duplicate
                 </ContextMenuItem>
-                <ContextMenuSeparator />
+                {/* <ContextMenuSeparator />
                 <ContextMenuItem>
                   <ShareIcon />
                   Share
-                </ContextMenuItem>
+                </ContextMenuItem> */}
                 <ContextMenuSeparator />
                 <ContextMenuItem>
                   <TextCursorIcon />
