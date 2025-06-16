@@ -55,7 +55,7 @@ function Sidebar(props: {
   const startNewChat = useStartNewChat();
 
   return (
-    <div className="relative flex h-full">
+    <div className="relative flex h-full flex-col">
       <div
         className={cn(
           "absolute top-4 left-2 z-10 flex gap-0.5 transition-all",
@@ -83,11 +83,11 @@ function Sidebar(props: {
       </div>
       <div
         className={cn(
-          "flex grow flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 px-4 py-4 transition-all duration-300",
-          open ? "w-60 px-4 opacity-100" : "w-0 px-0 opacity-0",
+          "flex h-full flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 pt-4 transition-all duration-300",
+          open ? "w-60 opacity-100" : "w-0 opacity-0",
         )}
       >
-        <Logo className="mb-2" />
+        <Logo className="mb-2 px-4" />
 
         {chatTrees.length > 0 && (
           <SidebarContent chatTrees={chatTrees} chats={chats} />
@@ -107,34 +107,39 @@ function SidebarContent(props: {
   const [expanded, setExpanded] = useState<Key[]>([]);
   const startNewChat = useStartNewChat();
   return (
-    <div className="flex h-full w-full flex-col">
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={async () => {
-          await startNewChat(chatTreeId);
-        }}
-      >
-        <PlusIcon />
-        New Chat
-      </Button>
-
-      <div className="relative mt-3.5 mb-4.5 w-full">
-        <input
-          type="text"
-          placeholder="Search your chats..."
-          className="focus:border-primary w-full border-b border-gray-300 bg-transparent py-2 pl-6.5 text-xs focus:outline-none"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setExpanded([]);
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <div className="px-4">
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={async () => {
+            await startNewChat(chatTreeId);
           }}
-        />
-        <SearchIcon className="text-muted-foreground absolute top-1/2 left-0 size-4 -translate-y-1/2 transform" />
+        >
+          <PlusIcon />
+          New Chat
+        </Button>
+
+        <div className="relative mt-3.5 mb-4.5 w-full">
+          <input
+            type="text"
+            placeholder="Search your chats..."
+            className="focus:border-primary w-full border-b border-gray-300 bg-transparent py-2 pl-6.5 text-xs focus:outline-none"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setExpanded([]);
+            }}
+          />
+          <SearchIcon className="text-muted-foreground absolute top-1/2 left-0 size-4 -translate-y-1/2 transform" />
+        </div>
       </div>
 
-      <TabsPrimitive.Root className="flex grow flex-col" defaultValue="tree">
-        <TabsPrimitive.List className="text-muted-foreground flex justify-center gap-2 text-xs">
+      <TabsPrimitive.Root
+        className="flex min-h-0 flex-1 flex-col"
+        defaultValue="tree"
+      >
+        <TabsPrimitive.List className="text-muted-foreground flex justify-center gap-2 px-4 text-xs">
           <TabsPrimitive.Trigger
             className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
             value="tree"
@@ -152,30 +157,37 @@ function SidebarContent(props: {
         </TabsPrimitive.List>
         <TabsPrimitive.Content
           value="tree"
-          className="flex grow flex-col justify-between"
+          className="flex min-h-0 flex-1 flex-col"
         >
-          <ChatTree
-            className="w-full py-1.5"
-            chatTreeId={chatTreeId}
-            expanded={expanded}
-            onExpandedChange={setExpanded}
-            getChatTitle={(chatId) => {
-              const chat = chats.find((chat) => chat.id === chatId);
-              return chat?.title ?? "?";
-            }}
-          />
-          <ChatCombobox
-            value={chatTreeId}
-            onChange={setChatTreeId}
-            options={chatTrees.map((chatTree) => ({
-              id: chatTree.id,
-              label: "Untitled",
-            }))}
-            className="w-full"
-          />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <ChatTree
+              className="w-full px-4 py-1.5"
+              chatTreeId={chatTreeId}
+              expanded={expanded}
+              onExpandedChange={setExpanded}
+              getChatTitle={(chatId) => {
+                const chat = chats.find((chat) => chat.id === chatId);
+                return chat?.title ?? "?";
+              }}
+            />
+          </div>
+          <div className="mb-2 px-4">
+            <ChatCombobox
+              value={chatTreeId}
+              onChange={setChatTreeId}
+              options={chatTrees.map((chatTree) => ({
+                id: chatTree.id,
+                label: "Untitled",
+              }))}
+              className="w-full flex-shrink-0"
+            />
+          </div>
         </TabsPrimitive.Content>
-        <TabsPrimitive.Content value="list">
-          <ChatList chats={chats} className="pt-3.5" />
+        <TabsPrimitive.Content
+          value="list"
+          className="min-h-0 flex-1 overflow-y-auto"
+        >
+          <ChatList chats={chats} className="px-4 pt-3.5" />
         </TabsPrimitive.Content>
       </TabsPrimitive.Root>
     </div>
