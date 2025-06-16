@@ -70,7 +70,14 @@ export const messages = createTable(
       .notNull()
       .references(() => chats.id, { onDelete: "cascade" }),
     userId: d.uuid().references(() => users.id, { onDelete: "cascade" }),
-    role: d.text({ enum: ["user", "assistant"] }).notNull(),
+    role: d
+      .text({
+        enum: [
+          "user",
+          "" as `assistant/${string}`, // e.g. "assistant/google/gemini-2.5-flash-preview"
+        ],
+      })
+      .notNull(),
     content: d.text().notNull(),
     status: messageStatusEnum().notNull(),
     createdAt: d.timestamp().notNull(),

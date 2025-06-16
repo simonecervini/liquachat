@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { SearchIcon } from "lucide-react";
+import { Loader2, SearchIcon } from "lucide-react";
 
 import { cn } from "~/lib/cn";
 
@@ -72,6 +72,21 @@ function CommandEmpty({
   );
 }
 
+function CommandLoading({
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Loading>) {
+  return (
+    <CommandPrimitive.Loading
+      data-slot="command-loading"
+      className="flex items-center justify-center px-2 py-4 text-sm"
+      {...props}
+    >
+      <Loader2 className="mr-2 inline-block size-3 animate-spin" />
+      Loading...
+    </CommandPrimitive.Loading>
+  );
+}
+
 function CommandGroup({
   className,
   ...props
@@ -138,6 +153,7 @@ export {
   CommandInput,
   CommandList,
   CommandEmpty,
+  CommandLoading,
   CommandGroup,
   CommandItem,
   CommandShortcut,

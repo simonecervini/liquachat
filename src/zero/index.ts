@@ -68,6 +68,7 @@ export function createMutators(authData: AuthData) {
           chatId: string;
           chunk: string;
           chunkType: "first" | "middle" | "last";
+          model: string;
           timestamp: number;
         },
       ) => {
@@ -84,7 +85,7 @@ export function createMutators(authData: AuthData) {
           chatId: input.chatId,
           content: prevContent + input.chunk,
           createdAt: safeTimestamp(tx, input.timestamp),
-          role: "assistant",
+          role: `assistant/${input.model}`,
           userId: authData.user.id,
           status: input.chunkType === "last" ? "complete" : "streaming",
         });

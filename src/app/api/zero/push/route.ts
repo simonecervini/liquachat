@@ -114,7 +114,7 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
             chatId: input.chatId,
             content: input.chunk,
             createdAt: safeTimestamp(tx, input.timestamp),
-            role: "assistant",
+            role: `assistant/${input.model}`,
             userId: authData.user.id,
             status: "streaming",
           });

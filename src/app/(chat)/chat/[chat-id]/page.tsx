@@ -23,9 +23,10 @@ import {
 import { motion } from "motion/react";
 import { Tabs } from "radix-ui";
 import { createStore, useStore } from "zustand";
+import { useStoreWithEqualityFn } from "zustand/traditional";
 
 import { Markdown } from "~/components/markdown";
-import { ModelCombobox } from "~/components/model-combobox";
+import { DEFAULT_MODEL, ModelCombobox } from "~/components/model-combobox";
 import { ScrollArea } from "~/components/scroll-area";
 import { Button } from "~/components/system/button";
 import {
@@ -34,7 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/system/tooltip";
-import { streamResponse } from "~/lib/ai";
+import { parseModelFromRole, streamResponse } from "~/lib/ai";
 import { cn } from "~/lib/cn";
 import { useCopyButton } from "~/lib/use-copy-button";
 import { useZero } from "~/zero/react";
@@ -66,8 +67,10 @@ type Message = Chat["messages"][number];
 type ChatStore = {
   chat: Chat | null;
   chatStatus: "pending" | "error" | "success";
+  model: string;
   abortController: AbortController;
   storeChat: (chat: Chat) => void;
+  setModel: (newModel: string) => void;
   abort: () => void;
 };
 
@@ -75,6 +78,7 @@ const chatStore = createStore<ChatStore>((set) => ({
   chat: null,
   chatStatus: "pending",
   abortController: new AbortController(),
+  model: DEFAULT_MODEL,
   storeChat: (newChat: Chat) =>
     set((state) => {
       const currentChat = state.chat;
@@ -82,14 +86,17 @@ const chatStore = createStore<ChatStore>((set) => ({
       // Zero actually provides fine-grained updates, but they are not available with useQuery() because
       // it needs to clone everything in order to follow the rules of React. We'll probably change this in the future.
       const optimizedChat = replaceEqualDeep(currentChat, newChat);
-      if (currentChat === optimizedChat) {
-        return state;
-      }
+      const latestModel = parseModelFromRole(
+        optimizedChat.messages.findLast((m) => m.role.startsWith("assistant/"))
+          ?.role,
+      );
       return {
         chat: optimizedChat,
+        model: latestModel ?? state.model,
         chatStatus: "success",
       };
     }),
+  setModel: (newModel: string) => set({ model: newModel }),
   abort: () =>
     set((state) => {
       try {
@@ -100,15 +107,19 @@ const chatStore = createStore<ChatStore>((set) => ({
 }));
 
 function useChatSelector<U>(selector: (chat: Chat) => U) {
-  return useStore(chatStore, (state) => {
-    const chat = state.chat;
-    if (!chat) {
-      throw new Error(
-        "Chat is not loaded: you are probably calling `useChatSelector` without using `useIsChatLoaded` first.",
-      );
-    }
-    return selector(chat);
-  });
+  return useStoreWithEqualityFn(
+    chatStore,
+    (state) => {
+      const chat = state.chat;
+      if (!chat) {
+        throw new Error(
+          "Chat is not loaded: you are probably calling `useChatSelector` without using `useIsChatLoaded` first.",
+        );
+      }
+      return selector(chat);
+    },
+    dequal,
+  );
 }
 
 function useIsChatLoaded() {
@@ -268,7 +279,9 @@ function MessageStackEmpty() {
                   className="w-full justify-start"
                   size="lg"
                   onClick={async () => {
-                    await sendUserMessage(suggestion);
+                    await sendUserMessage({
+                      prompt: suggestion,
+                    });
                   }}
                 >
                   {suggestion}
@@ -360,6 +373,7 @@ function MessageUser(props: {
 
 function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
   const { message: originalMessage, setEditMode } = props;
+  const chatId = useChatId();
   const z = useZero();
   const pushAssistantMessage = usePushAssistantMessage();
   const form = useForm({
@@ -369,12 +383,20 @@ function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
     onSubmit: async ({ value }) => {
       const newMessage = value.message.trim();
       if (newMessage && newMessage !== originalMessage.content.trim()) {
+        const nextMessage = await z.query.messages
+          .where("chatId", "=", chatId)
+          .where("createdAt", ">", originalMessage.createdAt)
+          .orderBy("createdAt", "asc")
+          .one();
         await z.mutate.chats.updateMessage({
           id: originalMessage.id,
           content: value.message,
           timestamp: Date.now(),
-        }).client;
-        await pushAssistantMessage({ prompt: newMessage });
+        }).server;
+        await pushAssistantMessage({
+          prompt: newMessage,
+          model: parseModelFromRole(nextMessage?.role),
+        });
       }
       setEditMode(false);
     },
@@ -461,6 +483,7 @@ function MessageActionsUser(props: {
   setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { message, editMode, setEditMode } = props;
+  const chatId = useChatId();
   const { buttonProps: copyButtonProps, copied } = useCopyButton(
     message.content,
   );
@@ -474,11 +497,19 @@ function MessageActionsUser(props: {
             size="icon"
             variant="ghost"
             onClick={async () => {
+              const nextMessage = await z.query.messages
+                .where("chatId", "=", chatId)
+                .where("createdAt", ">", message.createdAt)
+                .orderBy("createdAt", "asc")
+                .one();
               await z.mutate.chats.deleteLaterMessages({
                 messageId: message.id,
                 includeMessage: false,
               }).client;
-              await pushAssistantMessage({ prompt: message.content });
+              await pushAssistantMessage({
+                prompt: message.content,
+                model: parseModelFromRole(nextMessage?.role),
+              });
             }}
           >
             <RefreshCcwIcon />
@@ -511,7 +542,9 @@ function MessageActionsUser(props: {
   );
 }
 
-function MessageActionsSystem(props: { message: Message }) {
+function MessageActionsSystem(props: {
+  message: Message /* & { role: `assistant/${string}` }; */;
+}) {
   const { message } = props;
   const { buttonProps: copyButtonProps, copied } = useCopyButton(
     message.content,
@@ -534,11 +567,15 @@ function MessageActionsSystem(props: { message: Message }) {
             size="icon"
             variant="ghost"
             onClick={async () => {
+              const model = parseModelFromRole(message.role);
               await z.mutate.chats.deleteLaterMessages({
                 messageId: message.id,
                 includeMessage: true,
               }).client;
-              await pushAssistantMessage({ prompt: message.content });
+              await pushAssistantMessage({
+                prompt: message.content,
+                model,
+              });
             }}
           >
             <RefreshCcwIcon />
@@ -553,7 +590,8 @@ function MessageActionsSystem(props: { message: Message }) {
 function SendMessageForm() {
   const chatId = useChatId();
   const sendUserMessage = useSendUserMessage();
-  const [model, setModel] = React.useState("o4-mini");
+  const model = useStore(chatStore, (state) => state.model);
+  const setModel = useStore(chatStore, (state) => state.setModel);
   const pendingMessage = useStore(chatStore, (state) =>
     state.chat?.messages.find((message) => message.status === "streaming"),
   );
@@ -566,7 +604,7 @@ function SendMessageForm() {
       message: "",
     },
     onSubmit: async ({ value }) => {
-      await sendUserMessage(value.message);
+      await sendUserMessage({ prompt: value.message });
       form.reset();
     },
   });
@@ -651,17 +689,18 @@ function useSendUserMessage() {
   const chatId = useChatId();
   const pushAssistantMessage = usePushAssistantMessage();
   const z = useZero();
+  const model = useStore(chatStore, (state) => state.model);
   return React.useCallback(
-    async (prompt: string) => {
+    async (input: { prompt: string }) => {
       await z.mutate.chats.sendUserMessage({
         id: crypto.randomUUID(),
         chatId: chatId,
-        content: prompt,
+        content: input.prompt,
         timestamp: Date.now(),
       }).client;
-      await pushAssistantMessage({ prompt });
+      await pushAssistantMessage({ prompt: input.prompt, model });
     },
-    [chatId, pushAssistantMessage, z.mutate.chats],
+    [chatId, model, pushAssistantMessage, z.mutate.chats],
   );
 }
 
@@ -670,20 +709,36 @@ function usePushAssistantMessage() {
   const chatId = useChatId();
   const abortController = useStore(chatStore, (state) => state.abortController);
   return React.useCallback(
-    async (input: { prompt: string }) => {
+    async (input: { prompt: string; model?: string }) => {
+      const messages = (
+        await z.query.messages.where("chatId", "=", chatId)
+      ).toSorted((a, b) => a.createdAt - b.createdAt);
+      const lastMessage = messages.findLast((m) =>
+        m.role.startsWith("assistant/"),
+      );
       const messageId = crypto.randomUUID();
+      const model =
+        input.model ??
+        lastMessage?.role.slice("assistant/".length) ??
+        DEFAULT_MODEL; // TODO: handle fallback
       await z.mutate.chats.pushAssistantMessageChunk({
         chatId: chatId,
         messageId,
         chunk: "",
         chunkType: "first",
         timestamp: Date.now(),
+        model,
       }).client;
-      const response = streamResponse(input.prompt, {
-        // provider: "openrouter",
-        // modelId: "deepseek/deepseek-r1-0528:free",
-        provider: "ollama",
-        modelId: "llama3.2", // usage: `ollama run llama3.2`
+      const response = streamResponse(messages, {
+        ...(model.startsWith("ollama/")
+          ? {
+              provider: "ollama",
+              modelId: model.slice("ollama/".length),
+            }
+          : {
+              provider: "openrouter",
+              modelId: model, // Remember: `deepseek/deepseek-r1-0528:free` is free
+            }),
         abortSignal: abortController.signal,
       });
       for await (const chunk of response) {
@@ -693,6 +748,7 @@ function usePushAssistantMessage() {
           chunk,
           chunkType: "middle",
           timestamp: Date.now(),
+          model,
         }).client;
       }
       await z.mutate.chats.pushAssistantMessageChunk({
@@ -701,8 +757,9 @@ function usePushAssistantMessage() {
         chunk: "",
         chunkType: "last",
         timestamp: Date.now(),
+        model,
       }).client;
     },
-    [abortController.signal, chatId, z.mutate.chats],
+    [abortController.signal, chatId, z.mutate.chats, z.query.messages],
   );
 }
