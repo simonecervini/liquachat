@@ -237,6 +237,15 @@ export const schema = {
             "image"
           >,
         },
+        isAnonymous: {
+          type: "boolean",
+          optional: true,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "users",
+            "isAnonymous"
+          >,
+        },
         createdAt: {
           type: "number",
           optional: false,

@@ -9,6 +9,7 @@ export const users = createTable("user", (d) => ({
     .$defaultFn(() => false)
     .notNull(),
   image: d.text(),
+  isAnonymous: d.boolean(),
   createdAt: d
     .timestamp()
     .$defaultFn(() => /* @__PURE__ */ new Date())

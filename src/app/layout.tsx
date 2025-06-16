@@ -36,7 +36,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      {env.NEXT_PUBLIC_ZERO_SERVER_URL.includes("localhost") && <ReactScan />}
+      {env.NEXT_PUBLIC_NODE_ENV === "development" && <ReactScan />}
       <body
         className={`${poppins.variable} ${ibmPlexMono.variable} font-sans`}
         translate="no"

@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { bearer, jwt, magicLink } from "better-auth/plugins";
+import { anonymous, bearer, jwt } from "better-auth/plugins";
 
 import { env } from "~/env";
 import { db } from "./db";
@@ -18,17 +18,7 @@ export const auth = betterAuth({
         expirationTime: "1h",
       },
     }),
-    ...(env.NODE_ENV === "development"
-      ? [
-          magicLink({
-            sendMagicLink: async (data) => {
-              console.log(
-                `[Auth] Open this link to sign in with email ${data.email}: ${data.url}`,
-              );
-            },
-          }),
-        ]
-      : []),
+    ...(env.NODE_ENV === "development" ? [anonymous()] : []),
   ],
   databaseHooks: {
     user: {

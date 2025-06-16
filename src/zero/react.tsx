@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { Zero as ZeroClient } from "@rocicorp/zero";
 import { createUseZero, ZeroProvider } from "@rocicorp/zero/react";
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { GithubIcon } from "lucide-react";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import { GithubIcon, UserIcon } from "lucide-react";
 import invariant from "tiny-invariant";
 
 import { env } from "~/env";
 import { authClient } from "~/lib/auth";
+import { cn } from "~/lib/cn";
 import { createMutators } from ".";
 import { schema, type AuthData, type Schema } from "./schema";
 
@@ -47,9 +48,7 @@ const zeroDataQueryOptions = queryOptions({
         auth: jwt,
         server: env.NEXT_PUBLIC_ZERO_SERVER_URL,
         schema,
-        kvStore: env.NEXT_PUBLIC_ZERO_SERVER_URL.includes("localhost")
-          ? "mem"
-          : "idb",
+        kvStore: env.NEXT_PUBLIC_NODE_ENV === "development" ? "mem" : "idb",
         mutators: createMutators(authData),
       }),
     };
@@ -72,6 +71,7 @@ export function ZeroAuthenticatedProvider(props: {
 }
 
 function LoginForm() {
+  const queryClient = useQueryClient();
   return (
     <div className="flex w-full grow flex-col items-center justify-center">
       <div className="flex w-full max-w-md flex-col items-center">
@@ -79,63 +79,53 @@ function LoginForm() {
         <p className="text-muted-foreground mb-4 text-sm">
           Sign in below to get started.
         </p>
-        <button
+        <LoginFormButton
           onClick={async () => {
             await authClient.signIn.social({
               provider: "github",
               callbackURL: window.location.href,
             });
           }}
-          className="mb-2 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-t from-slate-800 to-slate-700 text-sm text-white shadow-sm hover:from-slate-900 hover:to-slate-800"
         >
-          <GithubIcon className="size-5" />
+          <GithubIcon />
           Continue with GitHub
-        </button>
+        </LoginFormButton>
         <p className="text-muted-foreground text-center text-xs">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
-        {env.NEXT_PUBLIC_ZERO_SERVER_URL.includes("localhost") && (
-          <LoginFormDevOnly />
+        {env.NEXT_PUBLIC_NODE_ENV === "development" && (
+          <div className="mt-6 w-full rounded-lg border border-slate-300 bg-white/50 px-3 pt-3 pb-1 text-center text-xs">
+            <h3 className="mb-0.5 text-lg font-bold">Dev mode only</h3>
+            <p className="text-muted-foreground mb-2.5">
+              This option is visibile only in dev mode to facilitate testing.
+            </p>
+            <LoginFormButton
+              className="w-full"
+              onClick={async () => {
+                await authClient.signIn.anonymous();
+                await queryClient.invalidateQueries(zeroDataQueryOptions);
+              }}
+            >
+              <UserIcon />
+              Login anonymously
+            </LoginFormButton>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function LoginFormDevOnly() {
-  const [email, setEmail] = useState("");
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    void authClient.signIn.magicLink({
-      email,
-      callbackURL: window.location.href,
-    });
-  };
+function LoginFormButton(props: React.ComponentProps<"button">) {
   return (
-    <div className="mt-4 flex w-full flex-col items-center rounded-md border border-slate-300 bg-white/50 p-4 text-sm">
-      Visible only in dev mode
-      <form
-        onSubmit={handleSubmit}
-        className="mt-1 mb-2 flex w-full max-w-md justify-center gap-2"
-      >
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-sm border border-slate-300 p-2 text-sm"
-          placeholder="Email"
-        />
-        <button
-          type="submit"
-          className="bg-primary text-primary-foreground rounded-sm px-2 text-sm"
-        >
-          Login
-        </button>
-      </form>
-      <p className="text-muted-foreground text-center text-xs">
-        You will receive the magic link in your dev console.
-      </p>
-    </div>
+    <button
+      {...props}
+      className={cn(
+        "mb-2 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-t from-slate-800 to-slate-700 text-sm text-white shadow-sm hover:from-slate-900 hover:to-slate-800 [&>svg]:size-5",
+        props.className,
+      )}
+    >
+      {props.children}
+    </button>
   );
 }
