@@ -22,6 +22,7 @@ export function streamResponse(
   messages: Pick<ZeroRow<"messages">, "role" | "content">[],
   options: StreamResponseOptions,
 ) {
+  console.log("Starting stream response with input", { messages, options });
   const model = getModelFromOptions(options);
 
   const result = streamText({

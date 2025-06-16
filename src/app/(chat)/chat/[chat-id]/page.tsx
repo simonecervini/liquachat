@@ -483,6 +483,7 @@ function MessageActionsUser(props: {
   setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { message, editMode, setEditMode } = props;
+  const chatId = useChatId();
   const { buttonProps: copyButtonProps, copied } = useCopyButton(
     message.content,
   );
@@ -496,14 +497,18 @@ function MessageActionsUser(props: {
             size="icon"
             variant="ghost"
             onClick={async () => {
-              const model = parseModelFromRole(message.role);
+              const nextMessage = await z.query.messages
+                .where("chatId", "=", chatId)
+                .where("createdAt", ">", message.createdAt)
+                .orderBy("createdAt", "asc")
+                .one();
               await z.mutate.chats.deleteLaterMessages({
                 messageId: message.id,
                 includeMessage: false,
               }).client;
               await pushAssistantMessage({
                 prompt: message.content,
-                model,
+                model: parseModelFromRole(nextMessage?.role),
               });
             }}
           >
@@ -705,7 +710,6 @@ function usePushAssistantMessage() {
   const abortController = useStore(chatStore, (state) => state.abortController);
   return React.useCallback(
     async (input: { prompt: string; model?: string }) => {
-      // TODO: use .toSorted() insted of cloning the array
       const messages = (
         await z.query.messages.where("chatId", "=", chatId)
       ).toSorted((a, b) => a.createdAt - b.createdAt);
@@ -725,7 +729,6 @@ function usePushAssistantMessage() {
         timestamp: Date.now(),
         model,
       }).client;
-      console.log(messages);
       const response = streamResponse(messages, {
         ...(model.startsWith("ollama/")
           ? {
