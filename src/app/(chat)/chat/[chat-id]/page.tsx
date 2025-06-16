@@ -151,9 +151,6 @@ function useChatLoader() {
 export default function ChatPage() {
   const chatId = useChatId();
   const z = useZero();
-
-  useChatLoader();
-
   const isChatLoaded = useIsChatLoaded();
 
   React.useEffect(() => {
@@ -170,14 +167,36 @@ export default function ChatPage() {
   }, [chatId, z.mutate.chats]);
 
   return (
-    <div className="relative h-full flex-1">
-      <ScrollArea className="h-full flex-1">
-        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
+    <>
+      <ChatLoader />
+
+      <div className="relative h-full flex-1">
+        <MessageStackScrollable className="h-full flex-1">
           {isChatLoaded && <MessageStack />}
-        </div>
+        </MessageStackScrollable>
         <SendMessageForm />
-      </ScrollArea>
-    </div>
+      </div>
+    </>
+  );
+}
+
+function ChatLoader() {
+  // Required to optimize re-renders
+  useChatLoader();
+  return null;
+}
+
+function MessageStackScrollable(props: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const { className, children } = props;
+  return (
+    <ScrollArea className={cn("h-full flex-1", className)}>
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
+        {children}
+      </div>
+    </ScrollArea>
   );
 }
 
@@ -356,7 +375,7 @@ function MessageUser(props: {
       role="article"
       aria-label="Your message"
       className={cn(
-        "flex max-w-[60%] rounded-2xl bg-gradient-to-tl from-white/70 to-white/90 p-4 backdrop-blur-lg",
+        "flex max-w-[60%] rounded-2xl bg-gradient-to-tl from-white/70 to-white/90 p-4 wrap-break-word backdrop-blur-lg",
         editMode
           ? "w-full bg-transparent p-0 outline-2 outline-slate-400/60 outline-dashed"
           : "shadow-primary/5 shadow-xl",
@@ -471,7 +490,11 @@ function EditMessageForm(props: React.ComponentProps<typeof MessageUser>) {
 function MessageSystem(props: { content: string }) {
   const { content } = props;
   return (
-    <div role="article" aria-label="Assistant message" className="w-full">
+    <div
+      role="article"
+      aria-label="Assistant message"
+      className="w-full wrap-break-word"
+    >
       <Markdown>{content}</Markdown>
     </div>
   );
@@ -592,8 +615,11 @@ function SendMessageForm() {
   const sendUserMessage = useSendUserMessage();
   const model = useStore(chatStore, (state) => state.model);
   const setModel = useStore(chatStore, (state) => state.setModel);
-  const pendingMessage = useStore(chatStore, (state) =>
-    state.chat?.messages.find((message) => message.status === "streaming"),
+  const pendingMessage = useStore(
+    chatStore,
+    (state) =>
+      // NOTE: do not return the object, it will cause a ton of re-renders while the message is streaming
+      !!state.chat?.messages.find((message) => message.status === "streaming"),
   );
   const isChatLoaded = useIsChatLoaded();
   const abort = useStore(chatStore, (state) => state.abort);
@@ -604,8 +630,11 @@ function SendMessageForm() {
       message: "",
     },
     onSubmit: async ({ value }) => {
-      await sendUserMessage({ prompt: value.message });
-      form.reset();
+      const prompt = value.message.trim();
+      if (prompt) {
+        form.reset();
+        await sendUserMessage({ prompt });
+      }
     },
   });
 
@@ -642,7 +671,6 @@ function SendMessageForm() {
                 }}
                 placeholder="Type your message here..."
                 className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
-                disabled={!!pendingMessage}
                 rows={4}
               />
             )}

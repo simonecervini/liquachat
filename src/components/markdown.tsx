@@ -1,10 +1,14 @@
 "use client";
 
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { CheckIcon, CopyIcon, TextIcon, WrapTextIcon } from "lucide-react";
 import MarkdownRoot from "react-markdown";
 import { codeToHtml } from "shiki";
 
 import { cn } from "~/lib/cn";
+import { useCopyButton } from "~/lib/use-copy-button";
+import { Button } from "./system/button";
 
 const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
   code(props) {
@@ -42,6 +46,8 @@ export function Markdown(props: { children: string }) {
 
 function CodeBlock(props: { lang: string; children: string }) {
   const { lang, children } = props;
+  const [textWrapping, setTextWrapping] = React.useState(false);
+  const { buttonProps: copyButtonProps, copied } = useCopyButton(children);
   const { data } = useQuery({
     queryKey: ["shiki", lang, children],
     staleTime: Infinity,
@@ -54,13 +60,26 @@ function CodeBlock(props: { lang: string; children: string }) {
   });
   return (
     <div className="border-primary/15 my-1.5 overflow-hidden rounded-lg border font-mono">
-      <div className="border-primary/15 border-b bg-white px-4 py-2.5 text-xs text-slate-800">
-        {lang}
+      <div className="border-primary/15 flex items-center justify-between gap-0.5 border-b bg-white py-1 pr-1 pl-4 text-xs text-slate-800">
+        <span className="inline-block grow">{lang}</span>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setTextWrapping((x) => !x)}
+        >
+          {textWrapping ? <WrapTextIcon /> : <TextIcon />}
+        </Button>
+        <Button variant="ghost" size="icon-sm" {...copyButtonProps}>
+          {copied ? <CheckIcon /> : <CopyIcon />}
+        </Button>
       </div>
       <div
         dangerouslySetInnerHTML={{ __html: data ?? "" }}
         // TODO: remove bg-white! when the custom theme is ready
-        className="w-full [&>pre]:m-0 [&>pre]:rounded-none [&>pre]:border-0 [&>pre]:bg-white! [&>pre]:p-2.5"
+        className={cn(
+          "w-full [&>pre]:m-0 [&>pre]:rounded-none [&>pre]:border-0 [&>pre]:bg-white! [&>pre]:p-2.5",
+          textWrapping && "[&>pre]:break-words [&>pre]:whitespace-pre-wrap",
+        )}
       />
     </div>
   );
