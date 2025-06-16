@@ -199,7 +199,7 @@ async function seedChat(
       await db.insert(messages).values({
         id: crypto.randomUUID(),
         chatId: chat.id,
-        role: "assistant",
+        role: "assistant/openai/o4-mini", // I actually used Cursor to generate the content
         status: "complete",
         content: messageContent,
         createdAt: messageDate,

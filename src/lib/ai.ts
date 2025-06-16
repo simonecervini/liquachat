@@ -5,6 +5,8 @@ import {
 import { streamText } from "ai";
 import { createOllama } from "ollama-ai-provider";
 
+import type { ZeroRow } from "~/zero/schema";
+
 type StreamResponseOptions = { abortSignal: AbortSignal } & (
   | {
       provider: "ollama";
@@ -16,16 +18,47 @@ type StreamResponseOptions = { abortSignal: AbortSignal } & (
     }
 );
 
-export function streamResponse(prompt: string, options: StreamResponseOptions) {
+export function streamResponse(
+  messages: Pick<ZeroRow<"messages">, "role" | "content">[],
+  options: StreamResponseOptions,
+) {
   const model = getModelFromOptions(options);
 
   const result = streamText({
     model,
-    prompt,
     abortSignal: options.abortSignal,
+    messages: [
+      {
+        role: "system",
+        content: [
+          "You are a helpful, neutral, and concise AI assistant called LiquaChat (Liqua, for short).",
+          "<core-directives>",
+          "- CRITICAL: you MUST format all responses using Markdown",
+          "- CRITICAL: for all code blocks, you MUST specify the programming language immediately after the backticks to enable syntax highlighting. Example: ```javascript ... ```",
+          "- Do not use LaTeX for mathematical expressions.",
+          "- Prioritize accuracy, clarity, and safety in all your answers.",
+          "- Do not use emojis unless they are explicitly requested.",
+          "- Be concise and to the point by default. Provide more details only when explicitly requested.",
+          "</core-directives>",
+        ].join("\n"),
+      },
+      ...messages.map(
+        (message) =>
+          ({
+            role: message.role.startsWith("assistant/") ? "assistant" : "user",
+            content: message.content,
+          }) as const,
+      ),
+    ],
   });
 
   return result.textStream;
+}
+
+export function parseModelFromRole(role: string | undefined) {
+  if (role?.startsWith("assistant/")) {
+    return role.slice("assistant/".length);
+  }
 }
 
 function getModelFromOptions(options: StreamResponseOptions): LanguageModelV1 {
