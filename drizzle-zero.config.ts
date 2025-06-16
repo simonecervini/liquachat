@@ -19,6 +19,7 @@ export default drizzleZeroConfig(drizzleSchema, {
       image: true,
       name: true,
       updatedAt: true,
+      isAnonymous: true,
     },
     sessions: false,
     accounts: false,
