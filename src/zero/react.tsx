@@ -7,6 +7,7 @@ import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GithubIcon, UserIcon } from "lucide-react";
 import invariant from "tiny-invariant";
 
+import { Logo } from "~/components/logo";
 import { env } from "~/env";
 import { authClient } from "~/lib/auth";
 import { cn } from "~/lib/cn";
@@ -73,44 +74,40 @@ export function ZeroAuthenticatedProvider(props: {
 function LoginForm() {
   const queryClient = useQueryClient();
   return (
-    <div className="flex w-full grow flex-col items-center justify-center">
-      <div className="flex w-full max-w-md flex-col items-center">
+    <div className="flex w-full grow flex-col items-center px-2 text-center">
+      <Logo className="my-3" />
+      <div className="my-auto flex w-full max-w-md flex-col items-center">
         <h1 className="mb-1 text-2xl font-bold">Welcome to liqua.chat</h1>
         <p className="text-muted-foreground mb-4 text-sm">
           Sign in below to get started.
         </p>
-        <LoginFormButton
-          onClick={async () => {
-            await authClient.signIn.social({
-              provider: "github",
-              callbackURL: window.location.href,
-            });
-          }}
-        >
-          <GithubIcon />
-          Continue with GitHub
-        </LoginFormButton>
+        <div className="mb-4 flex w-full flex-col gap-2">
+          <LoginFormButton
+            onClick={async () => {
+              await authClient.signIn.social({
+                provider: "github",
+                callbackURL: window.location.href,
+              });
+            }}
+          >
+            <GithubIcon />
+            Continue with GitHub
+          </LoginFormButton>
+          <LoginFormButton
+            className="w-full"
+            disabled={!env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS}
+            onClick={async () => {
+              await authClient.signIn.anonymous();
+              await queryClient.invalidateQueries(zeroDataQueryOptions);
+            }}
+          >
+            <UserIcon />
+            Continue as guest
+          </LoginFormButton>
+        </div>
         <p className="text-muted-foreground text-center text-xs">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
-        {env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS && (
-          <div className="mt-6 w-full rounded-lg border border-slate-300 bg-white/50 px-3 pt-3 pb-1 text-center text-xs">
-            <h3 className="mb-0.5 text-lg font-bold">Dev mode only</h3>
-            <p className="text-muted-foreground mb-2.5">
-              This option is visibile only in dev mode to facilitate testing.
-            </p>
-            <LoginFormButton
-              className="w-full"
-              onClick={async () => {
-                await authClient.signIn.anonymous();
-                await queryClient.invalidateQueries(zeroDataQueryOptions);
-              }}
-            >
-              <UserIcon />
-              Login anonymously
-            </LoginFormButton>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -121,7 +118,7 @@ function LoginFormButton(props: React.ComponentProps<"button">) {
     <button
       {...props}
       className={cn(
-        "mb-2 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-t from-slate-800 to-slate-700 text-sm text-white shadow-sm hover:from-slate-900 hover:to-slate-800 [&>svg]:size-5",
+        "flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-t from-slate-800 to-slate-700 px-2 text-sm whitespace-nowrap text-white shadow-sm outline-none not-disabled:hover:from-slate-900 not-disabled:hover:to-slate-800 focus-visible:ring-4 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 [&>svg]:size-5 [&>svg]:shrink-0",
         props.className,
       )}
     >

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import {
-  DropletIcon,
   FolderTreeIcon,
   ListIcon,
   PanelLeftIcon,
@@ -18,6 +17,7 @@ import type { Key } from "react-aria-components";
 
 import { ChatTree } from "~/components/chat-tree";
 import { ChatCombobox } from "~/components/chat-tree-combobox";
+import { Logo } from "~/components/logo";
 import { Button } from "~/components/system/button";
 import { cn } from "~/lib/cn";
 import { useZero } from "~/zero/react";
@@ -238,21 +238,6 @@ function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
           </div>
         ),
       )}
-    </div>
-  );
-}
-
-function Logo(props: { className?: string }) {
-  const { className } = props;
-  return (
-    <div
-      className={cn(
-        "flex h-10 w-full items-center justify-center gap-1 font-extrabold text-slate-900",
-        className,
-      )}
-    >
-      <DropletIcon className="size-4 text-blue-500" strokeWidth={3} />
-      Liqua
     </div>
   );
 }
