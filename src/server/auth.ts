@@ -18,7 +18,7 @@ export const auth = betterAuth({
         expirationTime: "1h",
       },
     }),
-    ...(env.NODE_ENV === "development" ? [anonymous()] : []),
+    ...(env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS ? [anonymous()] : []),
   ],
   databaseHooks: {
     user: {
