@@ -9,4 +9,8 @@ const config = {
   devIndicators: false,
 };
 
+if (process.env.DOCKER_BUILD === "true") {
+  config.output = "standalone";
+}
+
 export default config;

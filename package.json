@@ -32,7 +32,10 @@
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "cloc": "cloc --vcs=git --not-match-f='(pnpm-lock.yaml|yarn.lock|package-lock.json)'"
+    "cloc": "cloc --vcs=git --not-match-f='(pnpm-lock.yaml|yarn.lock|package-lock.json'",
+    "compose:up": "docker compose up -d --build",
+    "compose:down": "docker compose down",
+    "compose:down-with-volumes": "docker compose down -v"
   },
   "dependencies": {
     "@ai-sdk/provider-utils": "^2.2.8",

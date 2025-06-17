@@ -10,12 +10,12 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    ZERO_UPSTREAM_DB: z.string().url(),
+    ZERO_UPSTREAM_DB: z.string(),
     ZERO_REPLICA_FILE: z.string(),
-    ZERO_AUTH_JWKS_URL: z.string().url(),
-    ZERO_PUSH_URL: z.string().url(),
-    BETTER_AUTH_URL: z.string().url(),
-    BETTER_AUTH_SECRET: z.string(), // openssl rand -base64 32
+    ZERO_AUTH_JWKS_URL: z.string(),
+    ZERO_PUSH_URL: z.string(),
+    BETTER_AUTH_URL: z.string(),
+    BETTER_AUTH_SECRET: z.string(),
     GITHUB_CLIENT_ID: z.string(),
     GITHUB_CLIENT_SECRET: z.string(),
   },
@@ -26,8 +26,15 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_ZERO_SERVER_URL: z.string().url(),
+    NEXT_PUBLIC_ZERO_SERVER_URL: z.string(),
     NEXT_PUBLIC_NODE_ENV: z.enum(["development", "test", "production"]),
+    NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS: z
+      .preprocess(
+        (x) =>
+          x === true || (typeof x === "string" && x.toLowerCase() === "true"),
+        z.boolean(),
+      )
+      .default(false),
   },
 
   /**
@@ -48,6 +55,8 @@ export const env = createEnv({
     // client
     NEXT_PUBLIC_ZERO_SERVER_URL: process.env.NEXT_PUBLIC_ZERO_SERVER_URL,
     NEXT_PUBLIC_NODE_ENV: process.env.NEXT_PUBLIC_NODE_ENV,
+    NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS:
+      process.env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

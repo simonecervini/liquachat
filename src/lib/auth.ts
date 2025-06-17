@@ -12,6 +12,6 @@ export const authClient = createAuthClient({
   plugins: [
     jwtClient(),
     inferAdditionalFields<typeof auth>(),
-    ...(env.NEXT_PUBLIC_NODE_ENV === "development" ? [anonymousClient()] : []),
+    ...(env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS ? [anonymousClient()] : []),
   ],
 });

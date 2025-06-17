@@ -1,0 +1,93 @@
+services:
+  db:
+    image: postgres:16.2-alpine
+    restart: always
+    command: postgres -c wal_level=logical # Required by Zero
+    environment:
+      - POSTGRES_DB=liquachat
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d liquachat"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      - SKIP_ENV_VALIDATION=true
+      - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
+    command: sh -c "pnpm run db:push"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  zero:
+    image: rocicorp/zero@sha256:4ea7e59252b586d8b42ca3f59b5fbfdebf7e33ffc9b4fc048036a78c0612cb10
+    restart: always
+    ports:
+      - "4848:4848"
+    environment:
+      - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
+      - ZERO_REPLICA_FILE=/data/sync-replica.db
+      - ZERO_AUTH_JWKS_URL=http://app:3000/api/auth/jwks
+      - ZERO_PUSH_URL=http://app:3000/api/zero/push
+    volumes:
+      - zero_data:/data
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
+  zero-permissions-deployer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
+    command: npx zero-deploy-permissions -p ./src/zero/schema.ts
+    depends_on:
+      zero:
+        condition: service_started
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # client-side env vars
+        # we need to separate them from the server-side env vars because they are built into the bundle
+        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:4848
+        - NEXT_PUBLIC_NODE_ENV=production
+        - NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS=${NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS:-false}
+    restart: always
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      # server-side env vars
+      - NODE_ENV=production
+      - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
+      - ZERO_REPLICA_FILE=* # not used
+      - ZERO_AUTH_JWKS_URL=* # not used
+      - ZERO_PUSH_URL=* # not used
+      - BETTER_AUTH_URL=http://localhost:3000
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - GITHUB_CLIENT_ID=* # not used
+      - GITHUB_CLIENT_SECRET=* # not used
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      zero:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  zero_data:

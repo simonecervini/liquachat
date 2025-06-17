@@ -93,7 +93,7 @@ function LoginForm() {
         <p className="text-muted-foreground text-center text-xs">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
-        {env.NEXT_PUBLIC_NODE_ENV === "development" && (
+        {env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS && (
           <div className="mt-6 w-full rounded-lg border border-slate-300 bg-white/50 px-3 pt-3 pb-1 text-center text-xs">
             <h3 className="mb-0.5 text-lg font-bold">Dev mode only</h3>
             <p className="text-muted-foreground mb-2.5">
