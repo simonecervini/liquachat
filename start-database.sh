@@ -80,5 +80,5 @@ $DOCKER_CMD run -d \
   -e POSTGRES_PASSWORD="$DB_PASSWORD" \
   -e POSTGRES_DB="$DB_NAME" \
   -p "$DB_PORT":5432 \
-  docker.io/postgres \
+  docker.io/postgres:16.2-alpine \
   postgres -c wal_level=logical -c max_wal_senders=10 -c max_replication_slots=5 -c hot_standby=on -c hot_standby_feedback=on && echo "Database container '$DB_CONTAINER_NAME' was successfully created"
