@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
-import { replaceEqualDeep } from "@tanstack/react-query";
+import { replaceEqualDeep, useMutation } from "@tanstack/react-query";
 import { dequal } from "dequal";
 import {
   ArrowUpIcon,
@@ -14,6 +14,7 @@ import {
   CircleXIcon,
   CodeIcon,
   CopyIcon,
+  GitBranchIcon,
   GraduationCapIcon,
   RefreshCcwIcon,
   SparklesIcon,
@@ -570,8 +571,23 @@ function MessageActionsSystem(props: {
   const { buttonProps: copyButtonProps, copied } = useCopyButton(
     message.content,
   );
+  const chatId = useChatId();
   const pushAssistantMessage = usePushAssistantMessage();
   const z = useZero();
+  const router = useRouter();
+  const { mutate: fork, isPending: isForking } = useMutation({
+    mutationFn: async () => {
+      // TODO: we should not wait for the server to complete, but it doesn't work otherwise
+      // We should not need this (tanstack) mutation at all
+      const forkedChatId = crypto.randomUUID();
+      await z.mutate.chats.fork({
+        chatId: chatId,
+        forkedChatId,
+        messageId: message.id,
+      }).server;
+      router.push(`/chat/${forkedChatId}`);
+    },
+  });
   return (
     <TooltipProvider>
       <Tooltip>
@@ -581,6 +597,22 @@ function MessageActionsSystem(props: {
           </Button>
         </TooltipTrigger>
         <TooltipContent>Copy message</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={async () => {
+              if (!isForking) {
+                fork();
+              }
+            }}
+          >
+            <GitBranchIcon />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Start new fork</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger>

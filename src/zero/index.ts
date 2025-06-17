@@ -42,6 +42,106 @@ export function createMutators(authData: AuthData) {
           public: false,
         });
       },
+      fork: async (
+        tx,
+        input: { chatId: string; forkedChatId: string; messageId: string },
+      ) => {
+        const chat = await tx.query.chats.where("id", "=", input.chatId).one();
+        if (!chat) throw new ZeroMutatorError({ code: "NOT_FOUND" });
+        const allChatTrees = await tx.query.chatTrees.where(
+          "userId",
+          "=",
+          authData.user.id,
+        );
+        function findChatInTree(
+          nodes: ChatTreeNode[],
+          chatId: string,
+        ): boolean {
+          return nodes.some((node) => {
+            if (node.kind === "chat" && node.chatId === chatId) return true;
+            if (node.childItems) return findChatInTree(node.childItems, chatId);
+            return false;
+          });
+        }
+        const chatTree = allChatTrees.find((tree) =>
+          findChatInTree(tree.data ?? [], input.chatId),
+        );
+        if (!chatTree) throw new ZeroMutatorError({ code: "NOT_FOUND" });
+        const newChatTreeData: ChatTreeNode[] = structuredClone(
+          chatTree.data ?? [],
+        );
+        const referenceMessage = await tx.query.messages
+          .where("id", "=", input.messageId)
+          .one();
+        if (!referenceMessage)
+          throw new ZeroMutatorError({ code: "NOT_FOUND" });
+
+        const messagesToClone = await tx.query.messages.where((eb) =>
+          eb.and(
+            eb.cmp("chatId", "=", input.chatId),
+            eb.cmp("createdAt", "<=", referenceMessage.createdAt),
+          ),
+        );
+
+        const timestamp = Date.now();
+
+        await tx.mutate.chats.update({
+          id: input.chatId,
+          title: `v1`,
+        });
+        await tx.mutate.chats.insert({
+          id: input.forkedChatId,
+          title: `v2`,
+          userId: authData.user.id,
+          createdAt: safeTimestamp(tx, timestamp),
+          updatedAt: safeTimestamp(tx, timestamp),
+          public: chat.public,
+        });
+
+        for (const message of messagesToClone) {
+          await tx.mutate.messages.insert({
+            id: crypto.randomUUID(),
+            chatId: input.forkedChatId,
+            content: message.content,
+            role: message.role,
+            status: message.status,
+            userId: message.userId,
+            createdAt: message.createdAt,
+          });
+        }
+
+        function findAndReplaceNode(nodes: ChatTreeNode[]): ChatTreeNode[] {
+          if (!chat) return nodes;
+          return nodes.map((node) => {
+            if (node.kind === "chat" && node.chatId === input.chatId) {
+              return {
+                id: crypto.randomUUID(),
+                kind: "group",
+                name: chat.title,
+                childItems: [
+                  { ...node, id: crypto.randomUUID() },
+                  {
+                    id: crypto.randomUUID(),
+                    kind: "chat",
+                    chatId: input.forkedChatId,
+                  },
+                ],
+              };
+            } else if (node.childItems) {
+              return {
+                ...node,
+                childItems: findAndReplaceNode(node.childItems),
+              };
+            }
+            return node;
+          });
+        }
+
+        await tx.mutate.chatTrees.update({
+          id: chatTree.id,
+          data: findAndReplaceNode(newChatTreeData),
+        });
+      },
       sendUserMessage: async (
         tx,
         input: {
