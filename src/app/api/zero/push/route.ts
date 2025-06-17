@@ -118,10 +118,17 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
             userId: authData.user.id,
             status: "streaming",
           });
-        } else if (input.chunkType === "last") {
+        } else if (
+          input.chunkType === "last" ||
+          input.chunkType === "last-error"
+        ) {
           await tx.dbTransaction.query(
-            `UPDATE liquachat_message SET content = content || $1, status = 'complete' WHERE id = $2`,
-            [input.chunk, input.messageId],
+            `UPDATE liquachat_message SET content = content || $1, status = $2 WHERE id = $3`,
+            [
+              input.chunk,
+              input.chunkType === "last" ? "complete" : "error",
+              input.messageId,
+            ],
           );
         } else {
           await tx.dbTransaction.query(

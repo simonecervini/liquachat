@@ -44,7 +44,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <ZeroAuthenticatedProvider>{children}</ZeroAuthenticatedProvider>
         </TRPCReactProvider>
-        <Toaster />
+        <Toaster position="top-right" />
         <AlertEmitter />
         <RenameDialog />
       </body>

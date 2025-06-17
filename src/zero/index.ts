@@ -167,7 +167,7 @@ export function createMutators(authData: AuthData) {
           messageId: string;
           chatId: string;
           chunk: string;
-          chunkType: "first" | "middle" | "last";
+          chunkType: "first" | "middle" | "last" | "last-error";
           model: string;
           timestamp: number;
         },
@@ -187,7 +187,12 @@ export function createMutators(authData: AuthData) {
           createdAt: safeTimestamp(tx, input.timestamp),
           role: `assistant/${input.model}`,
           userId: authData.user.id,
-          status: input.chunkType === "last" ? "complete" : "streaming",
+          status:
+            input.chunkType === "last"
+              ? "complete"
+              : input.chunkType === "last-error"
+                ? "error"
+                : "streaming",
         });
       },
       abortChat: async (tx, input: { chatId: string }) => {

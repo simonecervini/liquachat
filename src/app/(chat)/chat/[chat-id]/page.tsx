@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Tabs } from "radix-ui";
+import { toast } from "sonner";
 import { createStore, useStore } from "zustand";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 
@@ -31,12 +32,22 @@ import { DEFAULT_MODEL, ModelCombobox } from "~/components/model-combobox";
 import { ScrollArea } from "~/components/scroll-area";
 import { Button } from "~/components/system/button";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/system/dialog";
+import { Input } from "~/components/system/input";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/system/tooltip";
-import { parseModelFromRole, streamResponse } from "~/lib/ai";
+import { isOllamaRunning, parseModelFromRole, streamResponse } from "~/lib/ai";
 import { cn } from "~/lib/cn";
 import { useCopyButton } from "~/lib/use-copy-button";
 import { useZero } from "~/zero/react";
@@ -210,7 +221,11 @@ function MessageStack(props: { className?: string }) {
   return (
     <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
       {messages.map((message) =>
-        message.content ? <Message key={message.id} message={message} /> : null,
+        message.content ||
+        message.status === "error" ||
+        message.status === "aborted" ? (
+          <Message key={message.id} message={message} />
+        ) : null,
       )}
     </div>
   );
@@ -342,7 +357,8 @@ const Message = React.memo(function Message(props: { message: Message }) {
           ) : (
             <>
               <CircleXIcon className="mr-1.5 inline-block size-4 align-middle" />
-              Error while generating response, please try again.
+              Error while generating response. Common causes: invalid OpenRouter
+              API key, insufficient credits, or non-existent Ollama model.
             </>
           )}
         </div>
@@ -641,6 +657,8 @@ function MessageActionsSystem(props: {
 }
 
 function SendMessageForm() {
+  const [openRouterKeyDialogOpen, setOpenRouterKeyDialogOpen] =
+    React.useState(false);
   const chatId = useChatId();
   const sendUserMessage = useSendUserMessage();
   const model = useStore(chatStore, (state) => state.model);
@@ -662,6 +680,19 @@ function SendMessageForm() {
     onSubmit: async ({ value }) => {
       const prompt = value.message.trim();
       if (prompt) {
+        if (model.startsWith("ollama/")) {
+          if (!(await isOllamaRunning())) {
+            toast.error(
+              "Ollama models unavailable: Ollama service is not running. Please start Ollama and try again.",
+            );
+            return;
+          }
+        } else {
+          if (!window.localStorage.getItem("openrouter-api-key")) {
+            setOpenRouterKeyDialogOpen(true);
+            return;
+          }
+        }
         form.reset();
         await sendUserMessage({ prompt });
       }
@@ -669,77 +700,173 @@ function SendMessageForm() {
   });
 
   return (
-    <div className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
-      <div className="relative h-full w-full">
+    <>
+      <div className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
+        <div className="relative h-full w-full">
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (pendingMessage) {
+                abort();
+                await z.mutate.chats.abortChat({
+                  chatId,
+                }).client;
+              } else {
+                await form.handleSubmit();
+              }
+            }}
+          >
+            <form.Field
+              name="message"
+              children={(field) => (
+                <textarea
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                  onKeyDown={async (event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      await form.handleSubmit();
+                    }
+                  }}
+                  placeholder="Type your message here..."
+                  className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
+                  rows={4}
+                />
+              )}
+            />
+
+            <Button
+              type="submit"
+              disabled={!isChatLoaded}
+              className="absolute right-1.5 bottom-1.5"
+              size="icon-lg"
+            >
+              {pendingMessage ? (
+                <>
+                  <SquareIcon className="fill-current" />
+                  <span className="sr-only">Stop</span>
+                </>
+              ) : (
+                <>
+                  <ArrowUpIcon />
+                  <span className="sr-only">Send</span>
+                </>
+              )}
+            </Button>
+          </form>
+          <div className="absolute bottom-1.5 left-1.5 flex gap-1">
+            <ModelCombobox
+              value={model}
+              onChange={(value) => {
+                setModel(value);
+              }}
+              slotProps={{
+                popoverContent: {
+                  align: "start",
+                },
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <OpenRouterKeyDialog
+        open={openRouterKeyDialogOpen}
+        onOpenChange={setOpenRouterKeyDialogOpen}
+        onSubmit={async () => {
+          await form.handleSubmit();
+        }}
+      />
+    </>
+  );
+}
+
+function OpenRouterKeyDialog(
+  props: { onSubmit?: () => void } & React.ComponentProps<typeof Dialog>,
+) {
+  const { onSubmit, ...rest } = props;
+  const form = useForm({
+    defaultValues: {
+      value: "",
+    },
+    onSubmit: ({ value }) => {
+      const newValue = value.value?.trim();
+      if (newValue) {
+        window.localStorage.setItem("openrouter-api-key", newValue);
+        onSubmit?.();
+      }
+      props.onOpenChange?.(false);
+    },
+  });
+  return (
+    <Dialog {...rest}>
+      <DialogContent className="sm:max-w-[500px]">
         <form
           onSubmit={async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            if (pendingMessage) {
-              abort();
-              await z.mutate.chats.abortChat({
-                chatId,
-              }).client;
-            } else {
-              await form.handleSubmit();
-            }
+            await form.handleSubmit();
           }}
         >
-          <form.Field
-            name="message"
-            children={(field) => (
-              <textarea
-                name={field.name}
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                onBlur={field.handleBlur}
-                onKeyDown={async (event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    await form.handleSubmit();
-                  }
-                }}
-                placeholder="Type your message here..."
-                className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
-                rows={4}
-              />
-            )}
-          />
-
-          <Button
-            type="submit"
-            disabled={!isChatLoaded}
-            className="absolute right-1.5 bottom-1.5"
-            size="icon-lg"
-          >
-            {pendingMessage ? (
-              <>
-                <SquareIcon className="fill-current" />
-                <span className="sr-only">Stop</span>
-              </>
-            ) : (
-              <>
-                <ArrowUpIcon />
-                <span className="sr-only">Send</span>
-              </>
-            )}
-          </Button>
+          <DialogHeader>
+            <DialogTitle>Configure OpenRouter API Key</DialogTitle>
+            <DialogDescription>
+              To use AI models, you need an OpenRouter API key. Get one from the{" "}
+              <a
+                href="https://openrouter.ai/settings/keys"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:text-primary/80 underline underline-offset-4"
+              >
+                OpenRouter website
+              </a>
+              .<br />
+              <br />
+              Your key is stored in your browser and sent to OpenRouter only
+              during AI requests - it is NEVER sent to any other servers under
+              any circumstances.
+              <br />
+              <br />
+              <strong>YOU make the requests</strong> to OpenRouter directly with
+              your browser, and <strong>YOU stream the AI responses</strong> to
+              all connected clients. No intermediaries.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 mb-4 grid gap-4">
+            <form.Field
+              name="value"
+              children={(field) => (
+                <Input
+                  type="password"
+                  placeholder="sk-or-v1-..."
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
+                  }}
+                  onBlur={field.handleBlur}
+                  autoFocus
+                />
+              )}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="ghost">Cancel</Button>
+            </DialogClose>
+            <form.Subscribe
+              selector={(state) => [state.canSubmit]}
+              children={([canSubmit]) => (
+                <Button type="submit" disabled={!canSubmit}>
+                  Save
+                </Button>
+              )}
+            />
+          </DialogFooter>
         </form>
-        <div className="absolute bottom-1.5 left-1.5 flex gap-1">
-          <ModelCombobox
-            value={model}
-            onChange={(value) => {
-              setModel(value);
-            }}
-            slotProps={{
-              popoverContent: {
-                align: "start",
-              },
-            }}
-          />
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -787,33 +914,39 @@ function usePushAssistantMessage() {
         timestamp: Date.now(),
         model,
       }).client;
-      const response = streamResponse(messages, {
-        ...(model.startsWith("ollama/")
-          ? {
-              provider: "ollama",
-              modelId: model.slice("ollama/".length),
-            }
-          : {
-              provider: "openrouter",
-              modelId: model, // Remember: `deepseek/deepseek-r1-0528:free` is free
-            }),
-        abortSignal: abortController.signal,
-      });
-      for await (const chunk of response) {
-        await z.mutate.chats.pushAssistantMessageChunk({
-          chatId: chatId,
-          messageId,
-          chunk,
-          chunkType: "middle",
-          timestamp: Date.now(),
-          model,
-        }).client;
+      let error = false;
+      try {
+        const response = streamResponse(messages, {
+          ...(model.startsWith("ollama/")
+            ? {
+                provider: "ollama",
+                modelId: model.slice("ollama/".length),
+              }
+            : {
+                provider: "openrouter",
+                modelId: model, // Remember: `deepseek/deepseek-r1-0528:free` is free
+              }),
+          abortSignal: abortController.signal,
+        });
+        for await (const chunk of response) {
+          await z.mutate.chats.pushAssistantMessageChunk({
+            chatId: chatId,
+            messageId,
+            chunk,
+            chunkType: "middle",
+            timestamp: Date.now(),
+            model,
+          }).client;
+        }
+      } catch (err) {
+        console.error("Error streaming response:", err);
+        error = true;
       }
       await z.mutate.chats.pushAssistantMessageChunk({
         chatId: chatId,
         messageId,
         chunk: "",
-        chunkType: "last",
+        chunkType: error ? "last-error" : "last",
         timestamp: Date.now(),
         model,
       }).client;

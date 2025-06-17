@@ -51,9 +51,21 @@ export function streamResponse(
           }) as const,
       ),
     ],
+    onError: ({ error }) => {
+      throw error;
+    },
   });
 
   return result.textStream;
+}
+
+export async function isOllamaRunning() {
+  try {
+    const res = await fetch("http://localhost:11434/");
+    const text = await res.text();
+    return text === "Ollama is running";
+  } catch {}
+  return false;
 }
 
 export function parseModelFromRole(role: string | undefined) {
