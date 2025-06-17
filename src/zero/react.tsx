@@ -12,7 +12,7 @@ import { env } from "~/env";
 import { authClient } from "~/lib/auth";
 import { cn } from "~/lib/cn";
 import { createMutators } from ".";
-import { schema, type AuthData, type Schema } from "./schema";
+import { schema, type Schema } from "./schema";
 
 export const useZero = createUseZero<
   Schema,
@@ -24,33 +24,32 @@ export type Zero = ReturnType<typeof useZero>;
 const zeroDataQueryOptions = queryOptions({
   queryKey: ["zero"],
   staleTime: 0,
-  queryFn: async (): Promise<
-    { authData: null; zero: null } | { authData: AuthData; zero: Zero }
-  > => {
+  queryFn: async () => {
     let jwt: string | undefined;
-    const { data: authData } = await authClient.getSession({
+    const { data: sessionData } = await authClient.getSession({
       fetchOptions: {
         onSuccess: (ctx) => {
           jwt = ctx.response.headers.get("set-auth-jwt") ?? undefined;
         },
       },
     });
-    if (!authData) {
+    const user = sessionData?.user;
+    if (!user) {
       return {
-        authData: null,
+        user: null,
         zero: null,
       };
     }
     invariant(jwt, "Found session but no JWT");
     return {
-      authData,
+      user,
       zero: new ZeroClient({
-        userID: authData.user.id,
+        userID: user.id,
         auth: jwt,
         server: env.NEXT_PUBLIC_ZERO_SERVER_URL,
         schema,
         kvStore: env.NEXT_PUBLIC_NODE_ENV === "development" ? "mem" : "idb",
-        mutators: createMutators(authData),
+        mutators: createMutators(user),
       }),
     };
   },
@@ -64,7 +63,7 @@ export function ZeroAuthenticatedProvider(props: {
 
   if (!data) {
     return "loading...";
-  } else if (!data.authData) {
+  } else if (!data.user) {
     return <LoginForm />;
   }
 

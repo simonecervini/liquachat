@@ -4,6 +4,7 @@ import {
   PushProcessor,
   ZQLDatabase,
 } from "@rocicorp/zero/pg";
+import type { User } from "better-auth";
 import { eq } from "drizzle-orm";
 import { createLocalJWKSet, jwtVerify, type JWTPayload } from "jose";
 import invariant from "tiny-invariant";
@@ -13,7 +14,7 @@ import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
 import { createMutators, safeTimestamp } from "~/zero";
-import { schema, type AuthData } from "~/zero/schema";
+import { schema } from "~/zero/schema";
 
 const zqlDb = new ZQLDatabase(new PostgresJSConnection(db.$client), schema);
 
@@ -60,7 +61,7 @@ export const POST = async (req: NextRequest) => {
   const asyncTasks: AsyncTask[] = [];
 
   const result = await pushProcessor.process(
-    createServerMutators({ user }, asyncTasks),
+    createServerMutators(user, asyncTasks),
     req.nextUrl.searchParams,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await req.json(),
@@ -94,8 +95,8 @@ export const POST = async (req: NextRequest) => {
   return NextResponse.json(result);
 };
 
-function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
-  const clientMutators = createMutators(authData);
+function createServerMutators(user: User, asyncTasks: AsyncTask[]) {
+  const clientMutators = createMutators(user);
   const _task = createTaskFn(asyncTasks);
 
   return {
@@ -115,7 +116,7 @@ function createServerMutators(authData: AuthData, asyncTasks: AsyncTask[]) {
             content: input.chunk,
             createdAt: safeTimestamp(tx, input.timestamp),
             role: `assistant/${input.model}`,
-            userId: authData.user.id,
+            userId: user.id,
             status: "streaming",
           });
         } else if (

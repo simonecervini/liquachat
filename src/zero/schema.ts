@@ -1,12 +1,10 @@
 import {
-  ANYONE_CAN_DO_ANYTHING,
   definePermissions,
   type ExpressionBuilder,
   type PermissionsConfig,
   type Row,
 } from "@rocicorp/zero";
 
-import type { Session } from "~/server/auth";
 import { schema, type Schema } from "./schema.gen";
 
 export { schema, type Schema };
@@ -15,34 +13,52 @@ export type ZeroRow<TTable extends keyof Schema["tables"]> = Row<
   Schema["tables"][TTable]
 >;
 
-export type AuthData = Pick<Session, "user">;
+type JWTData = { sub: string };
 
-export const permissions = definePermissions<AuthData, Schema>(schema, () => {
-  const _allowIfSameUser = (
-    authData: AuthData,
+export const permissions = definePermissions<JWTData, Schema>(schema, () => {
+  const allowIfSameUser = (
+    authData: JWTData,
     eb: ExpressionBuilder<Schema, "users">,
-  ) => eb.cmp("id", authData.user.id);
+  ) => eb.cmp("id", authData.sub);
 
-  // TODO: Add permissions
+  const allowIfOwner = (
+    authData: JWTData,
+    eb: ExpressionBuilder<Schema, "chats">,
+  ) => eb.cmp("userId", authData.sub);
+
+  type Config = CompletePermissionsConfig[keyof CompletePermissionsConfig];
+
+  const SAME_USER_CAN_DO_ANYTHING: Config = {
+    row: {
+      select: [allowIfSameUser],
+      delete: [allowIfSameUser],
+      insert: [allowIfSameUser],
+      update: {
+        preMutation: [allowIfSameUser],
+        postMutation: [allowIfSameUser],
+      },
+    },
+  };
+
+  const OWNER_CAN_DO_ANYTHING: Config = {
+    row: {
+      select: [allowIfOwner],
+      delete: [allowIfOwner],
+      insert: [allowIfOwner],
+      update: {
+        preMutation: [allowIfOwner],
+        postMutation: [allowIfOwner],
+      },
+    },
+  };
 
   return {
-    users: ANYONE_CAN_DO_ANYTHING,
-    // users: {
-    //   row: {
-    //     select: [allowIfSameUser],
-    //     delete: [allowIfSameUser],
-    //     insert: [allowIfSameUser],
-    //     update: {
-    //       preMutation: [allowIfSameUser],
-    //       postMutation: [allowIfSameUser],
-    //     },
-    //   },
-    // },
-    chats: ANYONE_CAN_DO_ANYTHING,
-    messages: ANYONE_CAN_DO_ANYTHING,
-    chatTrees: ANYONE_CAN_DO_ANYTHING,
+    users: SAME_USER_CAN_DO_ANYTHING,
+    chats: OWNER_CAN_DO_ANYTHING,
+    messages: OWNER_CAN_DO_ANYTHING,
+    chatTrees: OWNER_CAN_DO_ANYTHING,
   } satisfies CompletePermissionsConfig;
 });
 
-type CompletePermissionsConfig = PermissionsConfig<AuthData, Schema> &
+type CompletePermissionsConfig = PermissionsConfig<JWTData, Schema> &
   Record<keyof typeof schema.tables, unknown>;

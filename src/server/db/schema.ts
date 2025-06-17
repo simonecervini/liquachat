@@ -69,7 +69,7 @@ export const messages = createTable(
       .uuid()
       .notNull()
       .references(() => chats.id, { onDelete: "cascade" }),
-    userId: d.uuid().references(() => users.id, { onDelete: "cascade" }),
+    userId: d.uuid().references(() => users.id, { onDelete: "cascade" }), // TODO: remove this column, I forgot to remove it after initial testing
     role: d
       .text({
         enum: [

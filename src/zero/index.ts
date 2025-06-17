@@ -1,9 +1,10 @@
 import type { CustomMutatorDefs, Transaction } from "@rocicorp/zero";
+import type { User } from "better-auth";
 
 import type { ChatTreeNode } from "~/lib/types";
-import type { AuthData, Schema } from "./schema";
+import type { Schema } from "./schema";
 
-export function createMutators(authData: AuthData) {
+export function createMutators(user: User) {
   return {
     chats: {
       init: async (
@@ -30,13 +31,13 @@ export function createMutators(authData: AuthData) {
         ];
         await tx.mutate.chatTrees.upsert({
           id: input.chatTreeId ?? crypto.randomUUID(),
-          userId: authData.user.id,
+          userId: user.id,
           data: newChatTreeData,
         });
         await tx.mutate.chats.insert({
           id: input.id,
           title: "New Chat",
-          userId: authData.user.id,
+          userId: user.id,
           createdAt: safeTimestamp(tx, input.timestamp),
           updatedAt: safeTimestamp(tx, input.timestamp),
           public: false,
@@ -51,7 +52,7 @@ export function createMutators(authData: AuthData) {
         const allChatTrees = await tx.query.chatTrees.where(
           "userId",
           "=",
-          authData.user.id,
+          user.id,
         );
         function findChatInTree(
           nodes: ChatTreeNode[],
@@ -92,7 +93,7 @@ export function createMutators(authData: AuthData) {
         await tx.mutate.chats.insert({
           id: input.forkedChatId,
           title: `v2`,
-          userId: authData.user.id,
+          userId: user.id,
           createdAt: safeTimestamp(tx, timestamp),
           updatedAt: safeTimestamp(tx, timestamp),
           public: chat.public,
@@ -158,7 +159,7 @@ export function createMutators(authData: AuthData) {
           createdAt: safeTimestamp(tx, input.timestamp),
           role: "user",
           status: "complete",
-          userId: authData.user.id,
+          userId: user.id,
         });
       },
       pushAssistantMessageChunk: async (
@@ -186,7 +187,7 @@ export function createMutators(authData: AuthData) {
           content: prevContent + input.chunk,
           createdAt: safeTimestamp(tx, input.timestamp),
           role: `assistant/${input.model}`,
-          userId: authData.user.id,
+          userId: user.id,
           status:
             input.chunkType === "last"
               ? "complete"
