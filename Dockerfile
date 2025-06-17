@@ -1,6 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1
 
-# Reference: https://github.com/vercel/next.js/tree/canary/examples/with-docker
+# Reference: https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 
 FROM node:20-alpine AS base
 
@@ -18,7 +18,6 @@ RUN \
   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
   else echo "Lockfile not found." && exit 1; \
   fi
-
 
 # Rebuild the source code only when needed
 FROM base AS builder
