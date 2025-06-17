@@ -224,7 +224,11 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     <MenuIcon className="text-muted-foreground size-4" />
                   </Button>
                 )}
-                <span className="truncate">
+                {/* TODO: disable "truncate" when hovering to support long titles */}
+                <span
+                  className="truncate"
+                  title={String(props.children as string)}
+                >
                   {props.children}
                   {item.value.kind === "group" && !hasChildItems && (
                     <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
