@@ -23,7 +23,7 @@ import { ChatCombobox } from "~/components/chat-tree-combobox";
 import { Logo } from "~/components/logo";
 import { Markdown } from "~/components/markdown";
 import { Button } from "~/components/system/button";
-import { Dialog, DialogContent } from "~/components/system/dialog";
+import { Dialog, DialogContent, DialogTitle } from "~/components/system/dialog";
 import { Input } from "~/components/system/input";
 import { cn } from "~/lib/cn";
 import { useZero } from "~/zero/react";
@@ -308,6 +308,7 @@ function ChatTelescope() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTitle className="sr-only">Search chats</DialogTitle>
       <DialogContent
         className="flex h-1/2 w-full max-w-4xl! overflow-hidden p-3 focus-visible:outline-none"
         showCloseButton={false}
