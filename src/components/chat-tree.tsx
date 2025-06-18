@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import {
@@ -159,6 +159,7 @@ interface DynamicTreeItemProps extends TreeItemProps<object> {
 function DynamicTreeItem(props: DynamicTreeItemProps) {
   const { childItems, getItemText, renderLoader, supportsDragging, treeData } =
     props;
+  const pathname = usePathname();
   const router = useRouter();
   const z = useZero();
   const { openAlert } = useAlertDialog();
@@ -195,11 +196,15 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
     >
       <TreeItemContent>
         {({ isExpanded, hasChildItems, level, id, state }) => {
+          const isSelected =
+            item.value.kind === "chat" &&
+            pathname.startsWith(`/chat/${item.value.chatId}`);
           return (
             <ContextMenu>
               <ContextMenuTrigger
                 className={cn(
                   "hover:bg-primary/10 flex items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
+                  isSelected && "text-primary bg-white hover:bg-white",
                 )}
                 style={{
                   marginInlineStart: `${(level - 1) * 15}px`,
@@ -221,7 +226,12 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                 )}
                 {supportsDragging && item.value.kind !== "group" && (
                   <Button slot="drag">
-                    <MenuIcon className="text-muted-foreground size-4" />
+                    <MenuIcon
+                      className={cn(
+                        "text-muted-foreground size-4",
+                        isSelected && "text-primary",
+                      )}
+                    />
                   </Button>
                 )}
                 {/* TODO: disable "truncate" when hovering to support long titles */}
