@@ -290,7 +290,7 @@ function ChatTelescope() {
       } else if (e.key === "ArrowUp") {
         setCursor(Math.max(cursor - 1, 0));
       } else if (e.key === "Enter") {
-        if (focusedChat) {
+        if (focusedChat && open) {
           router.push(`/chat/${focusedChat.id}`);
         }
         setOpen(false);
@@ -304,7 +304,15 @@ function ChatTelescope() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [cursor, filteredChats.length, focusedChat, router, setCursor, setOpen]);
+  }, [
+    cursor,
+    filteredChats.length,
+    focusedChat,
+    open,
+    router,
+    setCursor,
+    setOpen,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
