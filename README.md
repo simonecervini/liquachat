@@ -14,7 +14,7 @@
 ---
 
 > [!WARNING]
-> This project was developed in about a week for the "build-a-chatbot" hackathon by Theo (@t3dotgg). It's a deliberate exploration of an architecture designed from the ground up for privacy and self-hosting.
+> This project was developed in about a week for the T3 Chat hackathon by [Theo (@t3dotgg)](https://github.com/t3dotgg). It's a deliberate exploration of an architecture designed from the ground up for privacy and self-hosting.
 
 > [!NOTE]
 > For the sole purpose of the hackathon judging, a public instance of this project is temporarily available at `liqua.chat`. This instance is for demonstration only and will be taken down after the event.
@@ -23,7 +23,7 @@
 
 ## Core Values & Architecture
 
-Understanding Liqua's core values is essential to grasping its architecture. Many design choices might seem unconventional, but they are deliberate decisions to create a truly private, user-owned, and self-hostable AI assistant.
+Understanding Liqua's core values is essential for understanding its architecture. Many design choices might seem unconventional, but they are deliberate decisions to create a truly private, user-owned, and self-hostable AI assistant.
 
 - **Self-Hosting First**: This is not a SaaS product and will never be. Liqua is designed to be run on your own hardware—your PC, a home server, or an on-premise server for your company. It's built for private networks, often without a public domain.
 - **Privacy by Design**: All communication happens directly between your browser and the AI provider (e.g., OpenRouter). Your API keys and conversations never pass through an intermediary server. This is a fundamental architectural choice.
@@ -31,7 +31,7 @@ Understanding Liqua's core values is essential to grasping its architecture. Man
 
 ## Motivation & Philosophy
 
-The goal of Liqua is **not** to create another ChatGPT-clone with a subscription model. Competing with excellent, low-cost services like t3.chat is a solved problem.
+The goal of Liqua is **not** to create another ChatGPT-clone with a subscription model. Competing with excellent, low-cost services like [t3.chat](https://t3.chat) is a solved problem.
 
 Instead, Liqua explores a different path: creating a sustainable, open-source project that gives you full ownership of your data and infrastructure. It's built on the belief that you shouldn't have to depend on a third party to interact with AI models privately. This project is intentionally designed in a way that prevents it from ever becoming a Software-as-a-Service.
 
