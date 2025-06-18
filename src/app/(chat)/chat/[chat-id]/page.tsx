@@ -533,7 +533,7 @@ function MessageActionsUser(props: {
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
@@ -559,7 +559,7 @@ function MessageActionsUser(props: {
         <TooltipContent>Retry message</TooltipContent>
       </Tooltip>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
@@ -572,7 +572,7 @@ function MessageActionsUser(props: {
         <TooltipContent>Edit message</TooltipContent>
       </Tooltip>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button size="icon" variant="ghost" {...copyButtonProps}>
             {copied ? <CheckIcon /> : <CopyIcon />}
           </Button>
@@ -610,7 +610,7 @@ function MessageActionsSystem(props: {
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button size="icon" variant="ghost" {...copyButtonProps}>
             {copied ? <CheckIcon /> : <CopyIcon />}
           </Button>
@@ -618,7 +618,7 @@ function MessageActionsSystem(props: {
         <TooltipContent>Copy message</TooltipContent>
       </Tooltip>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
@@ -634,7 +634,7 @@ function MessageActionsSystem(props: {
         <TooltipContent>Start new fork</TooltipContent>
       </Tooltip>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
