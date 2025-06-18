@@ -4,5 +4,11 @@
     "tw[cx]\\([^`]*?\\)`([^`]*)`",
     ["tw[cx]\\.[^`]+\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
     ["twc[cx]\\([^`]*?\\).*?\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#2B7FFF",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#2B7FFF",
+    "titleBar.inactiveForeground": "#2B7FFF"
+  }
 }
