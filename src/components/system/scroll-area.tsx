@@ -8,11 +8,11 @@ export function ScrollArea(
   return (
     <ScrollAreaBase.Root {...rest}>
       <ScrollAreaBase.Viewport className="h-full overscroll-contain focus-visible:outline-none">
-        <ScrollAreaBase.Content className="flex flex-col gap-1 py-3 pr-6 pl-2">
+        <ScrollAreaBase.Content className="flex flex-col gap-1 py-3">
           {children}
         </ScrollAreaBase.Content>
       </ScrollAreaBase.Viewport>
-      <ScrollAreaBase.Scrollbar className="mx-0.25 flex w-[3px] justify-center opacity-0 transition-opacity delay-300 duration-150 before:absolute before:h-full before:w-5 before:content-[''] data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+      <ScrollAreaBase.Scrollbar className="flex w-[5px] justify-center opacity-0 transition-opacity delay-300 duration-150 before:absolute before:h-full before:w-5 before:content-[''] data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
         <ScrollAreaBase.Thumb className="bg-primary w-full rounded-[2px]" />
       </ScrollAreaBase.Scrollbar>
     </ScrollAreaBase.Root>

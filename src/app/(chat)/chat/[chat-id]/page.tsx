@@ -29,7 +29,6 @@ import { useStoreWithEqualityFn } from "zustand/traditional";
 
 import { Markdown } from "~/components/markdown";
 import { DEFAULT_MODEL, ModelCombobox } from "~/components/model-combobox";
-import { ScrollArea } from "~/components/scroll-area";
 import { Button } from "~/components/system/button";
 import {
   Dialog,
@@ -41,6 +40,7 @@ import {
   DialogTitle,
 } from "~/components/system/dialog";
 import { Input } from "~/components/system/input";
+import { ScrollArea } from "~/components/system/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -204,7 +204,10 @@ function MessageStackScrollable(props: {
 }) {
   const { className, children } = props;
   return (
-    <ScrollArea className={cn("h-full flex-1", className)}>
+    <ScrollArea
+      // NOTE: we need the padding to offset the 'before:' absolute positioning on the root element
+      className={cn("h-full flex-1 px-3.5 pt-3.5", className)}
+    >
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
         {children}
       </div>
