@@ -43,7 +43,7 @@ export const modelsDict = [
   },
   // Google
   {
-    id: "google/gemini-2.5-flash-preview",
+    id: "google/gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
     // https://artificialanalysis.ai/models/gemini-2-5-flash/
     scores: {
@@ -53,17 +53,7 @@ export const modelsDict = [
     },
   },
   {
-    id: "google/gemini-2.5-flash-preview:thinking",
-    name: "Gemini 2.5 Flash (thinking)",
-    // https://artificialanalysis.ai/models/gemini-2-5-flash-reasoning/?
-    scores: {
-      intelligence: 65,
-      coding: 54,
-      math: 90,
-    },
-  },
-  {
-    id: "google/gemini-2.5-pro-preview",
+    id: "google/gemini-2.5-pro",
     name: "Gemini 2.5 Pro",
     // https://artificialanalysis.ai/models/gemini-2-5-pro
     scores: {
@@ -92,6 +82,7 @@ export const modelsDict = [
       math: 57,
     },
   },
+  // OpenAI
   {
     id: "openai/o4-mini", // "openai/o4-mini-high" = "openai/o4-mini" with reasoning.effort = "high"
     name: "o4 mini",
@@ -113,6 +104,15 @@ export const modelsDict = [
     },
   },
   {
+    id: "openai/o3",
+    name: "o3",
+    scores: {
+      intelligence: 70,
+      coding: 60,
+      math: 95,
+    },
+  },
+  {
     id: "openai/o3-pro",
     name: "o3 Pro",
     // https://artificialanalysis.ai/models/o3-pro
@@ -121,15 +121,6 @@ export const modelsDict = [
       // Not available yet
       // coding: 0,
       // math: 0,
-    },
-  },
-  {
-    id: "openai/o3",
-    name: "o3",
-    scores: {
-      intelligence: 70,
-      coding: 60,
-      math: 95,
     },
   },
   {
@@ -183,6 +174,47 @@ export const modelsDict = [
       math: 54,
     },
   },
+  // Anthropic
+  {
+    id: "anthropic/claude-sonnet-4",
+    name: "Claude Sonnet 4",
+    // https://artificialanalysis.ai/models/claude-4-sonnet
+    scores: {
+      intelligence: 61,
+      coding: 49,
+      math: 84,
+    },
+  },
+  {
+    id: "anthropic/claude-3.7-sonnet",
+    name: "Claude 3.7 Sonnet",
+    // https://artificialanalysis.ai/models/claude-3-7-sonnet
+    scores: {
+      intelligence: 48,
+      coding: 38,
+      math: 54,
+    },
+  },
+  {
+    id: "anthropic/claude-3.7-sonnet:thinking",
+    name: "Claude 3.7 Sonnet (thinking)",
+    // https://artificialanalysis.ai/models/claude-3-7-sonnet-thinking
+    scores: {
+      intelligence: 57,
+      coding: 44,
+      math: 72,
+    },
+  },
+  {
+    id: "anthropic/claude-opus-4",
+    name: "Claude Opus 4",
+    // https://artificialanalysis.ai/models/claude-4-opus
+    scores: {
+      intelligence: 58,
+      coding: 48,
+      math: 75,
+    },
+  },
 ];
 
 export interface ModelComboboxProps {
@@ -190,105 +222,15 @@ export interface ModelComboboxProps {
   onChange: (value: string) => void;
   className?: string;
   slotProps?: {
+    button?: React.ComponentProps<typeof Button>;
     popoverContent?: React.ComponentProps<typeof PopoverContent>;
   };
 }
 
 export function ModelCombobox(props: ModelComboboxProps) {
-  const { value, onChange, className, slotProps } = props;
+  const { value, onChange, slotProps } = props;
   const [open, setOpen] = React.useState(false);
-  const { data: allModels, status } = api.utils.getModels.useQuery(undefined, {
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
-  const models = React.useMemo(() => {
-    if (!allModels) return undefined;
-
-    const modelsWithScores: ((typeof allModels)[number] & {
-      scores: (typeof modelsDict)[number]["scores"];
-    })[] = [
-      {
-        id: "ollama/deepseek-r1:8b",
-        name: "DeepSeek-R1 (8B)",
-        createdAt: 0,
-        contextLength: 128_000,
-        reasoning: false,
-        inputModalities: {
-          text: true,
-          file: false,
-          image: false,
-        },
-        scores: {
-          intelligence: 52,
-          coding: 36,
-          math: 79,
-        },
-      },
-    ];
-
-    for (const model of allModels) {
-      const dictModel = modelsDict.find((m) => m.id === model.id);
-      if (dictModel) {
-        modelsWithScores.push({
-          ...model,
-          name: dictModel.name,
-          scores: dictModel.scores,
-        });
-      }
-    }
-
-    const allIntelligenceScores = modelsWithScores.map(
-      (m) => m.scores.intelligence,
-    );
-    const allCodingScores = modelsWithScores.flatMap(
-      (m) => m.scores.coding ?? [],
-    );
-    const allMathScores = modelsWithScores.flatMap((m) => m.scores.math ?? []);
-
-    const calculatePercentile = (
-      value: number,
-      allValues: number[],
-    ): number => {
-      const sorted = [...allValues].sort((a, b) => a - b);
-      const index = sorted.findIndex((v) => v >= value);
-      return (index / (sorted.length - 1)) * 100;
-    };
-
-    const percentileToScale = (percentile: number): 1 | 2 | 3 => {
-      if (percentile >= 66) return 3;
-      if (percentile >= 33) return 2;
-      return 1;
-    };
-
-    const modelsWithEvaluations = modelsWithScores.map((model) => ({
-      ...model,
-      evaluations: {
-        intelligence:
-          model.scores.intelligence !== undefined
-            ? percentileToScale(
-                calculatePercentile(
-                  model.scores.intelligence,
-                  allIntelligenceScores,
-                ),
-              )
-            : null,
-        coding:
-          model.scores.coding !== undefined
-            ? percentileToScale(
-                calculatePercentile(model.scores.coding, allCodingScores),
-              )
-            : null,
-        math:
-          model.scores.math !== undefined
-            ? percentileToScale(
-                calculatePercentile(model.scores.math, allMathScores),
-              )
-            : null,
-      },
-    }));
-
-    return modelsWithEvaluations.sort((a, b) => a.name.localeCompare(b.name));
-  }, [allModels]);
+  const { data: models, status } = useModels();
 
   const handleSelect = (newValue: string) => {
     onChange(newValue === value ? "" : newValue);
@@ -302,7 +244,7 @@ export function ModelCombobox(props: ModelComboboxProps) {
           variant="ghost"
           role="combobox"
           aria-expanded={open}
-          className={cn("justify-between text-xs", className)}
+          {...slotProps?.button}
         >
           {value
             ? (models?.find((model) => model.id === value)?.name ??
@@ -334,30 +276,36 @@ export function ModelCombobox(props: ModelComboboxProps) {
 
                 <ModelsGroup
                   heading="Local models (Ollama)"
-                  models={
-                    models?.filter((model) => model.id.startsWith("ollama/")) ??
-                    []
-                  }
-                  value={value}
-                  onSelect={handleSelect}
-                />
-
-                <ModelsGroup
-                  heading="Google"
-                  models={
-                    models?.filter((model) => model.id.startsWith("google/")) ??
-                    []
-                  }
+                  models={models.filter((model) =>
+                    model.id.startsWith("ollama/"),
+                  )}
                   value={value}
                   onSelect={handleSelect}
                 />
 
                 <ModelsGroup
                   heading="OpenAI"
-                  models={
-                    models?.filter((model) => model.id.startsWith("openai/")) ??
-                    []
-                  }
+                  models={models.filter((model) =>
+                    model.id.startsWith("openai/"),
+                  )}
+                  value={value}
+                  onSelect={handleSelect}
+                />
+
+                <ModelsGroup
+                  heading="Google"
+                  models={models.filter((model) =>
+                    model.id.startsWith("google/"),
+                  )}
+                  value={value}
+                  onSelect={handleSelect}
+                />
+
+                <ModelsGroup
+                  heading="Anthropic"
+                  models={models.filter((model) =>
+                    model.id.startsWith("anthropic/"),
+                  )}
                   value={value}
                   onSelect={handleSelect}
                 />
@@ -445,4 +393,106 @@ function ModelScore(props: {
       </div>
     </li>
   );
+}
+
+export function useModels() {
+  const { data: _allModels, status } = api.utils.getModels.useQuery(undefined, {
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  return React.useMemo(() => {
+    const allModels = _allModels ?? [];
+
+    const modelsWithScores: ((typeof allModels)[number] & {
+      scores: (typeof modelsDict)[number]["scores"];
+    })[] = [
+      {
+        id: "ollama/deepseek-r1:8b",
+        name: "DeepSeek-R1 (8B)",
+        createdAt: 0,
+        contextLength: 128_000,
+        reasoning: false,
+        inputModalities: {
+          text: true,
+          file: false,
+          image: false,
+        },
+        scores: {
+          intelligence: 52,
+          coding: 36,
+          math: 79,
+        },
+      },
+    ];
+
+    for (const model of allModels) {
+      const dictModel = modelsDict.find((m) => m.id === model.id);
+      if (dictModel) {
+        modelsWithScores.push({
+          ...model,
+          name: dictModel.name,
+          scores: dictModel.scores,
+        });
+      }
+    }
+
+    const allIntelligenceScores = modelsWithScores.map(
+      (m) => m.scores.intelligence,
+    );
+    const allCodingScores = modelsWithScores.flatMap(
+      (m) => m.scores.coding ?? [],
+    );
+    const allMathScores = modelsWithScores.flatMap((m) => m.scores.math ?? []);
+
+    const calculatePercentile = (
+      value: number,
+      allValues: number[],
+    ): number => {
+      const sorted = [...allValues].sort((a, b) => a - b);
+      const index = sorted.findIndex((v) => v >= value);
+      return (index / (sorted.length - 1)) * 100;
+    };
+
+    const percentileToScale = (percentile: number): 1 | 2 | 3 => {
+      if (percentile >= 66) return 3;
+      if (percentile >= 33) return 2;
+      return 1;
+    };
+
+    const modelsWithEvaluations = modelsWithScores.map((model) => ({
+      ...model,
+      evaluations: {
+        intelligence:
+          model.scores.intelligence !== undefined
+            ? percentileToScale(
+                calculatePercentile(
+                  model.scores.intelligence,
+                  allIntelligenceScores,
+                ),
+              )
+            : null,
+        coding:
+          model.scores.coding !== undefined
+            ? percentileToScale(
+                calculatePercentile(model.scores.coding, allCodingScores),
+              )
+            : null,
+        math:
+          model.scores.math !== undefined
+            ? percentileToScale(
+                calculatePercentile(model.scores.math, allMathScores),
+              )
+            : null,
+      },
+    }));
+
+    return {
+      data: modelsWithEvaluations.sort(
+        (a, b) =>
+          modelsDict.findIndex((m) => m.id === a.id) -
+          modelsDict.findIndex((m) => m.id === b.id),
+      ),
+      status,
+    };
+  }, [_allModels, status]);
 }

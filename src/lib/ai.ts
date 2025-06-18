@@ -7,7 +7,9 @@ import { createOllama } from "ollama-ai-provider";
 
 import type { ZeroRow } from "~/zero/schema";
 
-type StreamResponseOptions = { abortSignal: AbortSignal } & (
+export type ReasoningEffort = "low" | "medium" | "high";
+
+export type StreamResponseOptions = { abortSignal: AbortSignal } & (
   | {
       provider: "ollama";
       modelId: string;
@@ -15,6 +17,7 @@ type StreamResponseOptions = { abortSignal: AbortSignal } & (
   | {
       provider: "openrouter";
       modelId: string;
+      reasoningEffort?: ReasoningEffort;
     }
 );
 
@@ -85,7 +88,15 @@ function getModelFromOptions(options: StreamResponseOptions): LanguageModelV1 {
     const openrouter = createOpenRouter({
       apiKey,
     });
-    return openrouter.chat(options.modelId);
+    return openrouter.chat(options.modelId, {
+      reasoning: {
+        exclude: true,
+        effort: options.reasoningEffort ?? "high",
+      },
+      usage: {
+        include: true,
+      },
+    });
   } else {
     const ollama = createOllama({
       baseURL: "http://localhost:11434/api",

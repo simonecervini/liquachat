@@ -4,6 +4,9 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const utilsRouter = createTRPCRouter({
   getModels: publicProcedure.query(async () => {
+    // Right now, we could refactor this procedure as a client-side query
+    // Not sure about the future, so keeping it here for now
+
     const res = await fetch("https://openrouter.ai/api/v1/models");
     const json = (await res.json()) as unknown;
     const schema = z.object({

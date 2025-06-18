@@ -61,7 +61,7 @@ export function ChatCombobox(props: ChatComboboxProps) {
               <TrafficConeIcon className="mr-1 inline-block size-[1em] align-middle" />
               Work in progress
               <p className="text-muted-foreground mt-2 text-left text-[0.7rem]">
-                The backend can already handle different &apos;Tree Views&apos;
+                The backend is already handling different &apos;Tree Views&apos;
                 to organize your chats. The UI to manage them is coming soon.
               </p>
             </CommandPrimitive.Item>
