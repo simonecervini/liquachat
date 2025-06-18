@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
+import { Command as CommandPrimitive } from "cmdk";
+import { CheckIcon, ChevronsUpDownIcon, TrafficConeIcon } from "lucide-react";
 
 import { Button } from "~/components/system/button";
 import {
@@ -53,10 +54,18 @@ export function ChatCombobox(props: ChatComboboxProps) {
         className={cn("w-[200px] p-0", slotProps?.popoverContent?.className)}
       >
         <Command>
-          <CommandInput placeholder="Search view..." />
+          <CommandInput placeholder="Search view..." disabled />
           <CommandList>
             <CommandEmpty>No view found.</CommandEmpty>
-            <CommandGroup heading="View">
+            <CommandPrimitive.Item className="px-3 pt-3 text-center text-xs">
+              <TrafficConeIcon className="mr-1 inline-block size-[1em] align-middle" />
+              Work in progress
+              <p className="text-muted-foreground mt-2 text-left text-[0.7rem]">
+                The backend can already handle different &apos;Tree Views&apos;
+                to organize your chats. The UI to manage them is coming soon.
+              </p>
+            </CommandPrimitive.Item>
+            <CommandGroup heading="Views">
               {options.map((option) => (
                 <CommandItem
                   key={option.id}
