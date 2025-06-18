@@ -46,7 +46,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check types
+      - name: Check formatting
         run: pnpm format:check
 
   typecheck:
