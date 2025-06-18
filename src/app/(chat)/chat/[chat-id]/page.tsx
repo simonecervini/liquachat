@@ -16,6 +16,7 @@ import {
   CopyIcon,
   GitBranchIcon,
   GraduationCapIcon,
+  LoaderIcon,
   RefreshCcwIcon,
   SparklesIcon,
   SquareIcon,
@@ -232,13 +233,20 @@ function MessageStack(props: { className?: string }) {
   }
   return (
     <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
-      {messages.map((message) =>
-        message.content ||
-        message.status === "error" ||
-        message.status === "aborted" ? (
+      {messages.map((message) => {
+        if (!message.content && message.status === "streaming") {
+          return (
+            <div key={message.id}>
+              <LoaderIcon className="size-8 animate-spin" />
+            </div>
+          );
+        }
+        return message.content ||
+          message.status === "error" ||
+          message.status === "aborted" ? (
           <Message key={message.id} message={message} />
-        ) : null,
-      )}
+        ) : null;
+      })}
     </div>
   );
 }
