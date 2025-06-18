@@ -1,14 +1,18 @@
 import * as React from "react";
 import { ScrollArea as ScrollAreaBase } from "@base-ui-components/react/scroll-area";
 
+import { cn } from "~/lib/cn";
+
 export function ScrollArea(
-  props: React.ComponentProps<typeof ScrollAreaBase.Root>,
+  props: React.ComponentProps<typeof ScrollAreaBase.Root> & {
+    contentClassName?: string;
+  },
 ) {
-  const { children, ...rest } = props;
+  const { children, contentClassName, ...rest } = props;
   return (
     <ScrollAreaBase.Root {...rest}>
       <ScrollAreaBase.Viewport className="h-full overscroll-contain focus-visible:outline-none">
-        <ScrollAreaBase.Content className="flex flex-col gap-1 py-3">
+        <ScrollAreaBase.Content className={cn(contentClassName)}>
           {children}
         </ScrollAreaBase.Content>
       </ScrollAreaBase.Viewport>

@@ -25,6 +25,7 @@ import { Markdown } from "~/components/markdown";
 import { Button } from "~/components/system/button";
 import { Dialog, DialogContent, DialogTitle } from "~/components/system/dialog";
 import { Input } from "~/components/system/input";
+import { ScrollArea } from "~/components/system/scroll-area";
 import { cn } from "~/lib/cn";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
@@ -318,56 +319,71 @@ function ChatTelescope() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTitle className="sr-only">Search chats</DialogTitle>
       <DialogContent
-        className="flex h-1/2 w-full max-w-4xl! overflow-hidden p-3 focus-visible:outline-none"
+        className="flex h-1/2 w-full max-w-4xl! overflow-hidden p-2.5 focus-visible:outline-none"
         showCloseButton={false}
       >
-        <div className="grid grow grid-cols-2 gap-2.5">
-          <div className="flex h-full flex-col gap-2.5">
-            <div className="grow rounded-lg border">
-              <ul className="flex flex-col gap-1 p-1 text-sm [&>li]:rounded-sm [&>li]:px-2 [&>li]:py-1">
+        <div className="grid w-full grid-cols-2 gap-2.5">
+          <div className="flex flex-col gap-2 overflow-hidden">
+            <ScrollArea
+              className="min-h-0 flex-1 overflow-hidden rounded-md border"
+              contentClassName="min-w-0! p-1"
+            >
+              <ul className="text-sm [&>li]:rounded-sm [&>li]:px-2 [&>li]:py-1">
                 {filteredChats.map((chat, index) => (
                   <li
-                    key={chat.id}
+                    key={index}
                     className={cn(
-                      "cursor-pointer",
+                      "hover:bg-primary/10 min-w-0 cursor-pointer truncate",
                       cursor === index && "bg-primary/10",
                     )}
+                    onClick={() => {
+                      setCursor(index);
+                    }}
                   >
                     {chat.title}
                   </li>
                 ))}
               </ul>
-            </div>
+            </ScrollArea>
             <Input
               placeholder="Search your chats..."
               autoFocus
               value={search}
               ref={inputRef}
               onChange={(e) => setSearch(e.target.value)}
+              className="focus-visible:border-inherit focus-visible:ring-0"
             />
           </div>
-          <ul className="flex flex-col gap-1.5 overflow-y-scroll p-0.5 text-sm">
-            {focusedChat?.messages.map((message) => {
-              if (!message.content && message.status !== "error") return null;
-              return (
-                <li
-                  key={message.id}
-                  className="bg-secondary/50 rounded-sm p-2 text-xs/loose"
-                >
-                  {message.content ? (
-                    <Markdown className="gap-1 text-xs/loose">
-                      {message.content}
-                    </Markdown>
-                  ) : (
-                    <>
-                      <CircleXIcon className="mr-1 inline-block size-[1em] align-middle" />
-                      Error while generating response
-                    </>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <div className="flex flex-col gap-2 overflow-hidden">
+            <ScrollArea
+              className="min-h-0 flex-1 overflow-hidden rounded-md border"
+              contentClassName="p-2 min-w-0"
+            >
+              <ul className="flex flex-col gap-1 overflow-hidden">
+                {focusedChat?.messages.map((message) => {
+                  if (!message.content && message.status !== "error")
+                    return null;
+                  return (
+                    <li
+                      key={message.id}
+                      className="bg-secondary/50 rounded-sm p-2 text-xs/loose"
+                    >
+                      {message.content ? (
+                        <Markdown className="gap-1 text-xs/loose">
+                          {message.content}
+                        </Markdown>
+                      ) : (
+                        <>
+                          <CircleXIcon className="mr-1 inline-block size-[1em] align-middle" />
+                          Error while generating response
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </ScrollArea>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
