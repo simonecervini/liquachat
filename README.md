@@ -11,7 +11,8 @@
   <h3>Your Private, Self-Hostable, and Local-First AI Assistant</h3>
 </div>
 
----
+![liqua chat_chat_fbc2ad84-bb6c-4cfa-a445-aa4ac9c173dc](https://github.com/user-attachments/assets/9c81adf8-3b6c-47f5-a4cb-e1f74f0cdb2b)
+
 
 > [!WARNING]
 > This project was developed in about a week for the T3 Chat hackathon by [Theo (@t3dotgg)](https://github.com/t3dotgg). It's a deliberate exploration of an architecture designed from the ground up for privacy and self-hosting.
@@ -59,8 +60,6 @@ While Liqua includes the standard features you'd expect from an AI assistant (li
 
 Here are a few highlights:
 
-<!-- TODO: Add GIF here -->
-
 ### The Choice of Zero as a Sync Engine
 
 Theo chose Convex for t3.chat and rightly explained why Zero was not a good fit for a public-facing chatbot like his. While it is technically possible to build such an application with Zero, the architectural trade-offs are significant.
@@ -73,11 +72,15 @@ The main trade-off with this architecture is that **resumable streams are not po
 
 Instead of a traditional, flat list of conversations, Liqua introduces a completely redesigned tree structure. This file system-inspired approach allows for superior organization and unlocks powerful features like **chat forking**.
 
-<!-- TODO: Add GIF here -->
+![output-1](https://github.com/user-attachments/assets/72683d48-7c81-48db-9ad6-b853cfa783bb)
+
 
 ### Experimental Search
 
 Accessible via `Cmd+K`, a powerful, keyboard-driven search interface lets you fuzzy-find any chat. This feature is heavily inspired by Telescope in NeoVim. **(Note: This is highly experimental and the UI is still raw).**
+
+![outputtt](https://github.com/user-attachments/assets/ab8d0619-be6e-49a3-a29e-9d28f53dfc9a)
+
 
 ## Self-Hosting
 
