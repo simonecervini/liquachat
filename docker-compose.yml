@@ -86,7 +86,6 @@ services:
         # we need to separate them from the server-side env vars because they are built into the bundle
         - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:4848
         - NEXT_PUBLIC_NODE_ENV=production
-        - NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS=${NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS:-false}
     restart: always
     ports:
       - "${APP_PORT:-3000}:3000"
@@ -99,8 +98,7 @@ services:
       - ZERO_PUSH_URL=* # not used
       - BETTER_AUTH_URL=http://localhost:3000
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - GITHUB_CLIENT_ID=* # not used
-      - GITHUB_CLIENT_SECRET=* # not used
+      - LIQUA_CONFIG_JSON=${LIQUA_CONFIG_JSON}
     depends_on:
       migrator:
         condition: service_completed_successfully

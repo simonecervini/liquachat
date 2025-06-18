@@ -1,10 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { anonymous, bearer, jwt } from "better-auth/plugins";
+import { z } from "zod";
 
-import { env } from "~/env";
+import { getConfig } from "~/lib/config";
 import { db } from "./db";
 import { insertDemoChats } from "./db/seed";
+
+const liquaConfig = getConfig();
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -18,7 +21,7 @@ export const auth = betterAuth({
         expirationTime: "1h",
       },
     }),
-    ...(env.NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS ? [anonymous()] : []),
+    ...(liquaConfig.auth.allowGuests ? [anonymous()] : []),
   ],
   databaseHooks: {
     user: {
@@ -38,10 +41,24 @@ export const auth = betterAuth({
     },
   },
   socialProviders: {
-    github: {
-      clientId: env.GITHUB_CLIENT_ID,
-      clientSecret: env.GITHUB_CLIENT_SECRET,
-    },
+    github: liquaConfig.auth.socialProviders?.includes("github")
+      ? {
+          clientId: z.string().min(1).parse(process.env.GITHUB_CLIENT_ID),
+          clientSecret: z
+            .string()
+            .min(1)
+            .parse(process.env.GITHUB_CLIENT_SECRET),
+        }
+      : undefined,
+    google: liquaConfig.auth.socialProviders?.includes("google")
+      ? {
+          clientId: z.string().min(1).parse(process.env.GOOGLE_CLIENT_ID),
+          clientSecret: z
+            .string()
+            .min(1)
+            .parse(process.env.GOOGLE_CLIENT_SECRET),
+        }
+      : undefined,
   },
   advanced: {
     database: {

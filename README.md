@@ -1,7 +1,7 @@
 ## WIP
 
 ```bash
-DB_PASSWORD=my_root-password NEXT_PUBLIC_BETTER_AUTH_ALLOW_ANONYMOUS=true BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up -d --build
+DB_PASSWORD=my_root_password LIQUA_CONFIG_JSON='{"auth":{"allowGuests":"true","socialProviders":["github","google"]}}' BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up -d --build
 ```
 
 - doesn't work with gpus

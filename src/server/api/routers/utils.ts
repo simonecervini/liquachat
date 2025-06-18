@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { getConfig } from "~/lib/config";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const utilsRouter = createTRPCRouter({
@@ -36,5 +37,10 @@ export const utilsRouter = createTRPCRouter({
         file: model.architecture.input_modalities.includes("file"),
       },
     }));
+  }),
+  getLiquaConfig: publicProcedure.query(async () => {
+    // `getConfig` is a server-side function, so we can't use it in the client
+    // If required, we can hide sensitive data here before returning it to the client
+    return getConfig();
   }),
 });
