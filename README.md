@@ -13,7 +13,6 @@
 
 ![liqua chat_chat_fbc2ad84-bb6c-4cfa-a445-aa4ac9c173dc](https://github.com/user-attachments/assets/9c81adf8-3b6c-47f5-a4cb-e1f74f0cdb2b)
 
-
 > [!WARNING]
 > This project was developed in about a week for the T3 Chat hackathon by [Theo (@t3dotgg)](https://github.com/t3dotgg). It's a deliberate exploration of an architecture designed from the ground up for privacy and self-hosting.
 
@@ -74,13 +73,11 @@ Instead of a traditional, flat list of conversations, Liqua introduces a complet
 
 ![output-1](https://github.com/user-attachments/assets/72683d48-7c81-48db-9ad6-b853cfa783bb)
 
-
 ### Experimental Search
 
 Accessible via `Cmd+K`, a powerful, keyboard-driven search interface lets you fuzzy-find any chat. This feature is heavily inspired by Telescope in NeoVim. **(Note: This is highly experimental and the UI is still raw).**
 
 ![outputtt](https://github.com/user-attachments/assets/ab8d0619-be6e-49a3-a29e-9d28f53dfc9a)
-
 
 ## Self-Hosting
 
@@ -153,7 +150,7 @@ This section describes how to set up a local development environment to contribu
     Copy the `env.example` file to a new `.env` file. This file contains the necessary environment variables for development.
 
     ```bash
-    cp env.example .env
+    cp .env.example .env
     ```
 
 4.  **Start the database:**
