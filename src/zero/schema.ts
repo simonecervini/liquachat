@@ -26,6 +26,11 @@ export const permissions = definePermissions<JWTData, Schema>(schema, () => {
     eb: ExpressionBuilder<Schema, "chats">,
   ) => eb.cmp("userId", authData.sub);
 
+  const allowIfMessageOfAllowedChat = (
+    authData: JWTData,
+    eb: ExpressionBuilder<Schema, "messages">,
+  ) => eb.exists("chat", (q) => q.where("userId", authData.sub));
+
   type Config = CompletePermissionsConfig[keyof CompletePermissionsConfig];
 
   const SAME_USER_CAN_DO_ANYTHING: Config = {
@@ -55,7 +60,17 @@ export const permissions = definePermissions<JWTData, Schema>(schema, () => {
   return {
     users: SAME_USER_CAN_DO_ANYTHING,
     chats: OWNER_CAN_DO_ANYTHING,
-    messages: OWNER_CAN_DO_ANYTHING,
+    messages: {
+      row: {
+        select: [allowIfMessageOfAllowedChat],
+        delete: [allowIfMessageOfAllowedChat],
+        insert: [allowIfMessageOfAllowedChat],
+        update: {
+          preMutation: [allowIfMessageOfAllowedChat],
+          postMutation: [allowIfMessageOfAllowedChat],
+        },
+      },
+    },
     chatTrees: OWNER_CAN_DO_ANYTHING,
   } satisfies CompletePermissionsConfig;
 });
