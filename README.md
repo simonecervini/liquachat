@@ -1,10 +1,8 @@
 <h1 align="center">Liqua</h1>
 
 <div align="center">
-  <a href="https://github.com/simonecervini/liquachat/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/simonecervini/liquachat?style=flat-square&color=blue" alt="sawa-license" />
-  </a>
-  <img src="https://img.shields.io/github/last-commit/simonecervini/liquachat?style=flat-square" alt="sawa-last-commit" />
+  <img alt="GitHub License" src="https://img.shields.io/github/license/simonecervini/liquachat?style=flat&color=%232B7FFF">
+  <img src="https://img.shields.io/github/last-commit/simonecervini/liquachat?style=flat" alt="Last commit" />
 </div>
 
 <div align="center">
@@ -191,3 +189,7 @@ This section describes how to set up a local development environment to contribu
     ```bash
     ollama run deepseek-r1:8b
     ```
+
+## License
+
+This project is licensed under the terms of the [MIT license](./LICENSE).
