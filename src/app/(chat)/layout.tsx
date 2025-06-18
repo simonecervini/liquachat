@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import {
+  CircleXIcon,
   FolderTreeIcon,
   ListIcon,
   PanelLeftIcon,
@@ -337,13 +338,26 @@ function ChatTelescope() {
             />
           </div>
           <ul className="flex flex-col gap-1.5 overflow-y-scroll p-0.5 text-sm">
-            {focusedChat?.messages.map((message) => (
-              <li key={message.id} className="bg-secondary/50 rounded-sm p-2">
-                <Markdown className="gap-1 text-xs/loose">
-                  {message.content}
-                </Markdown>
-              </li>
-            ))}
+            {focusedChat?.messages.map((message) => {
+              if (!message.content && message.status !== "error") return null;
+              return (
+                <li
+                  key={message.id}
+                  className="bg-secondary/50 rounded-sm p-2 text-xs/loose"
+                >
+                  {message.content ? (
+                    <Markdown className="gap-1 text-xs/loose">
+                      {message.content}
+                    </Markdown>
+                  ) : (
+                    <>
+                      <CircleXIcon className="mr-1 inline-block size-[1em] align-middle" />
+                      Error while generating response
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </DialogContent>
