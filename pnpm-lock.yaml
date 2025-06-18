@@ -71,6 +71,9 @@ dependencies:
   lucide-react:
     specifier: ^0.513.0
     version: 0.513.0(react@19.1.0)
+  match-sorter:
+    specifier: ^8.0.3
+    version: 8.0.3
   motion:
     specifier: ^12.16.0
     version: 12.16.0(react-dom@19.1.0)(react@19.1.0)
@@ -9642,6 +9645,13 @@ packages:
       uc.micro: 2.1.0
     dev: false
 
+  /match-sorter@8.0.3:
+    resolution: {integrity: sha512-BnR/YBS1iO94R3EcseKkb7kJ2w2su5CWmywHvFYv70HQ2syqca79JefoGocMK+G1NOdpV2kt0G3uQb5hcdFtIA==}
+    dependencies:
+      '@babel/runtime': 7.27.6
+      remove-accents: 0.5.0
+    dev: false
+
   /math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -11082,6 +11092,10 @@ packages:
       mdast-util-to-hast: 13.2.0
       unified: 11.0.5
       vfile: 6.0.3
+    dev: false
+
+  /remove-accents@0.5.0:
+    resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
     dev: false
 
   /require-directory@2.1.1:

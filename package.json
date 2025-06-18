@@ -60,6 +60,7 @@
     "jose": "^6.0.11",
     "lorem-ipsum": "^2.0.8",
     "lucide-react": "^0.513.0",
+    "match-sorter": "^8.0.3",
     "motion": "^12.16.0",
     "next": "^15.2.3",
     "ollama-ai-provider": "^1.2.0",

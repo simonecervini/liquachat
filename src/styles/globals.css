@@ -38,6 +38,7 @@ body {
   --color-primary-foreground: var(--color-white);
   --color-secondary: var(--color-blue-100);
   --color-secondary-foreground: var(--color-slate-800);
+  --color-secondary-hover: var(--color-blue-200);
   --color-destructive: var(--color-red-500);
   --border-width-3: 3px;
   --color-popover: var(--color-white);

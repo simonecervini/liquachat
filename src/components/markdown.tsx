@@ -36,9 +36,9 @@ const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
   },
 };
 
-export function Markdown(props: { children: string }) {
+export function Markdown(props: { children: string; className?: string }) {
   return (
-    <div className="flex flex-col gap-3 text-sm/loose">
+    <div className={cn("flex flex-col gap-3 text-sm/loose", props.className)}>
       <MarkdownRoot components={components}>{props.children}</MarkdownRoot>
     </div>
   );

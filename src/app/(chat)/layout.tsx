@@ -12,13 +12,18 @@ import {
   PlusIcon,
   SearchIcon,
 } from "lucide-react";
+import { matchSorter } from "match-sorter";
 import { Tabs as TabsPrimitive } from "radix-ui";
 import type { Key } from "react-aria-components";
+import { create } from "zustand";
 
 import { ChatTree } from "~/components/chat-tree";
 import { ChatCombobox } from "~/components/chat-tree-combobox";
 import { Logo } from "~/components/logo";
+import { Markdown } from "~/components/markdown";
 import { Button } from "~/components/system/button";
+import { Dialog, DialogContent } from "~/components/system/dialog";
+import { Input } from "~/components/system/input";
 import { cn } from "~/lib/cn";
 import { useZero } from "~/zero/react";
 import type { ZeroRow } from "~/zero/schema";
@@ -37,6 +42,7 @@ export default function Layout(props: { children: React.ReactNode }) {
       >
         {children}
       </div>
+      <ChatTelescope />
     </div>
   );
 }
@@ -103,14 +109,13 @@ function SidebarContent(props: {
 }) {
   const { chatTrees, chats } = props;
   const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id);
-  const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Key[]>([]);
   const startNewChat = useStartNewChat();
+  const openChatTelescope = useChatTelescopeState((state) => state.setOpen);
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="px-4">
+      <div className="mb-2 flex flex-col gap-2 px-2 pb-2">
         <Button
-          className="w-full"
           size="lg"
           onClick={async () => {
             await startNewChat(chatTreeId);
@@ -120,26 +125,21 @@ function SidebarContent(props: {
           New Chat
         </Button>
 
-        <div className="relative mt-3.5 mb-4.5 w-full">
-          <input
-            type="text"
-            placeholder="Search your chats..."
-            className="focus:border-primary w-full border-b border-gray-300 bg-transparent py-2 pl-6.5 text-xs focus:outline-none"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setExpanded([]);
-            }}
-          />
-          <SearchIcon className="text-muted-foreground absolute top-1/2 left-0 size-4 -translate-y-1/2 transform" />
-        </div>
+        <Button
+          variant="secondary"
+          size="lg"
+          onClick={() => openChatTelescope(true)}
+        >
+          <SearchIcon />
+          Search chats
+        </Button>
       </div>
 
       <TabsPrimitive.Root
         className="flex min-h-0 flex-1 flex-col"
         defaultValue="tree"
       >
-        <TabsPrimitive.List className="text-muted-foreground flex justify-center gap-2 px-4 text-xs">
+        <TabsPrimitive.List className="text-muted-foreground mb-1 flex justify-center gap-2 px-4 text-xs">
           <TabsPrimitive.Trigger
             className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
             value="tree"
@@ -239,6 +239,116 @@ function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
         ),
       )}
     </div>
+  );
+}
+
+const useChatTelescopeState = create<{
+  search: string;
+  cursor: number;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  setCursor: (cursor: number) => void;
+  setSearch: (search: string) => void;
+}>()((set) => ({
+  search: "",
+  cursor: 0,
+  open: false,
+  setOpen: (open: boolean) => set({ open, cursor: 0 }),
+  setCursor: (cursor: number) => set({ cursor }),
+  setSearch: (search: string) => set({ search, cursor: 0 }),
+}));
+
+// Inspired by the GOAT https://github.com/nvim-telescope/telescope.nvim
+function ChatTelescope() {
+  // TODO: we need to use `useDeferredValue` here
+  const z = useZero();
+  const router = useRouter();
+  const [chats] = useQuery(
+    z.query.chats
+      .where("userId", "=", z.userID)
+      .orderBy("title", "asc")
+      .related("messages", (q) => q.orderBy("createdAt", "asc")),
+  );
+
+  const { open, setOpen, cursor, setCursor, search, setSearch } =
+    useChatTelescopeState();
+
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const filteredChats = React.useMemo(() => {
+    return matchSorter(chats, search, {
+      keys: ["title", "messages.*.content"],
+    });
+  }, [chats, search]);
+
+  const focusedChat = filteredChats[cursor];
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        setCursor(Math.min(cursor + 1, filteredChats.length - 1));
+      } else if (e.key === "ArrowUp") {
+        setCursor(Math.max(cursor - 1, 0));
+      } else if (e.key === "Enter") {
+        if (focusedChat) {
+          router.push(`/chat/${focusedChat.id}`);
+        }
+        setOpen(false);
+      } else if (e.key === "Escape") {
+        setOpen(false);
+      } else if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        setOpen(true);
+      } else if (e.key !== "Tab") {
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cursor, filteredChats.length, focusedChat, router, setCursor, setOpen]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent
+        className="flex h-1/2 w-full max-w-4xl! overflow-hidden p-3 focus-visible:outline-none"
+        showCloseButton={false}
+      >
+        <div className="grid grow grid-cols-2 gap-2.5">
+          <div className="flex h-full flex-col gap-2.5">
+            <div className="grow rounded-lg border">
+              <ul className="flex flex-col gap-1 p-1 text-sm [&>li]:rounded-sm [&>li]:px-2 [&>li]:py-1">
+                {filteredChats.map((chat, index) => (
+                  <li
+                    key={chat.id}
+                    className={cn(
+                      "cursor-pointer",
+                      cursor === index && "bg-primary/10",
+                    )}
+                  >
+                    {chat.title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Input
+              placeholder="Search your chats..."
+              autoFocus
+              value={search}
+              ref={inputRef}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <ul className="flex flex-col gap-1.5 overflow-y-scroll p-0.5 text-sm">
+            {focusedChat?.messages.map((message) => (
+              <li key={message.id} className="bg-secondary/50 rounded-sm p-2">
+                <Markdown className="gap-1 text-xs/loose">
+                  {message.content}
+                </Markdown>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

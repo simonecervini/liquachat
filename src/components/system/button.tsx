@@ -11,6 +11,7 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-gradient-to-t text-sm from-blue-500 to-blue-400 shadow-sm hover:from-blue-600 hover:to-blue-500 text-white",
+        secondary: "bg-secondary hover:bg-secondary-hover",
         ghost: "hover:bg-secondary text-secondary-foreground hover:text-black",
       },
       size: {
