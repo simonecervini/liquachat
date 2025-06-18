@@ -36,8 +36,8 @@ export default function Layout(props: { children: React.ReactNode }) {
       <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
       <div
         className={cn(
-          "relative grow transition-all before:absolute before:top-3.5 before:right-3.5 before:bottom-0 before:left-3.5 before:rounded-t-3xl before:border-3 before:border-b-0 before:border-white before:bg-white before:bg-gradient-to-tl before:from-white/70 before:to-white/80 before:shadow-2xl before:shadow-black/5 before:transition-all before:content-['']",
-          !sidebarOpen && "before:inset-0 before:rounded-none",
+          "relative grow transition-all before:absolute before:inset-0 before:rounded-t-3xl before:border-3 before:border-b-0 before:border-white before:bg-white before:bg-gradient-to-tl before:from-white/70 before:to-white/80 before:shadow-2xl before:shadow-black/5 before:transition-all before:content-[''] before:sm:top-3.5 before:sm:right-3.5 before:sm:left-3.5",
+          !sidebarOpen && "before:inset-0! before:rounded-none",
         )}
       >
         {children}
@@ -61,35 +61,34 @@ function Sidebar(props: {
   const startNewChat = useStartNewChat();
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative h-full flex-col">
       <div
         className={cn(
           "absolute top-4 left-2 z-10 flex gap-0.5 transition-all",
-          !open && "left-4",
+          !open && "sm:left-4",
         )}
       >
         <Button variant="ghost" size="icon" onClick={() => onOpenChange(!open)}>
           <PanelLeftIcon />
         </Button>
-        {!open && (
-          <>
-            <Button
-              className="animate-in fade-in"
-              variant="ghost"
-              size="icon"
-              onClick={async () => {
-                // TODO: use the last used chat tree
-                await startNewChat(chatTrees[0]!.id);
-              }}
-            >
-              <PlusIcon />
-            </Button>
-          </>
-        )}
+        <Button
+          className={cn(
+            "animate-in fade-in sm:hidden",
+            !open && "inline-flex!",
+          )}
+          variant="ghost"
+          size="icon"
+          onClick={async () => {
+            // TODO: use the last used chat tree
+            await startNewChat(chatTrees[0]!.id);
+          }}
+        >
+          <PlusIcon />
+        </Button>
       </div>
       <div
         className={cn(
-          "flex h-full flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 pt-4 transition-all duration-300",
+          "hidden h-full flex-col items-center border-r-3 border-white/50 bg-linear-to-r from-transparent to-white/20 pt-4 transition-all duration-300 sm:flex",
           open ? "w-60 opacity-100" : "w-0 opacity-0",
         )}
       >

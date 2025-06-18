@@ -704,8 +704,8 @@ function SendMessageForm() {
 
   return (
     <>
-      <div className="border-primary/10 absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
-        <div className="relative h-full w-full">
+      <div className="absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 px-1">
+        <div className="border-primary/10 relative h-full w-full rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
           <form
             onSubmit={async (event) => {
               event.preventDefault();
