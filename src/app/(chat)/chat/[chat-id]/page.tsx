@@ -740,12 +740,6 @@ function SendMessageForm() {
                   value={field.state.value}
                   onChange={(event) => field.handleChange(event.target.value)}
                   onBlur={field.handleBlur}
-                  onKeyDown={async (event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      await form.handleSubmit();
-                    }
-                  }}
                   placeholder="Type your message here..."
                   className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
                   rows={4}
