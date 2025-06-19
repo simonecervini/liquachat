@@ -213,7 +213,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
             <ContextMenu>
               <ContextMenuTrigger
                 className={cn(
-                  "hover:bg-primary/10 flex items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
+                  "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
                   // `data-floating-ui-inert is not documented, but it works (I guess)
                   "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
                   isSelected && "text-primary! bg-white! hover:bg-white!",
