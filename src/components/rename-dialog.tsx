@@ -79,7 +79,7 @@ export function RenameDialog() {
         }
       }}
     >
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[400px]" autoFocus>
         {data && (
           <form
             onSubmit={(event) => {
@@ -104,7 +104,6 @@ export function RenameDialog() {
                       field.handleChange(e.target.value);
                     }}
                     onBlur={field.handleBlur}
-                    autoFocus
                   />
                 )}
               />

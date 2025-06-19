@@ -16,8 +16,8 @@ export function ScrollArea(
           {children}
         </ScrollAreaBase.Content>
       </ScrollAreaBase.Viewport>
-      <ScrollAreaBase.Scrollbar className="flex w-[5px] justify-center opacity-0 transition-opacity delay-300 duration-150 before:absolute before:h-full before:w-5 before:content-[''] data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
-        <ScrollAreaBase.Thumb className="bg-primary w-full rounded-[2px]" />
+      <ScrollAreaBase.Scrollbar className="flex w-[5px] justify-center opacity-0 transition-opacity delay-300 duration-150 before:absolute before:h-full before:content-[''] data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+        <ScrollAreaBase.Thumb className="bg-primary w-full rounded-full" />
       </ScrollAreaBase.Scrollbar>
     </ScrollAreaBase.Root>
   );

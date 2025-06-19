@@ -312,7 +312,7 @@ function MessageStackEmpty() {
               <Tabs.Trigger
                 key={key}
                 value={key}
-                className="data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground inline-flex h-9 items-center gap-2 rounded-md bg-gradient-to-t from-blue-500 to-blue-400 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-500 data-[state=inactive]:bg-none data-[state=inactive]:shadow-none data-[state=inactive]:hover:bg-blue-200"
+                className="data-[state=inactive]:bg-secondary data-[state=inactive]:text-secondary-foreground inline-flex h-9 items-center gap-2 rounded-md bg-gradient-to-t from-blue-500 to-blue-400 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-blue-600 hover:to-blue-500 data-[state=inactive]:bg-none data-[state=inactive]:shadow-none data-[state=inactive]:hover:bg-blue-200"
               >
                 <Icon className="size-4" />
                 {tab.title}
