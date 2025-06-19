@@ -214,10 +214,15 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
           return (
             <ContextMenu>
               <ContextMenuTrigger
-                className={cn(
-                  "hover:bg-primary/10 flex items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
-                  isSelected && "text-primary bg-white hover:bg-white",
-                )}
+                className={(state) => {
+                  console.log(state);
+                  return cn(
+                    "hover:bg-primary/10 flex items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm",
+                    // `data-floating-ui-inert is not documented, but it works (I guess)
+                    "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
+                    isSelected && "text-primary! bg-white! hover:bg-white!",
+                  );
+                }}
                 style={{
                   marginInlineStart: `${(level - 1) * 15}px`,
                 }}
@@ -295,34 +300,6 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   <FolderPlusIcon />
                   Move to new folder
                 </ContextMenuItem>
-                <ContextMenuItem
-                  onClick={() => {
-                    treeData.insertBefore(id, {
-                      ...item.value,
-                      id: crypto.randomUUID(),
-                      childItems: item.value.childItems
-                        ? deepRegenerateIds(item.value.childItems)
-                        : undefined,
-                    });
-                  }}
-                >
-                  {item.value.kind === "group" ? (
-                    <>
-                      <FoldersIcon />
-                      Duplicate folder
-                    </>
-                  ) : (
-                    <>
-                      <CopyIcon />
-                      Duplicate
-                    </>
-                  )}
-                </ContextMenuItem>
-                {/* <ContextMenuSeparator />
-                <ContextMenuItem>
-                  <ShareIcon />
-                  Share
-                </ContextMenuItem> */}
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   onClick={() => {
@@ -338,17 +315,15 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                           : "Rename the folder to a new name.",
                       onSubmit: (value) => {
                         if (item.value.kind === "chat") {
-                          void z.mutate.chats.update({
+                          z.mutate.chats.rename({
                             id: item.value.chatId,
                             title: value,
-                          });
-                          treeData.update(id, {
-                            ...item.value,
                             // We need to change "something" in the tree data to trigger a re-render
                             // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
                             // The `key` prop on the DynamicTreeItem or Tree component is not enough because we need to sync the change across all clients
                             // Regenerating the id is not very elegant, but it works and have zero impact on the user
-                            id: crypto.randomUUID(),
+                            // TODO: remove this when treeDataV2 is used everywhere
+                            newNodeId: crypto.randomUUID(),
                           });
                         } else {
                           treeData.update(id, {

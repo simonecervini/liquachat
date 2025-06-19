@@ -65,6 +65,49 @@ export function createMutators(user: User) {
           }
         }
       },
+      rename: async (
+        tx,
+        input: { id: string; title: string; newNodeId: string },
+      ) => {
+        const promises: Promise<unknown>[] = [];
+        promises.push(
+          tx.mutate.chats.update({
+            id: input.id,
+            title: input.title,
+          }),
+        );
+        const chatTrees = await tx.query.chatTrees.where(
+          "userId",
+          "=",
+          user.id,
+        );
+        for (const chatTree of chatTrees) {
+          // We need to change "something" in the tree data to trigger a re-render
+          // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
+          // The `key` prop on the DynamicTreeItem or Tree component is not enough because we need to sync the change across all clients
+          // Regenerating the id is not very elegant, but it works and have zero impact on the user
+          // TODO: remove this when treeDataV2 is used everywhere
+          if (!chatTree.data) continue;
+          const tree = new Tree(chatTree.data);
+          const node = tree.findNode(
+            (node) => node.kind === "chat" && node.chatId === input.id,
+          );
+          if (node) {
+            promises.push(
+              tx.mutate.chatTrees.update({
+                id: chatTree.id,
+                data: tree
+                  .updateNode(node.id, (node) => {
+                    node.id = input.newNodeId;
+                    return node;
+                  })
+                  .getNodes(),
+              }),
+            );
+          }
+        }
+        await Promise.all(promises);
+      },
       fork: async (
         tx,
         input: { chatId: string; forkedChatId: string; messageId: string },
