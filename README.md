@@ -6,7 +6,7 @@
 </div>
 
 <div align="center">
-  <h3>Your Private, Self-Hostable, and Local-First AI Assistant</h3>
+  <h3>Your private, self-hostable, and local-first AI assistant</h3>
 </div>
 
 ![liqua chat_chat_fbc2ad84-bb6c-4cfa-a445-aa4ac9c173dc](https://github.com/user-attachments/assets/9c81adf8-3b6c-47f5-a4cb-e1f74f0cdb2b)
@@ -53,7 +53,7 @@ This client-centric approach unlocks several powerful possibilities:
 
 ## Features & Tech Stack
 
-While Liqua includes the standard features you'd expect from an AI assistant (like editing messages), a lot of effort has gone into building a unique, high-quality user experience. The application is built with **Next.js** and uses **Zero** as its real-time sync engine.
+While Liqua includes the standard features you'd expect from an AI assistant, a lot of effort has gone into building a unique, high-quality user experience. The application is built with **Next.js** and uses **Zero** as its real-time sync engine.
 
 Here are a few highlights:
 
@@ -73,7 +73,7 @@ Instead of a traditional, flat list of conversations, Liqua introduces a complet
 
 ### Experimental Search
 
-Accessible via `Cmd+K`, a powerful, keyboard-driven search interface lets you fuzzy-find any chat. This feature is heavily inspired by Telescope in NeoVim. **(Note: This is highly experimental and the UI is still raw).**
+Accessible via `Cmd+K`, a powerful, keyboard-driven search interface lets you fuzzy-find any chat. This feature is heavily inspired by Telescope in NeoVim.
 
 ![outputtt](https://github.com/user-attachments/assets/ab8d0619-be6e-49a3-a29e-9d28f53dfc9a)
 
