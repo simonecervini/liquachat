@@ -16,9 +16,9 @@ import {
   TrashIcon,
 } from "lucide-react";
 import {
+  Tree as AriaTree,
   Button,
   Collection,
-  Tree,
   TreeItem,
   TreeItemContent,
   useDragAndDrop,
@@ -27,6 +27,7 @@ import {
 } from "react-aria-components";
 
 import { cn } from "~/lib/cn";
+import { Tree } from "~/lib/tree";
 import type { ChatTreeNode } from "~/lib/types";
 import { useTreeData as __useTreeData } from "~/lib/use-tree-data";
 import { useZero } from "~/zero/react";
@@ -54,7 +55,7 @@ export function ChatTree(props: ChatTreeProps) {
     props;
 
   const z = useZero();
-  const [treeData, isPending] = useTreeData(props);
+  const [{ treeData, treeDataV2 }, isPending] = useTreeData(props);
 
   React.useEffect(() => {
     if (isPending || treeData.items.length === 0) return;
@@ -121,7 +122,7 @@ export function ChatTree(props: ChatTreeProps) {
   });
 
   return (
-    <Tree
+    <AriaTree
       dragAndDropHooks={dragAndDropHooks}
       className={clsx(styles.tree, className)}
       aria-label="Chat explorer tree view with folders"
@@ -133,6 +134,8 @@ export function ChatTree(props: ChatTreeProps) {
       children={(item) => (
         <DynamicTreeItem
           treeData={treeData}
+          treeDataV2={treeDataV2}
+          chatTreeId={chatTreeId}
           id={item.key}
           childItems={item.children ?? []}
           textValue={getItemText(item)}
@@ -149,6 +152,8 @@ export function ChatTree(props: ChatTreeProps) {
 interface DynamicTreeItemProps extends TreeItemProps<object> {
   children: React.ReactNode;
   treeData: TreeData;
+  treeDataV2: Tree<ChatTreeNode>;
+  chatTreeId: string;
   getItemText: (item: TreeData["items"][number]) => string;
   childItems?: Iterable<TreeData["items"][number]>;
   isLoading?: boolean;
@@ -157,8 +162,15 @@ interface DynamicTreeItemProps extends TreeItemProps<object> {
 }
 
 function DynamicTreeItem(props: DynamicTreeItemProps) {
-  const { childItems, getItemText, renderLoader, supportsDragging, treeData } =
-    props;
+  const {
+    childItems,
+    getItemText,
+    renderLoader,
+    supportsDragging,
+    treeData,
+    treeDataV2,
+    chatTreeId,
+  } = props;
   const pathname = usePathname();
   const router = useRouter();
   const z = useZero();
@@ -360,8 +372,35 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                           ? "This action cannot be undone. This will permanently delete this chat."
                           : "This action cannot be undone. This will permanently delete this folder and all its content.",
                       confirmLabel: "Delete",
-                      onConfirm: () => {
-                        treeData.remove(id);
+                      onConfirm: async () => {
+                        let shouldRedirect = false;
+                        if (item.value.kind === "chat") {
+                          z.mutate.chats.delete({
+                            chatId: item.value.chatId,
+                          });
+                          shouldRedirect = pathname.startsWith(
+                            `/chat/${item.value.chatId}`,
+                          );
+                        } else {
+                          z.mutate.chatTrees.deleteGroup({
+                            chatTreeId,
+                            groupId: id.toString(),
+                          });
+                          const subTreeRootNode = treeDataV2.findNodeById(
+                            id.toString(),
+                          );
+                          if (subTreeRootNode) {
+                            const subTree = new Tree([subTreeRootNode]);
+                            shouldRedirect = !!subTree.findNode(
+                              (node) =>
+                                node.kind === "chat" &&
+                                pathname.startsWith(`/chat/${node.chatId}`),
+                            );
+                          }
+                        }
+                        if (shouldRedirect) {
+                          router.replace("/");
+                        }
                       },
                     });
                   }}
@@ -379,6 +418,8 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
         children={(item) => (
           <DynamicTreeItem
             treeData={treeData}
+            treeDataV2={treeDataV2}
+            chatTreeId={chatTreeId}
             supportsDragging={supportsDragging}
             renderLoader={renderLoader}
             isLoading={props.isLoading}
@@ -406,10 +447,16 @@ function useTreeData(options: { chatTreeId: string }) {
     getKey: (item) => item.id,
     getChildren: (item) => item.childItems ?? [],
   });
-  return [treeData, type !== "complete"] as const;
+  // WIP, it will replace treeData and __useTreeData eventually
+  // I don't want `react-stately` to manage the tree state, it has a lot of complications with zero
+  // I want to manage the state myself
+  const treeDataV2 = React.useMemo(() => {
+    return new Tree(chatTree?.data ?? []);
+  }, [chatTree?.data]);
+  return [{ treeData, treeDataV2 }, type !== "complete"] as const;
 }
 
-type TreeData = ReturnType<typeof useTreeData>[0];
+type TreeData = ReturnType<typeof useTreeData>[0]["treeData"];
 
 function toNodeItems(items: TreeData["items"]): ChatTreeNode[] {
   return items.map((item): ChatTreeNode => {

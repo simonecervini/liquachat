@@ -161,7 +161,8 @@ function useChatLoader() {
     if (chat) {
       storeChat(chat);
     } else if (chatResult.type === "complete") {
-      notFound();
+      // FIXME: this should work, but something is wrong
+      // notFound();
     }
   }, [chat, chatResult.type, storeChat]);
 
