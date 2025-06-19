@@ -728,24 +728,28 @@ function SendMessageForm() {
     },
   });
 
+  const handleSubmit = async (
+    event:
+      | React.FormEvent<HTMLFormElement>
+      | React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (pendingMessage) {
+      abort();
+      await z.mutate.chats.abortChat({
+        chatId,
+      }).client;
+    } else {
+      await form.handleSubmit();
+    }
+  };
+
   return (
     <>
       <div className="absolute bottom-0 left-1/2 w-full max-w-2xl -translate-x-1/2 px-1">
         <div className="border-primary/10 relative h-full w-full rounded-t-3xl border-x-3 border-t-3 bg-white/100 text-sm text-slate-500 shadow-2xl shadow-blue-700/10">
-          <form
-            onSubmit={async (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              if (pendingMessage) {
-                abort();
-                await z.mutate.chats.abortChat({
-                  chatId,
-                }).client;
-              } else {
-                await form.handleSubmit();
-              }
-            }}
-          >
+          <form onSubmit={handleSubmit}>
             <form.Field
               name="message"
               children={(field) => (
@@ -757,6 +761,11 @@ function SendMessageForm() {
                   placeholder="Type your message here..."
                   className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
                   rows={4}
+                  onKeyDown={async (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      await handleSubmit(e);
+                    }
+                  }}
                 />
               )}
             />
