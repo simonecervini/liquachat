@@ -218,6 +218,8 @@ function MessageStackScrollable(props: {
     <ScrollArea
       // NOTE: we need the padding to offset the 'before:' absolute positioning on the root element
       className={cn("h-full flex-1 px-3.5 pt-3.5", className)}
+      viewportClassName="flex flex-col-reverse" // scroll to bottom
+      scrollbarClassName="invisible" // TODO: remove this (it breaks the scroll to bottom)
     >
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
         {children}
