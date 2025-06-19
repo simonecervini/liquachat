@@ -45,7 +45,9 @@ export function createMutators(user: User) {
         });
       },
       delete: async (tx, input: { chatId: string }) => {
-        await tx.mutate.chats.delete({ id: input.chatId });
+        const promises: Promise<unknown>[] = [
+          tx.mutate.chats.delete({ id: input.chatId }),
+        ];
         const chatTrees = await tx.query.chatTrees.where(
           "userId",
           "=",
@@ -58,12 +60,15 @@ export function createMutators(user: User) {
             (node) => node.kind === "chat" && node.chatId === input.chatId,
           );
           if (nodeToDelete) {
-            await tx.mutate.chatTrees.update({
-              id: chatTree.id,
-              data: tree.removeNode(nodeToDelete.id).getNodes(),
-            });
+            promises.push(
+              tx.mutate.chatTrees.update({
+                id: chatTree.id,
+                data: tree.removeNode(nodeToDelete.id).getNodes(),
+              }),
+            );
           }
         }
+        await Promise.all(promises);
       },
       rename: async (
         tx,
