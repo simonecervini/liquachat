@@ -34,12 +34,46 @@ const components: React.ComponentProps<typeof MarkdownRoot>["components"] = {
       </code>
     );
   },
+  blockquote(props) {
+    const { children, ...rest } = props;
+    return (
+      <blockquote
+        {...rest}
+        className={cn(
+          "border-primary/60 border-l-3 py-2 pl-2.5 text-xs/relaxed italic",
+          rest.className,
+        )}
+      >
+        {children}
+      </blockquote>
+    );
+  },
+  hr(props) {
+    const { ...rest } = props;
+    return <hr {...rest} className={cn("border-secondary", rest.className)} />;
+  },
 };
 
 export function Markdown(props: { children: string; className?: string }) {
+  const children = React.useMemo(() => {
+    if (!props.children.includes("<think>")) {
+      return props.children;
+    }
+    // DeepSeek ollama models use <think> tags to indicate the thinking process
+    return props.children.replace(
+      /<think>([\s\S]*?)(?:<\/think>|$)/,
+      (_match: string, content: string) => {
+        return content
+          .trim()
+          .split("\n")
+          .map((line: string) => `> ${line}`)
+          .join("\n");
+      },
+    );
+  }, [props.children]);
   return (
     <div className={cn("flex flex-col gap-3 text-sm/loose", props.className)}>
-      <MarkdownRoot components={components}>{props.children}</MarkdownRoot>
+      <MarkdownRoot components={components}>{children}</MarkdownRoot>
     </div>
   );
 }
