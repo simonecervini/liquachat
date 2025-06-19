@@ -3,14 +3,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import {
-  CopyIcon,
   CornerDownRightIcon,
   FolderIcon,
   FolderMinusIcon,
   FolderOpenDotIcon,
   FolderOpenIcon,
   FolderPlusIcon,
-  FoldersIcon,
   MenuIcon,
   TextCursorIcon,
   TrashIcon,
@@ -361,6 +359,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                             chatTreeId,
                             groupId: id.toString(),
                           });
+                          // TODO: maybe add `tree.slice(start)` to the Tree class?
                           const subTreeRootNode = treeDataV2.findNodeById(
                             id.toString(),
                           );
@@ -423,8 +422,8 @@ function useTreeData(options: { chatTreeId: string }) {
     getChildren: (item) => item.childItems ?? [],
   });
   // WIP, it will replace treeData and __useTreeData eventually
-  // I don't want `react-stately` to manage the tree state, it has a lot of complications with zero
-  // I want to manage the state myself
+  // I don't want `react-stately` to manage the tree state, it has a lot of complications with Zero
+  // I want to manage the state myself with Zero
   const treeDataV2 = React.useMemo(() => {
     return new Tree(chatTree?.data ?? []);
   }, [chatTree?.data]);
