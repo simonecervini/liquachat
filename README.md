@@ -50,6 +50,7 @@ This client-centric approach unlocks several powerful possibilities:
 - **Zero-Trust API Key Handling**: Your API keys never need to be shared with or stored on any server except the AI provider's. This dramatically reduces the security risk.
 - **Local Network & Custom Models**: You can run the entire Liqua stack on a local network. This allows you to connect not only to cloud AI providers but also to your own local models running on Ollama or other in-network AI servers. This is ideal for corporate environments or for developers experimenting with local LLMs.
 - **True End-to-End Encryption (Future)**: Since the "server" is your own self-hosted instance and the "logic" is in your browser, it's possible to implement end-to-end encryption for your conversations. Before a message is saved and synced, it can be encrypted on your device with a key only you hold. The sync server would only ever see encrypted data.
+- **100% Offline Dictation Mode (Future)**: you can run a small speech-to-text model with Ollama and use it to dictate your messages, without relying on external providers.
 
 ## Features & Tech Stack
 
