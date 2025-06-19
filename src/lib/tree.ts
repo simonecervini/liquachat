@@ -237,12 +237,8 @@ export class Tree<TData extends NodeData> {
     return flattenImpl(this._tree);
   }
 
-  toArray(): TreeNode<TData>[] {
-    return this._tree;
-  }
-
   getNodes(): TreeNode<TData>[] {
-    return this._tree;
+    return structuredClone(this._tree);
   }
 
   private deepCloneNode(node: TreeNode<TData>): TreeNode<TData> {

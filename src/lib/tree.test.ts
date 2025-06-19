@@ -124,7 +124,7 @@ test("filterNodes() should find nodes at different levels", () => {
 
 test("updateNode() should update node and return new tree", () => {
   const tree = createSampleTree();
-  const originalTree = tree.toArray();
+  const originalTree = tree.getNodes();
 
   const updatedTree = tree.updateNode("2", (node) => {
     node.name = "Updated Node 2";
@@ -137,21 +137,21 @@ test("updateNode() should update node and return new tree", () => {
   expect(updatedTree.findNodeById("2")?.name).toBe("Updated Node 2");
 
   // Trees should be different instances
-  expect(updatedTree.toArray()).not.toBe(originalTree);
+  expect(updatedTree.getNodes()).not.toBe(originalTree);
 });
 
 test("removeNode() should remove node and return new tree", () => {
   const tree = createSampleTree();
-  const originalTreeLength = tree.toArray().length;
+  const originalTreeLength = tree.getNodes().length;
 
   const newTree = tree.removeNode("2");
 
   // Original tree should be unchanged
-  expect(tree.toArray().length).toBe(originalTreeLength);
+  expect(tree.getNodes().length).toBe(originalTreeLength);
   expect(tree.findNodeById("2")).toBeTruthy();
 
   // New tree should not have the removed node
-  expect(newTree.toArray().length).toBe(originalTreeLength - 1);
+  expect(newTree.getNodes().length).toBe(originalTreeLength - 1);
   expect(newTree.findNodeById("2")).toBeNull();
 });
 
@@ -297,14 +297,14 @@ test("moveBefore - should move existing node before target", () => {
   }
 
   const newTree = tree.moveBefore("1", nodeToMove);
-  const rootNodes = newTree.toArray();
+  const rootNodes = newTree.getNodes();
 
   // Node should be moved before target
   const movedNodeIndex = rootNodes.findIndex((node) => node.id === "3");
   const targetIndex = rootNodes.findIndex((node) => node.id === "1");
 
   expect(movedNodeIndex).toBe(targetIndex - 1);
-  expect(rootNodes.length).toBe(tree.toArray().length); // Same number of nodes
+  expect(rootNodes.length).toBe(tree.getNodes().length); // Same number of nodes
 });
 
 test("moveAfter - should move existing node after target", () => {
@@ -316,14 +316,14 @@ test("moveAfter - should move existing node after target", () => {
   }
 
   const newTree = tree.moveAfter("3", nodeToMove);
-  const rootNodes = newTree.toArray();
+  const rootNodes = newTree.getNodes();
 
   // Node should be moved after target
   const movedNodeIndex = rootNodes.findIndex((node) => node.id === "1");
   const targetIndex = rootNodes.findIndex((node) => node.id === "3");
 
   expect(movedNodeIndex).toBe(targetIndex + 1);
-  expect(rootNodes.length).toBe(tree.toArray().length); // Same number of nodes
+  expect(rootNodes.length).toBe(tree.getNodes().length); // Same number of nodes
 });
 
 test("moveOn - should move node as child of target", () => {
@@ -332,7 +332,7 @@ test("moveOn - should move node as child of target", () => {
   const newTree = tree.moveOn("2", "1");
 
   // Node "2" should no longer be at root level
-  const rootNodes = newTree.toArray();
+  const rootNodes = newTree.getNodes();
   expect(rootNodes.find((node) => node.id === "2")).toBeUndefined();
 
   // Node "2" should be a child of node "1"
@@ -397,7 +397,7 @@ test("flatten - should return all nodes without hierarchy", () => {
 
 test("immutability - operations should not mutate original tree", () => {
   const tree = createSampleTree();
-  const originalArray = tree.toArray();
+  const originalArray = tree.getNodes();
   const originalJson = JSON.stringify(originalArray);
 
   // Perform various operations
@@ -410,7 +410,7 @@ test("immutability - operations should not mutate original tree", () => {
   tree.moveOn("1.1", "2");
 
   // Original tree should remain unchanged
-  expect(JSON.stringify(tree.toArray())).toBe(originalJson);
+  expect(JSON.stringify(tree.getNodes())).toBe(originalJson);
 });
 
 test("edge cases - operations on non-existent nodes", () => {
@@ -425,8 +425,8 @@ test("edge cases - operations on non-existent nodes", () => {
   const newTree3 = tree.moveOn("nonexistent", "1");
   const newTree4 = tree.moveOn("1", "nonexistent");
 
-  expect(newTree1.toArray()).toEqual(tree.toArray());
-  expect(newTree2.toArray()).toEqual(tree.toArray());
-  expect(newTree3.toArray()).toEqual(tree.toArray());
-  expect(newTree4.toArray()).toEqual(tree.toArray());
+  expect(newTree1.getNodes()).toEqual(tree.getNodes());
+  expect(newTree2.getNodes()).toEqual(tree.getNodes());
+  expect(newTree3.getNodes()).toEqual(tree.getNodes());
+  expect(newTree4.getNodes()).toEqual(tree.getNodes());
 });
