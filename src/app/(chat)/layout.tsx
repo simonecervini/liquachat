@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import {
   CircleXIcon,
@@ -66,7 +66,7 @@ function Sidebar(props: {
     <div className="relative h-full flex-col">
       <div
         className={cn(
-          "absolute top-4 left-2 z-10 flex gap-0.5 transition-all",
+          "absolute top-4 left-2 z-20 flex gap-0.5 transition-all",
           !open && "sm:left-4",
         )}
       >
@@ -197,6 +197,7 @@ function SidebarContent(props: {
 
 function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
   const { chats, className } = props;
+  const pathname = usePathname();
 
   const children = React.useMemo(() => {
     const _items: Array<
@@ -228,7 +229,11 @@ function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
             variant="ghost"
             asChild
             key={child.chat.id}
-            className="block justify-start truncate text-sm font-normal"
+            className={cn(
+              "block justify-start truncate text-sm font-normal",
+              pathname.startsWith(`/chat/${child.chat.id}`) &&
+                "text-primary hover:text-primary bg-white hover:bg-white",
+            )}
             title={child.chat.title}
           >
             <Link href={`/chat/${child.chat.id}`}>{child.chat.title}</Link>
