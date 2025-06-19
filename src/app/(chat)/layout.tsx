@@ -178,7 +178,7 @@ function SidebarContent(props: {
               onChange={setChatTreeId}
               options={chatTrees.map((chatTree) => ({
                 id: chatTree.id,
-                label: "Untitled",
+                label: "Example", // Temporary, we have only one chat tree for now
               }))}
               className="w-full flex-shrink-0"
             />
