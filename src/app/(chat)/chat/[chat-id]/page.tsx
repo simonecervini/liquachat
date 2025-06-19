@@ -194,11 +194,9 @@ export default function ChatPage() {
       <ChatLoader />
 
       <div className="relative h-full flex-1">
-        {isChatLoaded && (
-          <MessageStackScrollable className="h-full flex-1">
-            <MessageStack />
-          </MessageStackScrollable>
-        )}
+        <MessageStackScrollable className="h-full flex-1">
+          {isChatLoaded && <MessageStack />}
+        </MessageStackScrollable>
         <SendMessageForm />
       </div>
     </>
@@ -216,15 +214,17 @@ function MessageStackScrollable(props: {
   children: React.ReactNode;
 }) {
   const { className, children } = props;
-  const scrollToBottom = useChatSelector((chat) => chat.messages.length > 0);
   return (
     <ScrollArea
       // NOTE: we need the padding to offset the 'before:' absolute positioning on the root element
       className={cn("h-full flex-1 px-3.5 pt-3.5", className)}
-      viewportClassName={cn(scrollToBottom && "flex flex-col-reverse")}
+      viewportClassName="flex flex-col-reverse"
       scrollbarClassName="invisible" // NOTE: without this, the scroll to bottom doesn't work
     >
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36">
+      <div
+        // NOTE: the min height value is required to offset the container padding
+        className="mx-auto flex min-h-[calc(100vh-0.875rem)] w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36"
+      >
         {children}
       </div>
     </ScrollArea>
