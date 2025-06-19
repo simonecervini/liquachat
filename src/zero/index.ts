@@ -158,11 +158,11 @@ export function createMutators(user: User) {
 
         await tx.mutate.chats.update({
           id: input.chatId,
-          title: `v1`,
+          title: `${chat.title} (v1)`,
         });
         await tx.mutate.chats.insert({
           id: input.forkedChatId,
-          title: `v2`,
+          title: `${chat.title} (v2)`,
           userId: user.id,
           createdAt: safeTimestamp(tx, timestamp),
           updatedAt: safeTimestamp(tx, timestamp),
