@@ -1,6 +1,7 @@
 import type { CustomMutatorDefs, Transaction } from "@rocicorp/zero";
 import type { User } from "better-auth";
 
+import { Tree } from "~/lib/tree";
 import type { ChatTreeNode } from "~/lib/types";
 import type { Schema } from "./schema";
 
@@ -42,6 +43,75 @@ export function createMutators(user: User) {
           updatedAt: safeTimestamp(tx, input.timestamp),
           public: false,
         });
+      },
+      delete: async (tx, input: { chatId: string }) => {
+        const promises: Promise<unknown>[] = [
+          tx.mutate.chats.delete({ id: input.chatId }),
+        ];
+        const chatTrees = await tx.query.chatTrees.where(
+          "userId",
+          "=",
+          user.id,
+        );
+        for (const chatTree of chatTrees) {
+          if (!chatTree.data) continue;
+          const tree = new Tree(chatTree.data);
+          const nodeToDelete = tree.findNode(
+            (node) => node.kind === "chat" && node.chatId === input.chatId,
+          );
+          if (nodeToDelete) {
+            promises.push(
+              tx.mutate.chatTrees.update({
+                id: chatTree.id,
+                data: tree.removeNode(nodeToDelete.id).getNodes(),
+              }),
+            );
+          }
+        }
+        await Promise.all(promises);
+      },
+      rename: async (
+        tx,
+        input: { id: string; title: string; newNodeId: string },
+      ) => {
+        const promises: Promise<unknown>[] = [];
+        promises.push(
+          tx.mutate.chats.update({
+            id: input.id,
+            title: input.title,
+          }),
+        );
+        const chatTrees = await tx.query.chatTrees.where(
+          "userId",
+          "=",
+          user.id,
+        );
+        for (const chatTree of chatTrees) {
+          // We need to change "something" in the tree data to trigger a re-render
+          // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
+          // The `key` prop on the DynamicTreeItem or Tree component is not enough because we need to sync the change across all clients
+          // Regenerating the id is not very elegant, but it works and have zero impact on the user
+          // TODO: remove this when treeDataV2 is used everywhere
+          if (!chatTree.data) continue;
+          const tree = new Tree(chatTree.data);
+          const node = tree.findNode(
+            (node) => node.kind === "chat" && node.chatId === input.id,
+          );
+          if (node) {
+            promises.push(
+              tx.mutate.chatTrees.update({
+                id: chatTree.id,
+                data: tree
+                  .updateNode(node.id, (node) => {
+                    node.id = input.newNodeId;
+                    return node;
+                  })
+                  .getNodes(),
+              }),
+            );
+          }
+        }
+        await Promise.all(promises);
       },
       fork: async (
         tx,
@@ -243,6 +313,37 @@ export function createMutators(user: User) {
         },
       ) => {
         const promises = await getDeleteLaterMessagesPromises(tx, input);
+        await Promise.all(promises);
+      },
+    },
+    chatTrees: {
+      deleteGroup: async (
+        tx,
+        input: { chatTreeId: string; groupId: string },
+      ) => {
+        const chatTree = await tx.query.chatTrees
+          .where("id", "=", input.chatTreeId)
+          .one();
+        if (!chatTree) throw new ZeroMutatorError({ code: "NOT_FOUND" });
+        if (!chatTree.data) return;
+        const tree = new Tree(chatTree.data);
+        const nodeToDelete = tree.findNode(
+          (node) => node.id === input.groupId && node.kind === "group",
+        );
+        if (!nodeToDelete) return;
+        const subTree = new Tree([nodeToDelete]);
+        const promises: Promise<unknown>[] = [];
+        for (const node of subTree.filterNodes((n) => n.kind === "chat")) {
+          if (node.kind === "chat") {
+            promises.push(tx.mutate.chats.delete({ id: node.chatId }));
+          }
+        }
+        promises.push(
+          tx.mutate.chatTrees.update({
+            id: input.chatTreeId,
+            data: tree.removeNode(nodeToDelete.id).getNodes(),
+          }),
+        );
         await Promise.all(promises);
       },
     },
