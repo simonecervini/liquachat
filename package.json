@@ -1,7 +1,7 @@
 {
   "name": "liquachat",
   "version": "0.1.0",
-  "description": "Open Source alternative to ChatGPT with multi-model support",
+  "description": "Your private, self-hostable, and local-first AI assistant",
   "author": "Simone Cervini <simone@simonecervini.dev>",
   "license": "MIT",
   "homepage": "https://github.com/simonecervini/liquachat#README",
@@ -14,6 +14,10 @@
   },
   "private": false,
   "type": "module",
+  "packageManager": "pnpm@8.15.5",
+  "engines": {
+    "node": "^20"
+  },
   "scripts": {
     "build": "next build",
     "check": "next lint && tsc --noEmit",
@@ -106,9 +110,5 @@
     "typescript-eslint": "^8.27.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
-  },
-  "ct3aMetadata": {
-    "initVersion": "7.39.3"
-  },
-  "packageManager": "pnpm@8.15.5"
+  }
 }
