@@ -84,7 +84,7 @@ The entire Liqua stack is managed with a single Docker Compose file, designed fo
 To run the entire stack, use the following command. This will build the containers and run them in the background.
 
 ```bash
-DB_PASSWORD=<your_root_password> \
+DB_PASSWORD=your_root_password \
 BETTER_AUTH_SECRET=$(openssl rand -hex 32) \
 docker compose up -d --build
 ```
