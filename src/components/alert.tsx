@@ -16,7 +16,6 @@ import {
 export interface Alert {
   title: string;
   message: string;
-  autoFocus?: "confirm" | "cancel";
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm?: (() => void) | (() => Promise<void>);
@@ -56,8 +55,6 @@ export function useAlertDialog() {
 export function AlertEmitter() {
   const { open, alertData, setOpen } = useStore(alertStore);
 
-  const autoFocus = alertData?.autoFocus ?? "confirm";
-
   return (
     <Dialog
       open={open}
@@ -68,34 +65,30 @@ export function AlertEmitter() {
       }}
     >
       {alertData && (
-        <DialogContent>
+        <DialogContent autoFocus>
           <DialogHeader>
             <DialogTitle>{alertData.title}</DialogTitle>
             <DialogDescription>{alertData.message}</DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter
+            className="sm:flex-row-reverse sm:justify-start" // This hack is required to auto focus the correct (confirm) button
+          >
+            <Button
+              onClick={async () => {
+                await alertData.onConfirm?.();
+                setOpen(false);
+              }}
+            >
+              {alertData.confirmLabel ?? "Confirm"}
+            </Button>
             <Button
               variant="ghost"
               onClick={async () => {
                 await alertData.onCancel?.();
                 setOpen(false);
               }}
-              {...(autoFocus === "cancel" && {
-                autoFocus: true,
-              })}
             >
               {alertData.cancelLabel ?? "Cancel"}
-            </Button>
-            <Button
-              onClick={async () => {
-                await alertData.onConfirm?.();
-                setOpen(false);
-              }}
-              {...(autoFocus === "confirm" && {
-                autoFocus: true,
-              })}
-            >
-              {alertData.confirmLabel ?? "Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>
