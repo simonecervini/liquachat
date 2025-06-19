@@ -774,7 +774,7 @@ function SendMessageForm() {
               )}
             </Button>
           </form>
-          <div className="absolute bottom-1.5 left-1.5 flex gap-0.5">
+          <div className="absolute bottom-1.5 left-1.5 flex gap-0.5 rounded-md bg-white/50 backdrop-blur-xl">
             <ModelCombobox
               value={model}
               onChange={(value) => {
