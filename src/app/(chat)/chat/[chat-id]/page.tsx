@@ -221,6 +221,7 @@ function MessageStackScrollable(props: {
       viewportClassName="flex flex-col-reverse"
       scrollbarClassName="invisible" // NOTE: without this, the scroll to bottom doesn't work
     >
+      <div className="pointer-events-none absolute inset-x-3.5 top-3.5 z-10 h-10 rounded-t-full bg-gradient-to-t from-transparent to-white" />
       <div
         // NOTE: the min height value is required to offset the container padding
         className="mx-auto flex min-h-[calc(100vh-0.875rem)] w-full max-w-4xl flex-1 flex-col px-4 pt-8 pb-36"
