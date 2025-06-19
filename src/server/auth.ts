@@ -43,19 +43,45 @@ export const auth = betterAuth({
   socialProviders: {
     github: liquaConfig.auth.socialProviders?.includes("github")
       ? {
-          clientId: z.string().min(1).parse(process.env.GITHUB_CLIENT_ID),
+          clientId: z
+            .string()
+            .min(1)
+            .catch(() => {
+              throw new Error(
+                "GITHUB_CLIENT_ID environment variable is not set",
+              );
+            })
+            .parse(process.env.GITHUB_CLIENT_ID),
           clientSecret: z
             .string()
             .min(1)
+            .catch(() => {
+              throw new Error(
+                "GITHUB_CLIENT_SECRET environment variable is not set",
+              );
+            })
             .parse(process.env.GITHUB_CLIENT_SECRET),
         }
       : undefined,
     google: liquaConfig.auth.socialProviders?.includes("google")
       ? {
-          clientId: z.string().min(1).parse(process.env.GOOGLE_CLIENT_ID),
+          clientId: z
+            .string()
+            .min(1)
+            .catch(() => {
+              throw new Error(
+                "GOOGLE_CLIENT_ID environment variable is not set",
+              );
+            })
+            .parse(process.env.GOOGLE_CLIENT_ID),
           clientSecret: z
             .string()
             .min(1)
+            .catch(() => {
+              throw new Error(
+                "GOOGLE_CLIENT_SECRET environment variable is not set",
+              );
+            })
             .parse(process.env.GOOGLE_CLIENT_SECRET),
         }
       : undefined,
