@@ -29,7 +29,7 @@ Understanding Liqua's core values is essential for understanding its architectur
 
 ## Motivation & Philosophy
 
-The goal of Liqua is **not** to create another ChatGPT-clone with a subscription model. Competing with excellent, low-cost services like [t3.chat](https://t3.chat) is a solved problem.
+The goal of Liqua is **not** to create another ChatGPT-clone with a subscription model. I don’t have a full-time team, and I wanted to find a sustainable model to keep the project open-source and alive. Trying to compete with already perfect apps like T3.chat doesn’t make sense – I believe the community needs something different.
 
 Instead, Liqua explores a different path: creating a sustainable, open-source project that gives you full ownership of your data and infrastructure. It's built on the belief that you shouldn't have to depend on a third party to interact with AI models privately. This project is intentionally designed in a way that prevents it from ever becoming a Software-as-a-Service.
 
