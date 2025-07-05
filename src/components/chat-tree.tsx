@@ -213,7 +213,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
             <ContextMenu>
               <ContextMenuTrigger
                 className={cn(
-                  "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm outline-none",
+                  "hover:bg-secondary group flex h-10 cursor-default items-center gap-2.5 rounded-sm px-2 text-sm outline-none",
                   // `data-floating-ui-inert is not documented, but it works (I guess)
                   "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
                   isSelected && "text-primary! bg-white! hover:bg-white!",
@@ -246,17 +246,21 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     />
                   </Button>
                 )}
-                {/* TODO: disable "truncate" when hovering to support long titles */}
                 <span
-                  className="truncate"
+                  className="items-center truncate group-hover:absolute group-hover:z-10 group-hover:flex group-hover:h-10 group-hover:rounded-sm group-hover:bg-inherit group-hover:pr-2"
                   title={String(props.children as string)}
+                  style={{
+                    left: `calc(${(level - 1) * 15}px + 3.125rem)`,
+                  }}
                 >
-                  {props.children}
-                  {item.value.kind === "group" && !hasChildItems && (
-                    <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
-                      {" (empty)"}
-                    </span>
-                  )}
+                  <span>
+                    {props.children}
+                    {item.value.kind === "group" && !hasChildItems && (
+                      <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
+                        {" (empty)"}
+                      </span>
+                    )}
+                  </span>
                 </span>
               </ContextMenuTrigger>
               <ContextMenuContent>
