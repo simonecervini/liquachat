@@ -648,7 +648,17 @@ function MessageActionsSystem(props: {
             variant="ghost"
             onClick={async () => {
               if (!isForking) {
-                fork();
+                fork(undefined, {
+                  onSuccess: () => {
+                    toast.success(
+                      "Started new fork — you've already been redirected.",
+                      {
+                        description:
+                          "In the tree view, you can find both the original chat and the forked chat in a new folder.",
+                      },
+                    );
+                  },
+                });
               }
             }}
           >
