@@ -113,7 +113,7 @@ Liqua purposefully exposes **a single port for the whole app (`11904`, overridab
 | --------------------- | --------------------------------------------------------------------------- | ------------- | ----------------- |
 | **nginx** (`nginx`)   | Reverse-proxy entry-point that dispatches traffic to the rest of the stack. | 80            | `11904`           |
 | **Next.js** (`app`)   | The web UI.                                                                 | 3000          | –                 |
-| **Zero** (`zero`)     | [Zero server](https://zero.rocicorp.dev/)                                   | 4000          | –                 |
+| **Zero** (`zero`)     | [Zero server](https://zero.rocicorp.dev/)                                   | 4848          | –                 |
 | **Ollama** (`ollama`) | Runs local LLMs. Starts without any model installed.                        | 11434         | –                 |
 | **PostgreSQL** (`db`) | Relational database.                                                        | 5432          | `11905`           |
 
