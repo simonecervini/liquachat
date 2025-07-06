@@ -209,21 +209,11 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
           const isSelected =
             item.value.kind === "chat" &&
             pathname.startsWith(`/chat/${item.value.chatId}`);
-          return (
-            <ContextMenu>
-              <ContextMenuTrigger
-                className={cn(
-                  "hover:bg-secondary group flex h-10 cursor-default items-center gap-2.5 rounded-sm px-2 text-sm outline-none",
-                  // `data-floating-ui-inert is not documented, but it works (I guess)
-                  "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
-                  isSelected && "text-primary! bg-white! hover:bg-white!",
-                )}
-                style={{
-                  marginInlineStart: `${(level - 1) * 15}px`,
-                }}
-              >
+          const Icon = ({ className }: { className?: string }) => {
+            return (
+              <>
                 {item.value.kind === "group" && (
-                  <Button slot="chevron">
+                  <Button slot="chevron" className={className}>
                     {hasChildItems ? (
                       isExpanded ? (
                         <FolderOpenIcon className="text-muted-foreground size-4" />
@@ -237,7 +227,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   </Button>
                 )}
                 {supportsDragging && item.value.kind !== "group" && (
-                  <Button slot="drag">
+                  <Button slot="drag" className={className}>
                     <MenuIcon
                       className={cn(
                         "text-muted-foreground size-4",
@@ -246,18 +236,30 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     />
                   </Button>
                 )}
+              </>
+            );
+          };
+          return (
+            <ContextMenu>
+              <ContextMenuTrigger
+                className={cn(
+                  "hover:bg-secondary group flex h-10 cursor-default items-center gap-2.5 rounded-sm px-2 text-sm outline-none",
+                  // `data-floating-ui-inert is not documented, but it works (I guess)
+                  "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
+                  isSelected && "text-primary! bg-white! hover:bg-white!",
+                )}
+                style={{
+                  marginInlineStart: `${(level - 1) * 15}px`,
+                }}
+              >
+                <Icon />
                 <span
                   className="group-hover:shadow-primary/5 items-center truncate group-hover:absolute group-hover:z-20 group-hover:flex group-hover:h-10 group-hover:gap-2.5 group-hover:rounded-sm group-hover:bg-inherit group-hover:px-2 group-hover:pr-2 group-hover:shadow-sm"
                   style={{
                     left: `calc(${(level - 1) * 15}px + 1rem)`,
                   }}
                 >
-                  <MenuIcon
-                    className={cn(
-                      "text-muted-foreground hidden size-4 group-hover:block",
-                      isSelected && "text-primary",
-                    )}
-                  />
+                  <Icon className={cn("hidden group-hover:block")} />
                   <span>
                     {props.children}
                     {item.value.kind === "group" && !hasChildItems && (
