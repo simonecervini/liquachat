@@ -59,11 +59,9 @@ services:
   ollama:
     image: ollama/ollama
     restart: always
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    command: sh -c "ollama run deepseek-r1:8b"
+    entrypoint: ["/bin/sh", "-c", "ollama serve"]
     healthcheck:
       test:
         [
