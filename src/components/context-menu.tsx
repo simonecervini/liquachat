@@ -13,7 +13,7 @@ export function ContextMenuContent(props: { children: React.ReactNode }) {
   const { children } = props;
   return (
     <Base.Portal>
-      <Base.Positioner className="outline-none">
+      <Base.Positioner className="z-50 outline-none">
         <Base.Popup className="outline-primary/5 min-w-48 origin-[var(--transform-origin)] rounded-md bg-white py-1 shadow-xl shadow-black/5 outline-2 transition-[opacity] data-[ending-style]:opacity-0">
           {children}
         </Base.Popup>

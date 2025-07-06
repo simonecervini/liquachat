@@ -247,8 +247,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   </Button>
                 )}
                 <span
-                  className="items-center truncate group-hover:absolute group-hover:z-10 group-hover:flex group-hover:h-10 group-hover:rounded-sm group-hover:bg-inherit group-hover:pr-2"
-                  title={String(props.children as string)}
+                  className="items-center truncate group-hover:absolute group-hover:z-20 group-hover:flex group-hover:h-10 group-hover:rounded-sm group-hover:bg-inherit group-hover:pr-2"
                   style={{
                     left: `calc(${(level - 1) * 15}px + 3.125rem)`,
                   }}
