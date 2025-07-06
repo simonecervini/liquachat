@@ -13,32 +13,16 @@ body {
   flex-direction: column;
   letter-spacing: 0.02em;
   isolation: isolate;
-  background:
-    radial-gradient(
-      circle at 76% 89%,
-      var(--color-blue-100) 0%,
-      transparent 20%
-    ),
-    radial-gradient(
-      circle at 47% 34%,
-      var(--color-sky-200) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 8% 86%,
-      var(--color-indigo-100) 0%,
-      transparent 50%
-    ),
-    var(--color-sky-50);
+  @apply bg-gradient-to-tr from-blue-50 to-blue-100;
 }
 
 @theme {
   --color-foreground: var(--color-slate-900);
   --color-primary: var(--color-blue-500);
   --color-primary-foreground: var(--color-white);
-  --color-secondary: var(--color-blue-100);
+  --color-secondary: var(--color-blue-200);
   --color-secondary-foreground: var(--color-slate-800);
-  --color-secondary-hover: var(--color-blue-200);
+  --color-secondary-hover: var(--color-blue-300);
   --color-destructive: var(--color-red-500);
   --border-width-3: 3px;
   --color-popover: var(--color-white);
