@@ -38,8 +38,8 @@ services:
     environment:
       - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
       - ZERO_REPLICA_FILE=/data/sync-replica.db
-      - ZERO_AUTH_JWKS_URL=http://app:3000/api/auth/jwks
-      - ZERO_PUSH_URL=http://app:3000/api/zero/push
+      - ZERO_AUTH_JWKS_URL=http://nginx/api/auth/jwks
+      - ZERO_PUSH_URL=http://nginx/api/zero/push
     volumes:
       - zero_data:/data
     depends_on:
@@ -87,8 +87,6 @@ services:
         - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:4848
         - NEXT_PUBLIC_NODE_ENV=production
     restart: always
-    ports:
-      - "${APP_PORT:-3000}:3000"
     environment:
       # server-side env vars
       - NODE_ENV=production
@@ -96,13 +94,28 @@ services:
       - ZERO_REPLICA_FILE=* # not used
       - ZERO_AUTH_JWKS_URL=* # not used
       - ZERO_PUSH_URL=* # not used
-      - BETTER_AUTH_URL=http://localhost:3000
+      - BETTER_AUTH_URL=http://localhost:${APP_PORT:-54782}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - LIQUA_CONFIG_JSON=${LIQUA_CONFIG_JSON}
     depends_on:
       migrator:
         condition: service_completed_successfully
       zero:
+        condition: service_started
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "${APP_PORT:-54782}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      app:
+        condition: service_started
+      zero:
+        condition: service_started
+      ollama:
         condition: service_started
 
 volumes:
