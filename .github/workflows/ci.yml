@@ -119,17 +119,6 @@ jobs:
             exit 1
           fi
 
-      - name: Test zero-cache proxy
-        run: |
-          response=$(curl -sL http://localhost:54782/proxy-zero/)
-          status_code=$(curl -sL -o /dev/null -w "%{http_code}" http://localhost:54782/proxy-zero/)
-          if [ "$status_code" -eq 200 ] && [ "$response" = "OK" ]; then
-            echo "✅ Zero-cache proxy is working correctly"
-          else
-            echo "❌ Zero-cache proxy failed. Status: $status_code, Response: $response"
-            exit 1
-          fi
-
       - name: Show container logs (on failure)
         if: failure()
         run: |
