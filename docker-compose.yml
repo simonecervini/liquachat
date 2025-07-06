@@ -8,7 +8,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-11905}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,13 +33,11 @@ services:
   zero:
     image: rocicorp/zero@sha256:4ea7e59252b586d8b42ca3f59b5fbfdebf7e33ffc9b4fc048036a78c0612cb10
     restart: always
-    ports:
-      - "4848:4848"
     environment:
       - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
       - ZERO_REPLICA_FILE=/data/sync-replica.db
-      - ZERO_AUTH_JWKS_URL=http://app:3000/api/auth/jwks
-      - ZERO_PUSH_URL=http://app:3000/api/zero/push
+      - ZERO_AUTH_JWKS_URL=http://nginx/api/auth/jwks
+      - ZERO_PUSH_URL=http://nginx/api/zero/push
     volumes:
       - zero_data:/data
     depends_on:
@@ -61,11 +59,9 @@ services:
   ollama:
     image: ollama/ollama
     restart: always
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    command: sh -c "ollama run deepseek-r1:8b"
+    entrypoint: ["/bin/sh", "-c", "ollama serve"]
     healthcheck:
       test:
         [
@@ -84,11 +80,9 @@ services:
       args:
         # client-side env vars
         # we need to separate them from the server-side env vars because they are built into the bundle
-        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:4848
+        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:${APP_PORT:-11904}/proxy-zero
         - NEXT_PUBLIC_NODE_ENV=production
     restart: always
-    ports:
-      - "${APP_PORT:-3000}:3000"
     environment:
       # server-side env vars
       - NODE_ENV=production
@@ -96,13 +90,28 @@ services:
       - ZERO_REPLICA_FILE=* # not used
       - ZERO_AUTH_JWKS_URL=* # not used
       - ZERO_PUSH_URL=* # not used
-      - BETTER_AUTH_URL=http://localhost:3000
+      - BETTER_AUTH_URL=http://localhost:${APP_PORT:-11904}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - LIQUA_CONFIG_JSON=${LIQUA_CONFIG_JSON}
     depends_on:
       migrator:
         condition: service_completed_successfully
       zero:
+        condition: service_started
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "${APP_PORT:-11904}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      app:
+        condition: service_started
+      zero:
+        condition: service_started
+      ollama:
         condition: service_started
 
 volumes:

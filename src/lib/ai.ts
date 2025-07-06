@@ -64,7 +64,8 @@ export function streamResponse(
 
 export async function isOllamaRunning() {
   try {
-    const res = await fetch("http://localhost:11434/");
+    const ollamaUrl = new URL("/proxy-ollama/", window.location.origin);
+    const res = await fetch(ollamaUrl);
     const text = await res.text();
     return text === "Ollama is running";
   } catch {}
@@ -98,8 +99,9 @@ function getModelFromOptions(options: StreamResponseOptions): LanguageModelV1 {
       },
     });
   } else {
+    const baseURL = new URL("/proxy-ollama/api", window.location.origin);
     const ollama = createOllama({
-      baseURL: "http://localhost:11434/api",
+      baseURL: baseURL.toString(),
     });
     return ollama.chat(options.modelId);
   }
