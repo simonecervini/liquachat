@@ -247,11 +247,17 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   </Button>
                 )}
                 <span
-                  className="items-center truncate group-hover:absolute group-hover:z-20 group-hover:flex group-hover:h-10 group-hover:rounded-sm group-hover:bg-inherit group-hover:pr-2"
+                  className="group-hover:shadow-primary/5 items-center truncate group-hover:absolute group-hover:z-20 group-hover:flex group-hover:h-10 group-hover:gap-2.5 group-hover:rounded-sm group-hover:bg-inherit group-hover:px-2 group-hover:pr-2 group-hover:shadow-sm"
                   style={{
-                    left: `calc(${(level - 1) * 15}px + 3.125rem)`,
+                    left: `calc(${(level - 1) * 15}px + 1rem)`,
                   }}
                 >
+                  <MenuIcon
+                    className={cn(
+                      "text-muted-foreground hidden size-4 group-hover:block",
+                      isSelected && "text-primary",
+                    )}
+                  />
                   <span>
                     {props.children}
                     {item.value.kind === "group" && !hasChildItems && (
