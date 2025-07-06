@@ -8,7 +8,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-54783}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -82,7 +82,7 @@ services:
       args:
         # client-side env vars
         # we need to separate them from the server-side env vars because they are built into the bundle
-        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:54782/proxy-zero
+        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:${APP_PORT:-54782}/proxy-zero
         - NEXT_PUBLIC_NODE_ENV=production
     restart: always
     environment:
