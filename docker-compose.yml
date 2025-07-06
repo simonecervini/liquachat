@@ -33,8 +33,6 @@ services:
   zero:
     image: rocicorp/zero@sha256:4ea7e59252b586d8b42ca3f59b5fbfdebf7e33ffc9b4fc048036a78c0612cb10
     restart: always
-    ports:
-      - "4848:4848"
     environment:
       - ZERO_UPSTREAM_DB=postgresql://postgres:${DB_PASSWORD}@db:5432/liquachat?sslmode=disable
       - ZERO_REPLICA_FILE=/data/sync-replica.db
@@ -84,7 +82,7 @@ services:
       args:
         # client-side env vars
         # we need to separate them from the server-side env vars because they are built into the bundle
-        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:4848
+        - NEXT_PUBLIC_ZERO_SERVER_URL=http://localhost:54782/proxy-zero
         - NEXT_PUBLIC_NODE_ENV=production
     restart: always
     environment:
