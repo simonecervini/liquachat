@@ -106,20 +106,25 @@ Currently, this file is used to configure authentication methods, such as social
 
 ### Services
 
-The `docker-compose.yml` file orchestrates all the necessary services. The main services are:
+The `docker-compose.yml` file orchestrates all the necessary services.  
+Liqua purposefully exposes **a single port for the whole app (`11904`, overridable via `APP_PORT`)** plus an **optional port for PostgreSQL (`11905`, overridable via `DB_PORT`)** so that it never collides with anything else you might already be running locally.
 
-- **Next.js (`app`)**: The main web application server.
-- **PostgreSQL (`db`)**: The database, pre-configured for the sync engine.
-- **Zero (`zero`)**: The core of the real-time, local-first infrastructure.
-- **Ollama (`ollama`)**: A service for running local LLMs.
+| Container             | Description                                                                 | Internal Port | Default Host Port |
+| --------------------- | --------------------------------------------------------------------------- | ------------- | ----------------- |
+| **nginx** (`nginx`)   | Reverse-proxy entry-point that dispatches traffic to the rest of the stack. | 80            | `11904`           |
+| **Next.js** (`app`)   | The web UI.                                                                 | 3000          | –                 |
+| **Zero** (`zero`)     | [Zero server](https://zero.rocicorp.dev/)                                   | 4000          | –                 |
+| **Ollama** (`ollama`) | Runs local LLMs. Starts without any model installed.                        | 11434         | –                 |
+| **PostgreSQL** (`db`) | Relational database.                                                        | 5432          | `11905`           |
 
-### A Note on Public-Facing Servers (HTTPS)
+### Heads-up 🚧
 
-Deploying Liqua on a public-facing server with a domain name is an advanced setup that requires extra configuration for SSL certificates and the Zero sync engine. While possible (it was done for the `liqua.chat` demo), it is not yet documented. This is an area for future improvement.
+Liqua's self-hosting flow is still young and may have a few rough edges:
 
-### A Note on Ollama (GPU Support)
+- **Public-facing deploys:** Hosting Liqua behind your own domain with HTTPS currently requires you to generate SSL certificates and manually tweak `nginx.conf`. These settings are _not yet_ configurable via `liqua.config.json`, but they will be in the future.
+- **Ollama models & GPU:** The Ollama container starts empty and runs on CPU. Install models with `ollama pull <model>` inside the container. GPU acceleration and model pre-configuration will hopefully be managed through `liqua.config.json` as well in the future.
 
-The included Ollama service is for demonstration purposes and runs on the CPU only. Enabling GPU acceleration requires a more complex setup that is not yet documented.
+If you hit any snags, please [open an issue](https://github.com/simonecervini/liquachat/issues) – feedback is hugely appreciated!
 
 ## Getting Started: Development Environment
 
