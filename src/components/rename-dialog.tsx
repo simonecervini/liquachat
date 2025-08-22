@@ -60,13 +60,14 @@ export function RenameDialog() {
     defaultValues: {
       value: data?.initialValue,
     },
-    onSubmit: ({ value }) => {
+    onSubmit: ({ value, formApi }) => {
       const newValue = value.value?.trim();
       // TODO: we could show an error if newValue is empty instead of just ignoring the submit
       if (newValue) {
         data?.onSubmit(newValue);
       }
       closeAction();
+      formApi.reset();
     },
   });
   return (

@@ -30,7 +30,6 @@ import {
 import { cn } from "~/lib/cn";
 import { Tree } from "~/lib/tree";
 import type { ChatTreeNode } from "~/lib/types";
-import { useTreeData as __useTreeData } from "~/lib/use-tree-data";
 import { useZero } from "~/zero/react";
 import { useAlertDialog } from "./alert";
 import styles from "./chat-tree.module.css";
@@ -46,39 +45,47 @@ import { useRename } from "./rename-dialog";
 export interface ChatTreeProps {
   chatTreeId: string;
   getChatTitle: (chatId: string) => string;
+  disableDragAndDrop?: boolean;
   className?: string;
   expanded?: Key[];
   onExpandedChange?: (expanded: Key[]) => void;
 }
 
 export function ChatTree(props: ChatTreeProps) {
-  const { chatTreeId, getChatTitle, className, expanded, onExpandedChange } =
-    props;
+  const {
+    chatTreeId,
+    getChatTitle,
+    className,
+    expanded,
+    onExpandedChange,
+    disableDragAndDrop = false,
+  } = props;
 
   const z = useZero();
-  const [{ treeData, treeDataV2 }, isPending] = useTreeData(props);
 
-  React.useEffect(() => {
-    if (isPending || treeData.items.length === 0) return;
-    void z.mutate.chatTrees.update({
-      id: chatTreeId,
-      data: toNodeItems(treeData.items),
-    });
-  }, [chatTreeId, isPending, treeData.items, z.mutate.chatTrees]);
+  const [chatTree] = useQuery(
+    z.query.chatTrees.where("id", "=", chatTreeId).one(),
+  );
+
+  const { tree: treeDataV2, items } = React.useMemo(() => {
+    const tree = new Tree(chatTree?.data ?? []);
+    const items = tree.getNodes();
+    return { tree, items };
+  }, [chatTree?.data]);
 
   const getItemText = React.useCallback(
-    (item: TreeData["items"][number]) => {
-      return item.value.kind === "chat"
-        ? getChatTitle(item.value.chatId)
-        : item.value.name;
+    (node: ChatTreeNode) => {
+      return node.kind === "chat" ? getChatTitle(node.chatId) : node.name;
     },
     [getChatTitle],
   );
 
   const { dragAndDropHooks } = useDragAndDrop({
+    isDisabled: disableDragAndDrop,
     getItems: (keys) => {
-      return [...keys].map((key) => {
-        const item = treeData.getItem(key)!;
+      return [...keys].flatMap((key) => {
+        const item = treeDataV2.findNodeById(String(key));
+        if (!item) return [];
         return {
           "text/plain": getItemText(item),
         };
@@ -93,28 +100,40 @@ export function ChatTree(props: ChatTreeProps) {
       );
     },
     shouldAcceptItemDrop: (target) => {
-      const item = treeData.getItem(target.key);
-      return item?.value.kind === "group";
+      const item = treeDataV2.findNodeById(String(target.key));
+      return item?.kind === "group";
     },
     onMove: (e) => {
       try {
         if (e.target.dropPosition === "before") {
-          treeData.moveBefore(e.target.key, e.keys);
+          const nodeId = String(e.target.key);
+          const newTree = treeDataV2.moveBefore(
+            nodeId,
+            [...e.keys].map(String),
+          );
+          void z.mutate.chatTrees.update({
+            id: chatTreeId,
+            data: newTree.getNodes(),
+          });
         } else if (e.target.dropPosition === "after") {
-          treeData.moveAfter(e.target.key, e.keys);
+          const nodeId = String(e.target.key);
+          const newTree = treeDataV2.moveAfter(nodeId, [...e.keys].map(String));
+          void z.mutate.chatTrees.update({
+            id: chatTreeId,
+            data: newTree.getNodes(),
+          });
         } else if (e.target.dropPosition === "on") {
-          const targetNode = treeData.getItem(e.target.key);
-          if (targetNode) {
-            const targetIndex = targetNode.children
-              ? targetNode.children.length
-              : 0;
-            const keyArray = Array.from(e.keys);
-            for (let i = 0; i < keyArray.length; i++) {
-              treeData.move(keyArray[i]!, e.target.key, targetIndex + i);
-            }
-          } else {
-            console.error("Target node not found for drop on:", e.target.key);
+          const targetNodeId = String(e.target.key);
+          let newTree = treeDataV2.clone();
+          for (const key of e.keys) {
+            const node = newTree.findNodeById(String(key));
+            if (!node) continue;
+            newTree = newTree.moveOn(node.id, targetNodeId);
           }
+          void z.mutate.chatTrees.update({
+            id: chatTreeId,
+            data: newTree.getNodes(),
+          });
         }
       } catch (error) {
         console.error(error);
@@ -128,21 +147,20 @@ export function ChatTree(props: ChatTreeProps) {
         dragAndDropHooks={dragAndDropHooks}
         className={clsx(styles.tree, className)}
         aria-label="Chat explorer tree view with folders"
-        items={treeData.items}
+        items={items}
         expandedKeys={expanded}
         onExpandedChange={(newExpanded) => {
           onExpandedChange?.(Array.from(newExpanded));
         }}
         children={(item) => (
           <DynamicTreeItem
-            treeData={treeData}
             treeDataV2={treeDataV2}
             chatTreeId={chatTreeId}
-            id={item.key}
-            childItems={item.children ?? []}
+            id={item.id}
+            childItems={item.childItems ?? []}
             textValue={getItemText(item)}
             getItemText={getItemText}
-            supportsDragging
+            supportsDragging={!disableDragAndDrop}
           >
             {getItemText(item)}
           </DynamicTreeItem>
@@ -154,11 +172,10 @@ export function ChatTree(props: ChatTreeProps) {
 
 interface DynamicTreeItemProps extends TreeItemProps<object> {
   children: React.ReactNode;
-  treeData: TreeData;
   treeDataV2: Tree<ChatTreeNode>;
   chatTreeId: string;
-  getItemText: (item: TreeData["items"][number]) => string;
-  childItems?: Iterable<TreeData["items"][number]>;
+  getItemText: (item: ChatTreeNode) => string;
+  childItems?: Iterable<ChatTreeNode>;
   isLoading?: boolean;
   renderLoader?: (id: React.Key | undefined) => boolean;
   supportsDragging?: boolean;
@@ -170,7 +187,6 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
     getItemText,
     renderLoader,
     supportsDragging,
-    treeData,
     treeDataV2,
     chatTreeId,
   } = props;
@@ -180,7 +196,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
   const { openAlert } = useAlertDialog();
   const { rename } = useRename();
 
-  const item = treeData.getItem(props.id ?? "");
+  const item = treeDataV2.findNodeById(String(props.id));
   if (!item) return null;
 
   return (
@@ -188,8 +204,8 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
       {...props}
       onAction={() => {
         // TODO: improve accessibility, we can't make everything a Link because we have buttons
-        if (item.value.kind === "chat") {
-          router.push(`/chat/${item.value.chatId}`);
+        if (item.kind === "chat") {
+          router.push(`/chat/${item.chatId}`);
         }
       }}
       className={({
@@ -212,8 +228,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
       <TreeItemContent>
         {({ isExpanded, hasChildItems, level, id, state }) => {
           const isSelected =
-            item.value.kind === "chat" &&
-            pathname.startsWith(`/chat/${item.value.chatId}`);
+            item.kind === "chat" && pathname.startsWith(`/chat/${item.chatId}`);
           return (
             <Tooltip.Root>
               <ContextMenu>
@@ -229,7 +244,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                       marginInlineStart: `${(level - 1) * 15}px`,
                     }}
                   >
-                    {item.value.kind === "group" && (
+                    {item.kind === "group" && (
                       <Button slot="chevron">
                         {hasChildItems ? (
                           isExpanded ? (
@@ -243,7 +258,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                         )}
                       </Button>
                     )}
-                    {supportsDragging && item.value.kind !== "group" && (
+                    {supportsDragging && item.kind !== "group" && (
                       <Button slot="drag">
                         <MenuIcon
                           className={cn(
@@ -255,7 +270,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     )}
                     <span className="truncate">
                       {props.children}
-                      {item.value.kind === "group" && !hasChildItems && (
+                      {item.kind === "group" && !hasChildItems && (
                         <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
                           {" (empty)"}
                         </span>
@@ -271,7 +286,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   >
                     <Tooltip.Popup className="shadow-primary/5 border-muted-foreground/10 rounded-md border bg-white p-3 text-xs shadow-xl">
                       <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-                        {item.value.kind === "chat" ? (
+                        {item.kind === "chat" ? (
                           <MessageSquareIcon className="text-muted-foreground inline-block size-4" />
                         ) : (
                           <FolderIcon className="text-muted-foreground inline-block size-4" />
@@ -279,9 +294,9 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                         {props.children}
                       </p>
                       <p className="text-muted-foreground border-muted-foreground/10 pt-0.5 text-xs">
-                        {item.value.kind === "chat"
+                        {item.kind === "chat"
                           ? "Open chat"
-                          : `Open folder (${item.value.childItems?.length ?? 0} items)`}
+                          : `Open folder (${item.childItems?.length ?? 0} items)`}
                         <ArrowRightIcon className="ml-1 inline-block size-[1em]" />
                       </p>
                     </Tooltip.Popup>
@@ -290,21 +305,21 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                 <ContextMenuContent>
                   <ContextMenuItem
                     onClick={() => {
-                      if (item.value.kind === "chat") {
-                        router.push(`/chat/${item.value.chatId}`);
+                      if (item.kind === "chat") {
+                        router.push(`/chat/${item.chatId}`);
                       } else {
                         state.toggleKey(id);
                       }
                     }}
                   >
-                    {item.value.kind === "chat" ? (
+                    {item.kind === "chat" ? (
                       <CornerDownRightIcon />
                     ) : isExpanded ? (
                       <FolderMinusIcon />
                     ) : (
                       <FolderOpenIcon />
                     )}
-                    {item.value.kind === "chat"
+                    {item.kind === "chat"
                       ? "Open"
                       : isExpanded
                         ? "Close folder"
@@ -312,11 +327,20 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   </ContextMenuItem>
                   <ContextMenuItem
                     onClick={() => {
-                      treeData.update(id, {
-                        id: crypto.randomUUID(),
-                        name: "New folder",
-                        kind: "group",
-                        childItems: deepRegenerateIds([item.value]),
+                      const newTree = treeDataV2.updateNode(
+                        String(id),
+                        (node) => {
+                          Object.assign(node, {
+                            id: crypto.randomUUID(),
+                            name: "New folder",
+                            kind: "group",
+                            childItems: deepRegenerateIds([node]),
+                          });
+                        },
+                      );
+                      void z.mutate.chatTrees.update({
+                        id: chatTreeId,
+                        data: newTree.getNodes(),
                       });
                     }}
                   >
@@ -329,17 +353,17 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                       rename({
                         initialValue: getItemText(item),
                         title:
-                          item.value.kind === "chat"
+                          item.kind === "chat"
                             ? "Rename chat"
                             : "Rename folder",
                         description:
-                          item.value.kind === "chat"
+                          item.kind === "chat"
                             ? "Rename the chat to a new name."
                             : "Rename the folder to a new name.",
                         onSubmit: (value) => {
-                          if (item.value.kind === "chat") {
+                          if (item.kind === "chat") {
                             z.mutate.chats.rename({
-                              id: item.value.chatId,
+                              id: item.chatId,
                               title: value,
                               // We need to change "something" in the tree data to trigger a re-render
                               // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
@@ -349,9 +373,18 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                               newNodeId: crypto.randomUUID(),
                             });
                           } else {
-                            treeData.update(id, {
-                              ...item.value,
-                              name: value,
+                            const newTree = treeDataV2.updateNode(
+                              String(id),
+                              (node) => {
+                                if (node.kind !== "group") {
+                                  throw new Error("Node is not a group");
+                                }
+                                node.name = value;
+                              },
+                            );
+                            void z.mutate.chatTrees.update({
+                              id: chatTreeId,
+                              data: newTree.getNodes(),
                             });
                           }
                         },
@@ -366,18 +399,18 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                       openAlert({
                         title: "Are you sure?",
                         message:
-                          item.value.kind === "chat"
+                          item.kind === "chat"
                             ? "This action cannot be undone. This will permanently delete this chat."
                             : "This action cannot be undone. This will permanently delete this folder and all its content.",
                         confirmLabel: "Delete",
                         onConfirm: async () => {
                           let shouldRedirect = false;
-                          if (item.value.kind === "chat") {
+                          if (item.kind === "chat") {
                             z.mutate.chats.delete({
-                              chatId: item.value.chatId,
+                              chatId: item.chatId,
                             });
                             shouldRedirect = pathname.startsWith(
-                              `/chat/${item.value.chatId}`,
+                              `/chat/${item.chatId}`,
                             );
                           } else {
                             z.mutate.chatTrees.deleteGroup({
@@ -417,14 +450,13 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
         items={childItems}
         children={(item) => (
           <DynamicTreeItem
-            treeData={treeData}
             treeDataV2={treeDataV2}
             chatTreeId={chatTreeId}
             supportsDragging={supportsDragging}
             renderLoader={renderLoader}
             isLoading={props.isLoading}
-            id={item.key}
-            childItems={item.children ?? []}
+            id={item.id}
+            childItems={item.childItems ?? []}
             textValue={getItemText(item)}
             href={props.href}
             getItemText={getItemText}
@@ -435,48 +467,6 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
       />
     </TreeItem>
   );
-}
-
-function useTreeData(options: { chatTreeId: string }) {
-  const z = useZero();
-  const [chatTree, { type }] = useQuery(
-    z.query.chatTrees.where("id", "=", options.chatTreeId).one(),
-  );
-  const treeData = __useTreeData({
-    initialItems: chatTree?.data ?? [],
-    getKey: (item) => item.id,
-    getChildren: (item) => item.childItems ?? [],
-  });
-  // WIP, it will replace treeData and __useTreeData eventually
-  // I don't want `react-stately` to manage the tree state, it has a lot of complications with Zero
-  // I want to manage the state myself with Zero
-  const treeDataV2 = React.useMemo(() => {
-    return new Tree(chatTree?.data ?? []);
-  }, [chatTree?.data]);
-  return [{ treeData, treeDataV2 }, type !== "complete"] as const;
-}
-
-type TreeData = ReturnType<typeof useTreeData>[0]["treeData"];
-
-function toNodeItems(items: TreeData["items"]): ChatTreeNode[] {
-  return items.map((item): ChatTreeNode => {
-    const childItems = item.children ? toNodeItems(item.children) : undefined;
-    if (item.value.kind === "group") {
-      return {
-        id: item.value.id,
-        name: item.value.name,
-        kind: "group",
-        childItems,
-      };
-    } else {
-      return {
-        id: item.value.id,
-        kind: "chat",
-        chatId: item.value.chatId,
-        childItems,
-      };
-    }
-  });
 }
 
 // Required to avoid freezing the whole page

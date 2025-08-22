@@ -296,7 +296,7 @@ test("moveBefore - should move existing node before target", () => {
     throw new Error("Node to move not found");
   }
 
-  const newTree = tree.moveBefore("1", nodeToMove);
+  const newTree = tree.moveBefore("1", [nodeToMove]);
   const rootNodes = newTree.getNodes();
 
   // Node should be moved before target
@@ -315,7 +315,7 @@ test("moveAfter - should move existing node after target", () => {
     throw new Error("Node to move not found");
   }
 
-  const newTree = tree.moveAfter("3", nodeToMove);
+  const newTree = tree.moveAfter("3", [nodeToMove]);
   const rootNodes = newTree.getNodes();
 
   // Node should be moved after target
