@@ -123,6 +123,10 @@ export class Tree<TData extends NodeData> {
     let draftTree = this.clone();
     for (const nodeOrNodeId of nodesToMove) {
       const node = this.resolveNode(nodeOrNodeId);
+      if (node.id === anchorNodeId) {
+        // Cannot move a node before itself
+        continue;
+      }
       draftTree = draftTree.removeNode(node.id);
       draftTree = draftTree.insertBefore(anchorNodeId, node);
     }
@@ -136,6 +140,10 @@ export class Tree<TData extends NodeData> {
     let draftTree = this.clone();
     for (const nodeOrNodeId of nodesToMove) {
       const node = this.resolveNode(nodeOrNodeId);
+      if (node.id === anchorNodeId) {
+        // Cannot move a node after itself
+        continue;
+      }
       draftTree = draftTree.removeNode(node.id);
       draftTree = draftTree.insertAfter(anchorNodeId, node);
     }
