@@ -469,17 +469,6 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
   );
 }
 
-function useTreeData(options: { chatTreeId: string }) {
-  const z = useZero();
-  const [chatTree, { type }] = useQuery(
-    z.query.chatTrees.where("id", "=", options.chatTreeId).one(),
-  );
-  const treeDataV2 = React.useMemo(() => {
-    return new Tree(chatTree?.data ?? []);
-  }, [chatTree?.data]);
-  return [{ treeDataV2 }, type !== "complete"] as const;
-}
-
 // Required to avoid freezing the whole page
 function deepRegenerateIds(items: ChatTreeNode[]): ChatTreeNode[] {
   return items.map((item) => {
