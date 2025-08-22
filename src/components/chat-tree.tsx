@@ -265,7 +265,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
                   <Tooltip.Positioner
-                    sideOffset={10}
+                    sideOffset={8}
                     align="center"
                     side="right"
                   >
@@ -280,8 +280,8 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                       </p>
                       <p className="text-muted-foreground border-muted-foreground/10 pt-0.5 text-xs">
                         {item.value.kind === "chat"
-                          ? "Open the chat"
-                          : `Open the folder (${item.value.childItems?.length ?? 0} items)`}
+                          ? "Open chat"
+                          : `Open folder (${item.value.childItems?.length ?? 0} items)`}
                         <ArrowRightIcon className="ml-1 inline-block size-[1em]" />
                       </p>
                     </Tooltip.Popup>
