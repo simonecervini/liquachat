@@ -62,19 +62,16 @@ export function ChatTree(props: ChatTreeProps) {
   } = props;
 
   const z = useZero();
-  const [{ treeDataV2 }, isPending] = useTreeData(props);
 
-  const items = React.useMemo(() => {
-    return treeDataV2.getNodes();
-  }, [treeDataV2]);
+  const [chatTree] = useQuery(
+    z.query.chatTrees.where("id", "=", chatTreeId).one(),
+  );
 
-  React.useEffect(() => {
-    if (isPending || items.length === 0) return;
-    void z.mutate.chatTrees.update({
-      id: chatTreeId,
-      data: items,
-    });
-  }, [chatTreeId, isPending, items, z.mutate.chatTrees]);
+  const { tree: treeDataV2, items } = React.useMemo(() => {
+    const tree = new Tree(chatTree?.data ?? []);
+    const items = tree.getNodes();
+    return { tree, items };
+  }, [chatTree?.data]);
 
   const getItemText = React.useCallback(
     (node: ChatTreeNode) => {
