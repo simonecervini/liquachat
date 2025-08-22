@@ -116,14 +116,30 @@ export class Tree<TData extends NodeData> {
     return new Tree(newTree);
   }
 
-  moveBefore(nodeId: string, node: TreeNode<TData>): Tree<TData> {
-    const tempTree = this.removeNode(node.id);
-    return tempTree.insertBefore(nodeId, node);
+  moveBefore(
+    anchorNodeId: string,
+    nodesToMove: Iterable<TreeNode<TData> | string>,
+  ): Tree<TData> {
+    let draftTree = this.clone();
+    for (const nodeOrNodeId of nodesToMove) {
+      const node = this.resolveNode(nodeOrNodeId);
+      draftTree = draftTree.removeNode(node.id);
+      draftTree = draftTree.insertBefore(anchorNodeId, node);
+    }
+    return draftTree;
   }
 
-  moveAfter(nodeId: string, node: TreeNode<TData>): Tree<TData> {
-    const tempTree = this.removeNode(node.id);
-    return tempTree.insertAfter(nodeId, node);
+  moveAfter(
+    anchorNodeId: string,
+    nodesToMove: Iterable<TreeNode<TData> | string>,
+  ): Tree<TData> {
+    let draftTree = this.clone();
+    for (const nodeOrNodeId of nodesToMove) {
+      const node = this.resolveNode(nodeOrNodeId);
+      draftTree = draftTree.removeNode(node.id);
+      draftTree = draftTree.insertAfter(anchorNodeId, node);
+    }
+    return draftTree;
   }
 
   moveOn(nodeId: string, targetId: string): Tree<TData> {
@@ -213,8 +229,19 @@ export class Tree<TData extends NodeData> {
     return filterNodesImpl(this._tree);
   }
 
-  findNodeById(nodeId: string): TreeNode<TData> | null {
-    return this.findNode((node) => node.id === nodeId);
+  findNodeById(id: string): TreeNode<TData> | null {
+    return this.findNode((n) => n.id === id);
+  }
+
+  resolveNode(nodeOrNodeId: string | TreeNode<TData>) {
+    if (typeof nodeOrNodeId === "string") {
+      const node = this.findNodeById(nodeOrNodeId);
+      if (!node) {
+        throw new Error(`Node with id ${nodeOrNodeId} not found`);
+      }
+      return node;
+    }
+    return nodeOrNodeId;
   }
 
   isLeafNode(node: string | TreeNode<TData>): boolean {
