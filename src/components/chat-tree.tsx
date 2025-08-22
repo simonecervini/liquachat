@@ -1,8 +1,10 @@
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Tooltip } from "@base-ui-components/react/tooltip";
 import { useQuery } from "@rocicorp/zero/react";
 import clsx from "clsx";
 import {
+  ArrowRightIcon,
   CornerDownRightIcon,
   FolderIcon,
   FolderMinusIcon,
@@ -10,6 +12,7 @@ import {
   FolderOpenIcon,
   FolderPlusIcon,
   MenuIcon,
+  MessageSquareIcon,
   TextCursorIcon,
   TrashIcon,
 } from "lucide-react";
@@ -120,30 +123,32 @@ export function ChatTree(props: ChatTreeProps) {
   });
 
   return (
-    <AriaTree
-      dragAndDropHooks={dragAndDropHooks}
-      className={clsx(styles.tree, className)}
-      aria-label="Chat explorer tree view with folders"
-      items={treeData.items}
-      expandedKeys={expanded}
-      onExpandedChange={(newExpanded) => {
-        onExpandedChange?.(Array.from(newExpanded));
-      }}
-      children={(item) => (
-        <DynamicTreeItem
-          treeData={treeData}
-          treeDataV2={treeDataV2}
-          chatTreeId={chatTreeId}
-          id={item.key}
-          childItems={item.children ?? []}
-          textValue={getItemText(item)}
-          getItemText={getItemText}
-          supportsDragging
-        >
-          {getItemText(item)}
-        </DynamicTreeItem>
-      )}
-    />
+    <Tooltip.Provider>
+      <AriaTree
+        dragAndDropHooks={dragAndDropHooks}
+        className={clsx(styles.tree, className)}
+        aria-label="Chat explorer tree view with folders"
+        items={treeData.items}
+        expandedKeys={expanded}
+        onExpandedChange={(newExpanded) => {
+          onExpandedChange?.(Array.from(newExpanded));
+        }}
+        children={(item) => (
+          <DynamicTreeItem
+            treeData={treeData}
+            treeDataV2={treeDataV2}
+            chatTreeId={chatTreeId}
+            id={item.key}
+            childItems={item.children ?? []}
+            textValue={getItemText(item)}
+            getItemText={getItemText}
+            supportsDragging
+          >
+            {getItemText(item)}
+          </DynamicTreeItem>
+        )}
+      />
+    </Tooltip.Provider>
   );
 }
 
@@ -210,177 +215,201 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
             item.value.kind === "chat" &&
             pathname.startsWith(`/chat/${item.value.chatId}`);
           return (
-            <ContextMenu>
-              <ContextMenuTrigger
-                className={cn(
-                  "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm outline-none",
-                  // `data-floating-ui-inert is not documented, but it works (I guess)
-                  "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
-                  isSelected && "text-primary! bg-white! hover:bg-white!",
-                )}
-                style={{
-                  marginInlineStart: `${(level - 1) * 15}px`,
-                }}
-              >
-                {item.value.kind === "group" && (
-                  <Button slot="chevron">
-                    {hasChildItems ? (
-                      isExpanded ? (
-                        <FolderOpenIcon className="text-muted-foreground size-4" />
-                      ) : (
-                        <FolderIcon className="text-muted-foreground size-4" />
-                      )
-                    ) : (
-                      // Empty folder
-                      <FolderOpenDotIcon className="text-muted-foreground size-4" />
+            <Tooltip.Root>
+              <ContextMenu>
+                <Tooltip.Trigger className="w-full">
+                  <ContextMenuTrigger
+                    className={cn(
+                      "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm outline-none",
+                      // `data-floating-ui-inert is not documented, but it works (I guess)
+                      "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
+                      isSelected && "text-primary! bg-white! hover:bg-white!",
                     )}
-                  </Button>
-                )}
-                {supportsDragging && item.value.kind !== "group" && (
-                  <Button slot="drag">
-                    <MenuIcon
-                      className={cn(
-                        "text-muted-foreground size-4",
-                        isSelected && "text-primary",
+                    style={{
+                      marginInlineStart: `${(level - 1) * 15}px`,
+                    }}
+                  >
+                    {item.value.kind === "group" && (
+                      <Button slot="chevron">
+                        {hasChildItems ? (
+                          isExpanded ? (
+                            <FolderOpenIcon className="text-muted-foreground size-4" />
+                          ) : (
+                            <FolderIcon className="text-muted-foreground size-4" />
+                          )
+                        ) : (
+                          // Empty folder
+                          <FolderOpenDotIcon className="text-muted-foreground size-4" />
+                        )}
+                      </Button>
+                    )}
+                    {supportsDragging && item.value.kind !== "group" && (
+                      <Button slot="drag">
+                        <MenuIcon
+                          className={cn(
+                            "text-muted-foreground size-4",
+                            isSelected && "text-primary",
+                          )}
+                        />
+                      </Button>
+                    )}
+                    <span className="truncate">
+                      {props.children}
+                      {item.value.kind === "group" && !hasChildItems && (
+                        <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
+                          {" (empty)"}
+                        </span>
                       )}
-                    />
-                  </Button>
-                )}
-                {/* TODO: disable "truncate" when hovering to support long titles */}
-                <span
-                  className="truncate"
-                  title={String(props.children as string)}
-                >
-                  {props.children}
-                  {item.value.kind === "group" && !hasChildItems && (
-                    <span className="text-muted-foreground pl-0.5 text-[0.6rem]">
-                      {" (empty)"}
                     </span>
-                  )}
-                </span>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem
-                  onClick={() => {
-                    if (item.value.kind === "chat") {
-                      router.push(`/chat/${item.value.chatId}`);
-                    } else {
-                      state.toggleKey(id);
-                    }
-                  }}
-                >
-                  {item.value.kind === "chat" ? (
-                    <CornerDownRightIcon />
-                  ) : isExpanded ? (
-                    <FolderMinusIcon />
-                  ) : (
-                    <FolderOpenIcon />
-                  )}
-                  {item.value.kind === "chat"
-                    ? "Open"
-                    : isExpanded
-                      ? "Close folder"
-                      : "Open folder"}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  onClick={() => {
-                    treeData.update(id, {
-                      id: crypto.randomUUID(),
-                      name: "New folder",
-                      kind: "group",
-                      childItems: deepRegenerateIds([item.value]),
-                    });
-                  }}
-                >
-                  <FolderPlusIcon />
-                  Move to new folder
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  onClick={() => {
-                    rename({
-                      initialValue: getItemText(item),
-                      title:
-                        item.value.kind === "chat"
-                          ? "Rename chat"
-                          : "Rename folder",
-                      description:
-                        item.value.kind === "chat"
-                          ? "Rename the chat to a new name."
-                          : "Rename the folder to a new name.",
-                      onSubmit: (value) => {
-                        if (item.value.kind === "chat") {
-                          z.mutate.chats.rename({
-                            id: item.value.chatId,
-                            title: value,
-                            // We need to change "something" in the tree data to trigger a re-render
-                            // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
-                            // The `key` prop on the DynamicTreeItem or Tree component is not enough because we need to sync the change across all clients
-                            // Regenerating the id is not very elegant, but it works and have zero impact on the user
-                            // TODO: remove this when treeDataV2 is used everywhere
-                            newNodeId: crypto.randomUUID(),
-                          });
-                        } else {
-                          treeData.update(id, {
-                            ...item.value,
-                            name: value,
-                          });
-                        }
-                      },
-                    });
-                  }}
-                >
-                  <TextCursorIcon />
-                  Rename
-                </ContextMenuItem>
-                <ContextMenuItem
-                  onClick={() => {
-                    openAlert({
-                      title: "Are you sure?",
-                      message:
-                        item.value.kind === "chat"
-                          ? "This action cannot be undone. This will permanently delete this chat."
-                          : "This action cannot be undone. This will permanently delete this folder and all its content.",
-                      confirmLabel: "Delete",
-                      onConfirm: async () => {
-                        let shouldRedirect = false;
-                        if (item.value.kind === "chat") {
-                          z.mutate.chats.delete({
-                            chatId: item.value.chatId,
-                          });
-                          shouldRedirect = pathname.startsWith(
-                            `/chat/${item.value.chatId}`,
-                          );
-                        } else {
-                          z.mutate.chatTrees.deleteGroup({
-                            chatTreeId,
-                            groupId: id.toString(),
-                          });
-                          // TODO: maybe add `tree.slice(start)` to the Tree class?
-                          const subTreeRootNode = treeDataV2.findNodeById(
-                            id.toString(),
-                          );
-                          if (subTreeRootNode) {
-                            const subTree = new Tree([subTreeRootNode]);
-                            shouldRedirect = !!subTree.findNode(
-                              (node) =>
-                                node.kind === "chat" &&
-                                pathname.startsWith(`/chat/${node.chatId}`),
-                            );
+                  </ContextMenuTrigger>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Positioner
+                    sideOffset={8}
+                    align="center"
+                    side="right"
+                  >
+                    <Tooltip.Popup className="shadow-primary/5 border-muted-foreground/10 rounded-md border bg-white p-3 text-xs shadow-xl">
+                      <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                        {item.value.kind === "chat" ? (
+                          <MessageSquareIcon className="text-muted-foreground inline-block size-4" />
+                        ) : (
+                          <FolderIcon className="text-muted-foreground inline-block size-4" />
+                        )}
+                        {props.children}
+                      </p>
+                      <p className="text-muted-foreground border-muted-foreground/10 pt-0.5 text-xs">
+                        {item.value.kind === "chat"
+                          ? "Open chat"
+                          : `Open folder (${item.value.childItems?.length ?? 0} items)`}
+                        <ArrowRightIcon className="ml-1 inline-block size-[1em]" />
+                      </p>
+                    </Tooltip.Popup>
+                  </Tooltip.Positioner>
+                </Tooltip.Portal>
+                <ContextMenuContent>
+                  <ContextMenuItem
+                    onClick={() => {
+                      if (item.value.kind === "chat") {
+                        router.push(`/chat/${item.value.chatId}`);
+                      } else {
+                        state.toggleKey(id);
+                      }
+                    }}
+                  >
+                    {item.value.kind === "chat" ? (
+                      <CornerDownRightIcon />
+                    ) : isExpanded ? (
+                      <FolderMinusIcon />
+                    ) : (
+                      <FolderOpenIcon />
+                    )}
+                    {item.value.kind === "chat"
+                      ? "Open"
+                      : isExpanded
+                        ? "Close folder"
+                        : "Open folder"}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onClick={() => {
+                      treeData.update(id, {
+                        id: crypto.randomUUID(),
+                        name: "New folder",
+                        kind: "group",
+                        childItems: deepRegenerateIds([item.value]),
+                      });
+                    }}
+                  >
+                    <FolderPlusIcon />
+                    Move to new folder
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    onClick={() => {
+                      rename({
+                        initialValue: getItemText(item),
+                        title:
+                          item.value.kind === "chat"
+                            ? "Rename chat"
+                            : "Rename folder",
+                        description:
+                          item.value.kind === "chat"
+                            ? "Rename the chat to a new name."
+                            : "Rename the folder to a new name.",
+                        onSubmit: (value) => {
+                          if (item.value.kind === "chat") {
+                            z.mutate.chats.rename({
+                              id: item.value.chatId,
+                              title: value,
+                              // We need to change "something" in the tree data to trigger a re-render
+                              // The tree view probably implements a lot of logic with global state and structural sharing to optimize re-renders
+                              // The `key` prop on the DynamicTreeItem or Tree component is not enough because we need to sync the change across all clients
+                              // Regenerating the id is not very elegant, but it works and have zero impact on the user
+                              // TODO: remove this when treeDataV2 is used everywhere
+                              newNodeId: crypto.randomUUID(),
+                            });
+                          } else {
+                            treeData.update(id, {
+                              ...item.value,
+                              name: value,
+                            });
                           }
-                        }
-                        if (shouldRedirect) {
-                          router.replace("/");
-                        }
-                      },
-                    });
-                  }}
-                >
-                  <TrashIcon />
-                  Delete
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+                        },
+                      });
+                    }}
+                  >
+                    <TextCursorIcon />
+                    Rename
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onClick={() => {
+                      openAlert({
+                        title: "Are you sure?",
+                        message:
+                          item.value.kind === "chat"
+                            ? "This action cannot be undone. This will permanently delete this chat."
+                            : "This action cannot be undone. This will permanently delete this folder and all its content.",
+                        confirmLabel: "Delete",
+                        onConfirm: async () => {
+                          let shouldRedirect = false;
+                          if (item.value.kind === "chat") {
+                            z.mutate.chats.delete({
+                              chatId: item.value.chatId,
+                            });
+                            shouldRedirect = pathname.startsWith(
+                              `/chat/${item.value.chatId}`,
+                            );
+                          } else {
+                            z.mutate.chatTrees.deleteGroup({
+                              chatTreeId,
+                              groupId: id.toString(),
+                            });
+                            // TODO: maybe add `tree.slice(start)` to the Tree class?
+                            const subTreeRootNode = treeDataV2.findNodeById(
+                              id.toString(),
+                            );
+                            if (subTreeRootNode) {
+                              const subTree = new Tree([subTreeRootNode]);
+                              shouldRedirect = !!subTree.findNode(
+                                (node) =>
+                                  node.kind === "chat" &&
+                                  pathname.startsWith(`/chat/${node.chatId}`),
+                              );
+                            }
+                          }
+                          if (shouldRedirect) {
+                            router.replace("/");
+                          }
+                        },
+                      });
+                    }}
+                  >
+                    <TrashIcon />
+                    Delete
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            </Tooltip.Root>
           );
         }}
       </TreeItemContent>
