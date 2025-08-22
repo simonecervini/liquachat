@@ -269,7 +269,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     align="center"
                     side="right"
                   >
-                    <Tooltip.Popup className="shadow-primary/5 border-muted-foreground/10 rounded-md border bg-white p-2.5 text-xs shadow-xl">
+                    <Tooltip.Popup className="shadow-primary/5 border-muted-foreground/10 rounded-md border bg-white p-3 text-xs shadow-xl">
                       <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
                         {item.value.kind === "chat" ? (
                           <MessageSquareIcon className="text-muted-foreground inline-block size-4" />
