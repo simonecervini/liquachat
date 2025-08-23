@@ -56,9 +56,6 @@ function Sidebar(props: {
   const { open, onOpenChange } = props;
   const z = useZero();
 
-  const [chats] = useQuery(
-    z.query.chats.where("userId", "=", z.userID).orderBy("updatedAt", "desc"),
-  );
   const [chatTrees] = useQuery(
     z.query.chatTrees.where("userId", "=", z.userID),
   );
@@ -98,23 +95,25 @@ function Sidebar(props: {
       >
         <Logo className="mb-2 px-4" />
 
-        {chatTrees.length > 0 && (
-          <SidebarContent chatTrees={chatTrees} sortedChats={chats} />
-        )}
+        <SidebarContent chatTrees={chatTrees} />
       </div>
     </div>
   );
 }
 
-function SidebarContent(props: {
-  chatTrees: ZeroRow<"chatTrees">[];
-  sortedChats: ZeroRow<"chats">[];
-}) {
-  const { chatTrees, sortedChats } = props;
-  const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id);
+function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
+  const { chatTrees } = props;
+  const z = useZero();
+  const [sortedChats] = useQuery(
+    z.query.chats.where("userId", "=", z.userID).orderBy("updatedAt", "desc"),
+  );
+  const chatTreeId = chatTrees[0]?.id;
   const [expanded, setExpanded] = useState<Key[]>([]);
   const startNewChat = useStartNewChat();
   const openChatTelescope = useChatTelescopeState((state) => state.setOpen);
+  if (!chatTreeId) {
+    return null;
+  }
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="mb-2 flex flex-col gap-2 px-2 pb-2">
@@ -158,53 +157,28 @@ function SidebarContent(props: {
             List
           </TabsPrimitive.Trigger>
         </TabsPrimitive.List>
-        <TabsPrimitive.Content
-          value="tree"
-          className="flex min-h-0 flex-1 flex-col"
-        >
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <ChatTree
-              className="w-full px-4 py-1.5"
-              mode="tree"
-              sortedChats={sortedChats}
-              chatTreeId={chatTreeId}
-              expanded={expanded}
-              onExpandedChange={setExpanded}
-              getChatTitle={(chatId) => {
-                const chat = sortedChats.find((chat) => chat.id === chatId);
-                return chat?.title ?? "?";
-              }}
-            />
-          </div>
-          <div className="mb-2 px-4">
-            <ChatCombobox
-              value={chatTreeId}
-              onChange={setChatTreeId}
-              options={chatTrees.map((chatTree) => ({
-                id: chatTree.id,
-                label: "Example", // Temporary, we have only one chat tree for now
-              }))}
-              className="w-full flex-shrink-0"
-            />
-          </div>
-        </TabsPrimitive.Content>
-        <TabsPrimitive.Content
-          value="list"
-          className="min-h-0 flex-1 overflow-y-auto"
-        >
-          <ChatTree
-            className="w-full px-4 py-1.5"
-            mode="list"
-            sortedChats={sortedChats}
-            chatTreeId={chatTreeId}
-            expanded={expanded}
-            onExpandedChange={setExpanded}
-            getChatTitle={(chatId) => {
-              const chat = sortedChats.find((chat) => chat.id === chatId);
-              return chat?.title ?? "?";
-            }}
-          />
-        </TabsPrimitive.Content>
+        {(["tree", "list"] as const).map((mode) => (
+          <TabsPrimitive.Content
+            key={mode}
+            value={mode}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ChatTree
+                className="w-full px-4 py-1.5"
+                mode={mode}
+                sortedChats={sortedChats}
+                chatTreeId={chatTreeId}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+                getChatTitle={(chatId) => {
+                  const chat = sortedChats.find((chat) => chat.id === chatId);
+                  return chat?.title ?? "?";
+                }}
+              />
+            </div>
+          </TabsPrimitive.Content>
+        ))}
       </TabsPrimitive.Root>
     </div>
   );
