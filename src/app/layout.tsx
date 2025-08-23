@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 import { IBM_Plex_Mono, Poppins } from "next/font/google";
 
 import { AlertEmitter } from "~/components/alert";
+import { ReactAriaProvider } from "~/components/react-aria-provider";
 import { RenameDialog } from "~/components/rename-dialog";
 import { Toaster } from "~/components/system/sonner";
 import { env } from "~/env";
@@ -63,7 +64,9 @@ export default function RootLayout({
         translate="no"
       >
         <TRPCReactProvider>
-          <ZeroAuthenticatedProvider>{children}</ZeroAuthenticatedProvider>
+          <ZeroAuthenticatedProvider>
+            <ReactAriaProvider>{children}</ReactAriaProvider>
+          </ZeroAuthenticatedProvider>
         </TRPCReactProvider>
         <Toaster position="top-right" />
         <AlertEmitter />

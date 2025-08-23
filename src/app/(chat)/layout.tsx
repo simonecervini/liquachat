@@ -56,7 +56,6 @@ function Sidebar(props: {
   const { open, onOpenChange } = props;
   const z = useZero();
 
-  const [chats] = useQuery(z.query.chats.where("userId", "=", z.userID));
   const [chatTrees] = useQuery(
     z.query.chatTrees.where("userId", "=", z.userID),
   );
@@ -96,23 +95,25 @@ function Sidebar(props: {
       >
         <Logo className="mb-2 px-4" />
 
-        {chatTrees.length > 0 && (
-          <SidebarContent chatTrees={chatTrees} chats={chats} />
-        )}
+        <SidebarContent chatTrees={chatTrees} />
       </div>
     </div>
   );
 }
 
-function SidebarContent(props: {
-  chatTrees: ZeroRow<"chatTrees">[];
-  chats: ZeroRow<"chats">[];
-}) {
-  const { chatTrees, chats } = props;
-  const [chatTreeId, setChatTreeId] = useState(chatTrees[0]!.id);
+function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
+  const { chatTrees } = props;
+  const z = useZero();
+  const [sortedChats] = useQuery(
+    z.query.chats.where("userId", "=", z.userID).orderBy("updatedAt", "desc"),
+  );
+  const chatTreeId = chatTrees[0]?.id;
   const [expanded, setExpanded] = useState<Key[]>([]);
   const startNewChat = useStartNewChat();
   const openChatTelescope = useChatTelescopeState((state) => state.setOpen);
+  if (!chatTreeId) {
+    return null;
+  }
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="mb-2 flex flex-col gap-2 px-2 pb-2">
@@ -156,94 +157,29 @@ function SidebarContent(props: {
             List
           </TabsPrimitive.Trigger>
         </TabsPrimitive.List>
-        <TabsPrimitive.Content
-          value="tree"
-          className="flex min-h-0 flex-1 flex-col"
-        >
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <ChatTree
-              className="w-full px-4 py-1.5"
-              chatTreeId={chatTreeId}
-              expanded={expanded}
-              onExpandedChange={setExpanded}
-              getChatTitle={(chatId) => {
-                const chat = chats.find((chat) => chat.id === chatId);
-                return chat?.title ?? "?";
-              }}
-            />
-          </div>
-          <div className="mb-2 px-4">
-            <ChatCombobox
-              value={chatTreeId}
-              onChange={setChatTreeId}
-              options={chatTrees.map((chatTree) => ({
-                id: chatTree.id,
-                label: "Example", // Temporary, we have only one chat tree for now
-              }))}
-              className="w-full flex-shrink-0"
-            />
-          </div>
-        </TabsPrimitive.Content>
-        <TabsPrimitive.Content
-          value="list"
-          className="min-h-0 flex-1 overflow-y-auto"
-        >
-          <ChatList chats={chats} className="px-4 pt-3.5" />
-        </TabsPrimitive.Content>
-      </TabsPrimitive.Root>
-    </div>
-  );
-}
-
-function ChatList(props: { chats: ZeroRow<"chats">[]; className?: string }) {
-  const { chats, className } = props;
-  const pathname = usePathname();
-
-  const children = React.useMemo(() => {
-    const _items: Array<
-      | { kind: "DIVIDER"; id: string; title: string }
-      | { kind: "CHAT"; chat: ZeroRow<"chats"> }
-    > = [];
-    const sortedChats = [...chats].sort((a, b) => b.updatedAt - a.updatedAt);
-    let lastDividerTitle: string | undefined;
-    for (const chat of sortedChats) {
-      const date = new Date(chat.updatedAt);
-      const title = date.toLocaleString("default", {
-        month: "long",
-        year: "numeric",
-      });
-      if (title !== lastDividerTitle) {
-        _items.push({ kind: "DIVIDER", id: crypto.randomUUID(), title });
-        lastDividerTitle = title;
-      }
-      _items.push({ kind: "CHAT", chat });
-    }
-    return _items;
-  }, [chats]);
-
-  return (
-    <div className={cn("flex w-full min-w-0 flex-col gap-2", className)}>
-      {children.map((child) =>
-        child.kind === "CHAT" ? (
-          <Button
-            variant="ghost"
-            asChild
-            key={child.chat.id}
-            className={cn(
-              "block justify-start truncate text-sm font-normal",
-              pathname.startsWith(`/chat/${child.chat.id}`) &&
-                "text-primary hover:text-primary bg-white hover:bg-white",
-            )}
-            title={child.chat.title}
+        {(["tree", "list"] as const).map((mode) => (
+          <TabsPrimitive.Content
+            key={mode}
+            value={mode}
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <Link href={`/chat/${child.chat.id}`}>{child.chat.title}</Link>
-          </Button>
-        ) : (
-          <div className="text-sm font-semibold" key={child.id}>
-            {child.title}
-          </div>
-        ),
-      )}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ChatTree
+                className="w-full px-4 py-1.5"
+                mode={mode}
+                sortedChats={sortedChats}
+                chatTreeId={chatTreeId}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+                getChatTitle={(chatId) => {
+                  const chat = sortedChats.find((chat) => chat.id === chatId);
+                  return chat?.title ?? "?";
+                }}
+              />
+            </div>
+          </TabsPrimitive.Content>
+        ))}
+      </TabsPrimitive.Root>
     </div>
   );
 }

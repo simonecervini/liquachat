@@ -31,6 +31,7 @@ import { cn } from "~/lib/cn";
 import { Tree } from "~/lib/tree";
 import type { ChatTreeNode } from "~/lib/types";
 import { useZero } from "~/zero/react";
+import type { ZeroRow } from "~/zero/schema";
 import { useAlertDialog } from "./alert";
 import styles from "./chat-tree.module.css";
 import {
@@ -43,7 +44,9 @@ import {
 import { useRename } from "./rename-dialog";
 
 export interface ChatTreeProps {
+  mode?: "tree" | "list";
   chatTreeId: string;
+  sortedChats: ZeroRow<"chats">[];
   getChatTitle: (chatId: string) => string;
   disableDragAndDrop?: boolean;
   className?: string;
@@ -53,12 +56,13 @@ export interface ChatTreeProps {
 
 export function ChatTree(props: ChatTreeProps) {
   const {
+    mode = "tree",
+    sortedChats,
     chatTreeId,
     getChatTitle,
     className,
     expanded,
     onExpandedChange,
-    disableDragAndDrop = false,
   } = props;
 
   const z = useZero();
@@ -68,10 +72,23 @@ export function ChatTree(props: ChatTreeProps) {
   );
 
   const { tree: treeDataV2, items } = React.useMemo(() => {
-    const tree = new Tree(chatTree?.data ?? []);
+    const tree =
+      mode === "tree"
+        ? new Tree(chatTree?.data ?? [])
+        : // The list is just a special case of the tree
+          new Tree(
+            sortedChats.map(
+              (chat) =>
+                ({
+                  id: chat.id,
+                  kind: "chat",
+                  chatId: chat.id,
+                }) satisfies ChatTreeNode,
+            ),
+          );
     const items = tree.getNodes();
     return { tree, items };
-  }, [chatTree?.data]);
+  }, [chatTree?.data, mode, sortedChats]);
 
   const getItemText = React.useCallback(
     (node: ChatTreeNode) => {
@@ -81,7 +98,7 @@ export function ChatTree(props: ChatTreeProps) {
   );
 
   const { dragAndDropHooks } = useDragAndDrop({
-    isDisabled: disableDragAndDrop,
+    isDisabled: mode === "list",
     getItems: (keys) => {
       return [...keys].flatMap((key) => {
         const item = treeDataV2.findNodeById(String(key));
@@ -154,13 +171,13 @@ export function ChatTree(props: ChatTreeProps) {
         }}
         children={(item) => (
           <DynamicTreeItem
+            mode={mode}
             treeDataV2={treeDataV2}
             chatTreeId={chatTreeId}
             id={item.id}
             childItems={item.childItems ?? []}
             textValue={getItemText(item)}
             getItemText={getItemText}
-            supportsDragging={!disableDragAndDrop}
           >
             {getItemText(item)}
           </DynamicTreeItem>
@@ -172,21 +189,21 @@ export function ChatTree(props: ChatTreeProps) {
 
 interface DynamicTreeItemProps extends TreeItemProps<object> {
   children: React.ReactNode;
+  mode: "tree" | "list";
   treeDataV2: Tree<ChatTreeNode>;
   chatTreeId: string;
   getItemText: (item: ChatTreeNode) => string;
   childItems?: Iterable<ChatTreeNode>;
   isLoading?: boolean;
   renderLoader?: (id: React.Key | undefined) => boolean;
-  supportsDragging?: boolean;
 }
 
 function DynamicTreeItem(props: DynamicTreeItemProps) {
   const {
+    mode,
     childItems,
     getItemText,
     renderLoader,
-    supportsDragging,
     treeDataV2,
     chatTreeId,
   } = props;
@@ -202,27 +219,12 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
   return (
     <TreeItem
       {...props}
-      onAction={() => {
-        // TODO: improve accessibility, we can't make everything a Link because we have buttons
-        if (item.kind === "chat") {
-          router.push(`/chat/${item.chatId}`);
-        }
-      }}
-      className={({
-        isFocused,
-        isSelected,
-        isHovered,
-        isFocusVisible,
-        isDropTarget,
-      }) =>
-        // TODO: handle these styles
-        clsx("group focus-visible:outline-primary rounded-sm", {
-          focused: isFocused,
-          "focus-visible": isFocusVisible,
-          selected: isSelected,
-          hovered: isHovered,
-          "drop-target": isDropTarget,
-        })
+      href={item.kind === "chat" ? `/chat/${item.chatId}` : undefined}
+      className={({ isPressed }) =>
+        clsx(
+          "group focus-visible:outline-primary rounded-sm transition-transform duration-100",
+          isPressed && "scale-98",
+        )
       }
     >
       <TreeItemContent>
@@ -230,15 +232,13 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
           const isSelected =
             item.kind === "chat" && pathname.startsWith(`/chat/${item.chatId}`);
           return (
-            <Tooltip.Root>
+            <Tooltip.Root delay={150}>
               <ContextMenu>
                 <Tooltip.Trigger className="w-full">
                   <ContextMenuTrigger
                     className={cn(
                       "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm outline-none",
-                      // `data-floating-ui-inert is not documented, but it works (I guess)
-                      "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
-                      isSelected && "text-primary! bg-white! hover:bg-white!",
+                      isSelected && "text-primary bg-white hover:bg-white",
                     )}
                     style={{
                       marginInlineStart: `${(level - 1) * 15}px`,
@@ -258,7 +258,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                         )}
                       </Button>
                     )}
-                    {supportsDragging && item.kind !== "group" && (
+                    {mode === "tree" && item.kind !== "group" && (
                       <Button slot="drag">
                         <MenuIcon
                           className={cn(
@@ -284,7 +284,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     align="center"
                     side="right"
                   >
-                    <Tooltip.Popup className="shadow-primary/5 border-muted-foreground/10 rounded-md border bg-white p-3 text-xs shadow-xl">
+                    <Tooltip.Popup className="border-primary/5 rounded-md border-2 bg-white p-3 text-xs shadow-xl shadow-black/5">
                       <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
                         {item.kind === "chat" ? (
                           <MessageSquareIcon className="text-muted-foreground inline-block size-4" />
@@ -325,28 +325,30 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                         ? "Close folder"
                         : "Open folder"}
                   </ContextMenuItem>
-                  <ContextMenuItem
-                    onClick={() => {
-                      const newTree = treeDataV2.updateNode(
-                        String(id),
-                        (node) => {
-                          Object.assign(node, {
-                            id: crypto.randomUUID(),
-                            name: "New folder",
-                            kind: "group",
-                            childItems: deepRegenerateIds([node]),
-                          });
-                        },
-                      );
-                      void z.mutate.chatTrees.update({
-                        id: chatTreeId,
-                        data: newTree.getNodes(),
-                      });
-                    }}
-                  >
-                    <FolderPlusIcon />
-                    Move to new folder
-                  </ContextMenuItem>
+                  {mode === "tree" && (
+                    <ContextMenuItem
+                      onClick={() => {
+                        const newTree = treeDataV2.updateNode(
+                          String(id),
+                          (node) => {
+                            Object.assign(node, {
+                              id: crypto.randomUUID(),
+                              name: "New folder",
+                              kind: "group",
+                              childItems: deepRegenerateIds([node]),
+                            });
+                          },
+                        );
+                        void z.mutate.chatTrees.update({
+                          id: chatTreeId,
+                          data: newTree.getNodes(),
+                        });
+                      }}
+                    >
+                      <FolderPlusIcon />
+                      Move to new folder
+                    </ContextMenuItem>
+                  )}
                   <ContextMenuSeparator />
                   <ContextMenuItem
                     onClick={() => {
@@ -450,9 +452,9 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
         items={childItems}
         children={(item) => (
           <DynamicTreeItem
+            mode={mode}
             treeDataV2={treeDataV2}
             chatTreeId={chatTreeId}
-            supportsDragging={supportsDragging}
             renderLoader={renderLoader}
             isLoading={props.isLoading}
             id={item.id}
