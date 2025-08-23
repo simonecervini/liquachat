@@ -237,7 +237,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
           const isSelected =
             item.kind === "chat" && pathname.startsWith(`/chat/${item.chatId}`);
           return (
-            <Tooltip.Root>
+            <Tooltip.Root delay={150}>
               <ContextMenu>
                 <Tooltip.Trigger className="w-full">
                   <ContextMenuTrigger
