@@ -19,7 +19,7 @@ import type { Key } from "react-aria-components";
 import { create } from "zustand";
 
 import { ChatTree } from "~/components/chat-tree";
-import { ChatCombobox } from "~/components/chat-tree-combobox";
+import { CustomizePromptDialog } from "~/components/customize-prompt-dialog";
 import { Logo } from "~/components/logo";
 import { Markdown } from "~/components/markdown";
 import { Button } from "~/components/system/button";
@@ -45,6 +45,7 @@ export default function Layout(props: { children: React.ReactNode }) {
         {children}
       </div>
       <ChatTelescope />
+      <CustomizePromptDialog />
     </div>
   );
 }

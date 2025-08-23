@@ -32,6 +32,7 @@ export default drizzleZeroConfig(drizzleSchema, {
       public: true,
       updatedAt: true,
       userId: true,
+      customInstructions: true,
     },
     chatTrees: {
       data: true,

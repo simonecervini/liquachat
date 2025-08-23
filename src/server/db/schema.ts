@@ -44,6 +44,7 @@ export const chats = createTable(
       .uuid()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    customInstructions: d.text(),
     createdAt: d.timestamp().notNull(),
     updatedAt: d.timestamp().notNull(),
   }),
