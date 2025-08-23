@@ -219,12 +219,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
   return (
     <TreeItem
       {...props}
-      onAction={() => {
-        // TODO: improve accessibility, we can't make everything a Link because we have buttons
-        if (item.kind === "chat") {
-          router.push(`/chat/${item.chatId}`);
-        }
-      }}
+      href={item.kind === "chat" ? `/chat/${item.chatId}` : undefined}
       className={({ isPressed }) =>
         clsx(
           "group focus-visible:outline-primary rounded-sm transition-transform duration-100",
