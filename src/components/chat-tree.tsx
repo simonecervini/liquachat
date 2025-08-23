@@ -225,21 +225,11 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
           router.push(`/chat/${item.chatId}`);
         }
       }}
-      className={({
-        isFocused,
-        isSelected,
-        isHovered,
-        isFocusVisible,
-        isDropTarget,
-      }) =>
-        // TODO: handle these styles
-        clsx("group focus-visible:outline-primary rounded-sm", {
-          focused: isFocused,
-          "focus-visible": isFocusVisible,
-          selected: isSelected,
-          hovered: isHovered,
-          "drop-target": isDropTarget,
-        })
+      className={({ isPressed }) =>
+        clsx(
+          "group focus-visible:outline-primary rounded-sm transition-transform duration-100",
+          isPressed && "scale-98",
+        )
       }
     >
       <TreeItemContent>
@@ -253,9 +243,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                   <ContextMenuTrigger
                     className={cn(
                       "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm outline-none",
-                      // `data-floating-ui-inert is not documented, but it works (I guess)
-                      "data-[floating-ui-inert]:text-primary data-[floating-ui-inert]:bg-white/60 data-[floating-ui-inert]:hover:bg-white/60",
-                      isSelected && "text-primary! bg-white! hover:bg-white!",
+                      isSelected && "text-primary bg-white hover:bg-white",
                     )}
                     style={{
                       marginInlineStart: `${(level - 1) * 15}px`,
@@ -301,7 +289,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     align="center"
                     side="right"
                   >
-                    <Tooltip.Popup className="shadow-primary/5 border-muted-foreground/10 rounded-md border bg-white p-3 text-xs shadow-xl">
+                    <Tooltip.Popup className="border-primary/5 rounded-md border-2 bg-white p-3 text-xs shadow-xl shadow-black/5">
                       <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
                         {item.kind === "chat" ? (
                           <MessageSquareIcon className="text-muted-foreground inline-block size-4" />
