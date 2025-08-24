@@ -68,7 +68,9 @@ export function CustomizePromptDialog() {
         if (!newOpen) {
           closeCustomizePromptDialog();
         } else {
-          openCustomizePromptDialog(chatId, initialValue);
+          dialogStore.setState({
+            open: true,
+          });
         }
       }}
     >
