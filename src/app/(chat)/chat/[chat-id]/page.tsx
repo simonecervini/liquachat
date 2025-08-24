@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
 import { replaceEqualDeep, useMutation } from "@tanstack/react-query";
@@ -16,7 +16,6 @@ import {
   CopyIcon,
   GitBranchIcon,
   GraduationCapIcon,
-  LoaderIcon,
   RefreshCcwIcon,
   SparklesIcon,
   SquareIcon,
@@ -242,11 +241,7 @@ function MessageStack(props: { className?: string }) {
     <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
       {messages.map((message) => {
         if (!message.content && message.status === "streaming") {
-          return (
-            <div key={message.id}>
-              <LoaderIcon className="size-8 animate-spin" />
-            </div>
-          );
+          return <MessageLoading key={message.id} />;
         }
         return message.content ||
           message.status === "error" ||
@@ -254,6 +249,23 @@ function MessageStack(props: { className?: string }) {
           <Message key={message.id} message={message} />
         ) : null;
       })}
+    </div>
+  );
+}
+
+function MessageLoading() {
+  return (
+    <div role="progressbar" className="flex items-center gap-1.5">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className={cn(
+            "bg-primary/35 size-2.5 animate-bounce rounded-full ease-out",
+            index === 1 && "delay-100",
+            index === 2 && "delay-200",
+          )}
+        />
+      ))}
     </div>
   );
 }
@@ -770,8 +782,8 @@ function SendMessageForm() {
                   onChange={(event) => field.handleChange(event.target.value)}
                   onBlur={field.handleBlur}
                   placeholder="Type your message here..."
-                  className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
-                  rows={4}
+                  className="h-full w-full resize-none border-none bg-transparent p-5 outline-none"
+                  rows={5}
                   onKeyDown={async (e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       await handleSubmit(e);
@@ -1075,6 +1087,12 @@ function usePushAssistantMessage() {
         model,
       }).client;
     },
-    [abortController.signal, chatId, z.mutate.chats, z.query.messages],
+    [
+      abortController.signal,
+      chatId,
+      z.mutate.chats,
+      z.query.chats,
+      z.query.messages,
+    ],
   );
 }

@@ -158,15 +158,16 @@ export function createMutators(user: User) {
 
         await tx.mutate.chats.update({
           id: input.chatId,
-          title: `${chat.title} (v1)`,
+          title: chat.title,
         });
         await tx.mutate.chats.insert({
           id: input.forkedChatId,
-          title: `${chat.title} (v2)`,
+          title: `${chat.title} (fork)`,
           userId: user.id,
           createdAt: safeTimestamp(tx, timestamp),
           updatedAt: safeTimestamp(tx, timestamp),
           public: chat.public,
+          customInstructions: chat.customInstructions,
         });
 
         for (const message of messagesToClone) {
