@@ -242,11 +242,7 @@ function MessageStack(props: { className?: string }) {
     <div className={cn("flex flex-col gap-8 px-4 pb-16", className)}>
       {messages.map((message) => {
         if (!message.content && message.status === "streaming") {
-          return (
-            <div key={message.id}>
-              <LoaderIcon className="size-8 animate-spin" />
-            </div>
-          );
+          return <MessageLoading key={message.id} />;
         }
         return message.content ||
           message.status === "error" ||
@@ -254,6 +250,23 @@ function MessageStack(props: { className?: string }) {
           <Message key={message.id} message={message} />
         ) : null;
       })}
+    </div>
+  );
+}
+
+function MessageLoading() {
+  return (
+    <div role="progressbar" className="flex items-center gap-1.5">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className={cn(
+            "bg-primary/35 size-3 animate-bounce rounded-full ease-out",
+            index === 1 && "delay-100",
+            index === 2 && "delay-200",
+          )}
+        />
+      ))}
     </div>
   );
 }
