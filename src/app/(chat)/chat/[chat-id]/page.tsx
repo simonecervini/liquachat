@@ -1015,6 +1015,8 @@ function usePushAssistantMessage() {
       model?: string;
       reasoningEffort?: ReasoningEffort;
     }) => {
+      const chat = await z.query.chats.where("id", "=", chatId).one();
+      if (!chat) return;
       const messages = (
         await z.query.messages.where("chatId", "=", chatId)
       ).toSorted((a, b) => a.createdAt - b.createdAt);
@@ -1048,6 +1050,7 @@ function usePushAssistantMessage() {
                 reasoningEffort: input.reasoningEffort,
               }),
           abortSignal: abortController.signal,
+          customInstructions: chat.customInstructions ?? undefined,
         });
         for await (const chunk of response) {
           await z.mutate.chats.pushAssistantMessageChunk({

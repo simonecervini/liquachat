@@ -97,6 +97,15 @@ export const schema = {
             "userId"
           >,
         },
+        customInstructions: {
+          type: "string",
+          optional: true,
+          customType: null as unknown as ZeroCustomType<
+            typeof zeroSchema,
+            "chats",
+            "customInstructions"
+          >,
+        },
         createdAt: {
           type: "number",
           optional: false,

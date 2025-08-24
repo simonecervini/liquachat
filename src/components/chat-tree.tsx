@@ -13,6 +13,7 @@ import {
   FolderPlusIcon,
   MenuIcon,
   MessageSquareIcon,
+  Settings2Icon,
   TextCursorIcon,
   TrashIcon,
 } from "lucide-react";
@@ -41,6 +42,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "./context-menu";
+import { openCustomizePromptDialog } from "./customize-prompt-dialog";
 import { useRename } from "./rename-dialog";
 
 export interface ChatTreeProps {
@@ -350,6 +352,26 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     </ContextMenuItem>
                   )}
                   <ContextMenuSeparator />
+                  {item.kind === "chat" && (
+                    <>
+                      <ContextMenuItem
+                        onClick={async () => {
+                          const chat = await z.query.chats
+                            .where("id", "=", item.chatId)
+                            .one();
+                          if (!chat) return;
+                          openCustomizePromptDialog(
+                            item.chatId,
+                            chat.customInstructions ?? "",
+                          );
+                        }}
+                      >
+                        <Settings2Icon />
+                        Customize prompt
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                    </>
+                  )}
                   <ContextMenuItem
                     onClick={() => {
                       rename({

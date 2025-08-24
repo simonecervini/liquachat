@@ -9,7 +9,10 @@ import type { ZeroRow } from "~/zero/schema";
 
 export type ReasoningEffort = "low" | "medium" | "high";
 
-export type StreamResponseOptions = { abortSignal: AbortSignal } & (
+export type StreamResponseOptions = {
+  abortSignal: AbortSignal;
+  customInstructions?: string;
+} & (
   | {
       provider: "ollama";
       modelId: string;
@@ -44,6 +47,14 @@ export function streamResponse(
           "- Do not use emojis unless they are explicitly requested.",
           "- Be concise and to the point by default. Provide more details only when explicitly requested.",
           "</core-directives>",
+          ...(options.customInstructions
+            ? [
+                "You MUST also follow the following instructions, that take priority over the core directives above",
+                "<instructions>",
+                options.customInstructions,
+                "</instructions>",
+              ]
+            : []),
         ].join("\n"),
       },
       ...messages.map(
