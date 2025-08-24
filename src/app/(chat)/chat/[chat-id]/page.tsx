@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import { useForm } from "@tanstack/react-form";
 import { replaceEqualDeep, useMutation } from "@tanstack/react-query";
@@ -1075,6 +1075,12 @@ function usePushAssistantMessage() {
         model,
       }).client;
     },
-    [abortController.signal, chatId, z.mutate.chats, z.query.messages],
+    [
+      abortController.signal,
+      chatId,
+      z.mutate.chats,
+      z.query.chats,
+      z.query.messages,
+    ],
   );
 }
