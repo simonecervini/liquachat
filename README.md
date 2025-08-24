@@ -6,30 +6,28 @@
 </div>
 
 <div align="center">
-  <h3>Your private, self-hostable, and local-first AI assistant</h3>
+  <h3>The self-hostable AI assistant you truly own.</h3>
 </div>
 
 ![liqua chat_chat_fbc2ad84-bb6c-4cfa-a445-aa4ac9c173dc](https://github.com/user-attachments/assets/9c81adf8-3b6c-47f5-a4cb-e1f74f0cdb2b)
 
 > [!WARNING]
-> This project was developed in about a week for the T3 Chat hackathon by [Theo (@t3dotgg)](https://github.com/t3dotgg). It's a deliberate exploration of an architecture designed from the ground up for privacy and self-hosting.
+> For a limited period of time, a public instance of this project is available at `liqua.chat` for demonstration purposes. This instance will be taken down in the future. The project's core incentive is to provide a powerful tool you can run on your own hardware, avoiding the operational costs that would force a subscription model.
 
-> [!NOTE]
-> For the sole purpose of the hackathon judging, a public instance of this project is temporarily available at `liqua.chat`. This instance is for demonstration only and will be taken down after the event.
->
-> In the future, a public instance might be maintained if the community or a sponsor provides the necessary infrastructure. However, this is not a priority. The project's core incentive is to provide a powerful tool you can run on your own hardware, avoiding the operational costs that would force a subscription model.
+> [!WARNING]
+> This project is still experimental and has many rough edges. Until a sensible versioning strategy is defined to ensure backward compatibility for users while maintaining development speed, you should expect breaking changes with every commit. This can lead to data loss, and backup strategies are encouraged if this could be a problem.
 
 ## Core Values & Architecture
 
 Understanding Liqua's core values is essential for understanding its architecture. Many design choices might seem unconventional, but they are deliberate decisions to create a truly private, user-owned, and self-hostable AI assistant.
 
-- **Self-Hosting First**: This is not a SaaS product and will never be. Liqua is designed to be run on your own hardware—your PC, a home server, or an on-premise server for your company. It's built for private networks, often without a public domain.
+- **Self-Hosting First**: This is not a SaaS product and will never be. Liqua is designed to be run on your own hardware—your personal computer, a home server, a Raspberry Pi on your network, or an on-premise server for your company. It's built for private networks, often without a public domain.
 - **Privacy by Design**: All communication happens directly between your browser and the AI provider (e.g., OpenRouter). Your API keys and conversations never pass through an intermediary server. This is a fundamental architectural choice.
 - **Bring Your Own Key (BYOK)**: You are always in control of your API keys. They are stored locally in your browser and sent directly to the AI provider.
 
 ## Motivation & Philosophy
 
-The goal of Liqua is **not** to create another ChatGPT-clone with a subscription model. I don’t have a full-time team, and I wanted to find a sustainable model to keep the project open-source and alive. Trying to compete with already perfect apps like T3.chat doesn’t make sense – I believe the community needs something different.
+The goal of Liqua is **not** to create another ChatGPT-clone with a subscription model. I don’t have a full-time team, and I wanted to find a sustainable model to keep the project open-source and alive. Trying to compete with the many excellent paid alternatives out there doesn’t make sense – I believe the community needs something different.
 
 Instead, Liqua explores a different path: creating a sustainable, open-source project that gives you full ownership of your data and infrastructure. It's built on the belief that you shouldn't have to depend on a third party to interact with AI models privately. This project is intentionally designed in a way that prevents it from ever becoming a Software-as-a-Service.
 
@@ -40,7 +38,7 @@ This philosophy led to a radical, client-heavy architecture. Most AI assistants 
 <details>
   <summary>How does real-time sync work in this model?</summary>
   
-  This client-direct approach doesn't compromise the real-time, local-first experience. When your browser receives the response from the AI provider, it streams the tokens directly to your self-hosted database. The Zero sync engine then instantly propagates the changes to all other connected clients (like other browser tabs). If you stop a stream in one tab, it stops in all of them. This provides a seamless, real-time sync without any intermediary server between you and the AI.
+  This client-direct approach doesn't compromise the real-time, synced experience. When your browser receives the response from the AI provider, it streams the tokens directly to your self-hosted database. The Zero sync engine then instantly propagates the changes to all other connected clients (like other browser tabs). If you stop a stream in one tab, it stops in all of them. This provides a seamless, real-time sync without any intermediary server between you and the AI.
 </details>
 
 This is a strange and powerful design, only possible in an application built specifically for self-hosting. It's the key to unlocking the core values of the project.
@@ -60,11 +58,7 @@ Here are a few highlights:
 
 ### The Choice of Zero as a Sync Engine
 
-Theo chose Convex for t3.chat and rightly explained why Zero was not a good fit for a public-facing chatbot like his. While it is technically possible to build such an application with Zero, the architectural trade-offs are significant.
-
-Liqua, however, operates under a different set of architectural principles. Because it is designed for self-hosting rather than as a public-facing service, Zero becomes a viable and interesting technology for this project. The decision to use it was a deliberate choice to explore its capabilities in an architecture that could properly support it.
-
-The main trade-off with this architecture is that **resumable streams are not possible**. Because the browser handles the connection, refreshing the page will interrupt the stream. Supporting resumable streams would likely require tools like Durable Objects, which would violate the core "no intermediary servers" principle of the project.
+[Zero](https://zero.rocicorp.dev/) is a new kind of sync engine. It's a new and highly promising technology, currently in alpha. I encourage you to explore the official [Zero documentation](https://zero.rocicorp.dev/docs) to understand its unique architecture and capabilities.
 
 ### Rethinking Chat Organization: The Tree Structure
 
@@ -72,7 +66,7 @@ Instead of a traditional, flat list of conversations, Liqua introduces a complet
 
 ![output-1](https://github.com/user-attachments/assets/72683d48-7c81-48db-9ad6-b853cfa783bb)
 
-### Experimental Search
+### Search
 
 Accessible via `Cmd+K`, a powerful, keyboard-driven search interface lets you fuzzy-find any chat. This feature is heavily inspired by Telescope in NeoVim.
 
