@@ -2,9 +2,8 @@ import React from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-// @markflorkowski if you're reading this
-// I know you're a click-to-copy button expert.
-// I hope this solution is over-engineered enough for your standards
+// I hereby present you the most over-engineered copy button the human race has ever seen
+// If you're not using @tanstack/react-query to copy to clipboard, you're ngmi
 
 export function useCopyButton(content: string) {
   const { mutate, status, reset } = useMutation({
