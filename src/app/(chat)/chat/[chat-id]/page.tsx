@@ -260,7 +260,7 @@ function MessageLoading() {
         <div
           key={index}
           className={cn(
-            "bg-primary/35 size-3 animate-bounce rounded-full ease-out",
+            "bg-primary/35 size-2.5 animate-bounce rounded-full ease-out",
             index === 1 && "delay-100",
             index === 2 && "delay-200",
           )}
