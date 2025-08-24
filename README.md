@@ -60,6 +60,12 @@ Here are a few highlights:
 
 [Zero](https://zero.rocicorp.dev/) is a new kind of sync engine. It's a new and highly promising technology, currently in alpha. I encourage you to explore the official [Zero documentation](https://zero.rocicorp.dev/docs) to understand its unique architecture and capabilities.
 
+
+
+https://github.com/user-attachments/assets/ee6a6bb1-9a8b-47a4-9479-932ae95f4468
+
+
+
 ### Rethinking Chat Organization: The Tree Structure
 
 Instead of a traditional, flat list of conversations, Liqua introduces a completely redesigned tree structure. This file system-inspired approach allows for superior organization and unlocks powerful features like **chat forking**.
