@@ -16,7 +16,6 @@ import {
   CopyIcon,
   GitBranchIcon,
   GraduationCapIcon,
-  LoaderIcon,
   RefreshCcwIcon,
   SparklesIcon,
   SquareIcon,
