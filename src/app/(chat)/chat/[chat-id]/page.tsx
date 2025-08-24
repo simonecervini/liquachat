@@ -770,8 +770,8 @@ function SendMessageForm() {
                   onChange={(event) => field.handleChange(event.target.value)}
                   onBlur={field.handleBlur}
                   placeholder="Type your message here..."
-                  className="h-full w-full resize-none border-none bg-transparent p-6 outline-none"
-                  rows={4}
+                  className="h-full w-full resize-none border-none bg-transparent p-5 outline-none"
+                  rows={5}
                   onKeyDown={async (e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       await handleSubmit(e);

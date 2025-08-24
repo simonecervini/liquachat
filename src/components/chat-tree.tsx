@@ -113,7 +113,7 @@ export function ChatTree(props: ChatTreeProps) {
     getAllowedDropOperations: () => ["move"],
     renderDragPreview(items) {
       return (
-        <div className="bg-primary/100 rounded-sm px-2 py-0.5 text-sm text-white">
+        <div className="bg-primary/100 rounded-sm px-2 py-0.5 text-[0.8125rem] text-white">
           {items[0]?.["text/plain"]}
         </div>
       );
@@ -224,13 +224,21 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
       href={item.kind === "chat" ? `/chat/${item.chatId}` : undefined}
       className={({ isPressed }) =>
         clsx(
-          "group focus-visible:outline-primary rounded-sm transition-transform duration-100",
+          "group rounded-sm transition-transform duration-100 outline-none",
           isPressed && "scale-98",
         )
       }
     >
       <TreeItemContent>
-        {({ isExpanded, hasChildItems, level, id, state }) => {
+        {({
+          isExpanded,
+          hasChildItems,
+          level,
+          id,
+          state,
+          isFocusVisible,
+          isHovered,
+        }) => {
           const isSelected =
             item.kind === "chat" && pathname.startsWith(`/chat/${item.chatId}`);
           return (
@@ -239,24 +247,26 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                 <Tooltip.Trigger className="w-full">
                   <ContextMenuTrigger
                     className={cn(
-                      "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm px-2 py-2.5 text-sm outline-none",
+                      "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm border-2 border-transparent px-2 py-2 text-[0.8125rem]",
                       isSelected && "text-primary bg-white hover:bg-white",
+                      isFocusVisible && "border-primary",
+                      isFocusVisible && !isSelected && "bg-primary/10",
                     )}
                     style={{
-                      marginInlineStart: `${(level - 1) * 15}px`,
+                      marginInlineStart: `${(level - 1) * 10}px`,
                     }}
                   >
                     {item.kind === "group" && (
-                      <Button slot="chevron">
+                      <Button slot="chevron" className="text-muted-foreground">
                         {hasChildItems ? (
                           isExpanded ? (
-                            <FolderOpenIcon className="text-muted-foreground size-4" />
+                            <FolderOpenIcon className="size-4" />
                           ) : (
-                            <FolderIcon className="text-muted-foreground size-4" />
+                            <FolderIcon className="size-4" />
                           )
                         ) : (
                           // Empty folder
-                          <FolderOpenDotIcon className="text-muted-foreground size-4" />
+                          <FolderOpenDotIcon className="size-4" />
                         )}
                       </Button>
                     )}
@@ -265,6 +275,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                         <MenuIcon
                           className={cn(
                             "text-muted-foreground size-4",
+                            isHovered && "text-black",
                             isSelected && "text-primary",
                           )}
                         />
@@ -287,7 +298,7 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
                     side="right"
                   >
                     <Tooltip.Popup className="border-primary/5 rounded-md border-2 bg-white p-3 text-xs shadow-xl shadow-black/5">
-                      <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                      <p className="mb-2 flex items-center gap-1.5 text-[0.8125rem] font-medium">
                         {item.kind === "chat" ? (
                           <MessageSquareIcon className="text-muted-foreground inline-block size-4" />
                         ) : (

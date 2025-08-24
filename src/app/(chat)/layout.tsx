@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import {
   CircleXIcon,
@@ -144,14 +143,14 @@ function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
       >
         <TabsPrimitive.List className="text-muted-foreground mb-1 flex justify-center gap-2 px-4 text-xs">
           <TabsPrimitive.Trigger
-            className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
+            className="data-[state=active]:text-primary focus-visible:outline-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1 focus-visible:outline-2 focus-visible:outline-offset-1"
             value="tree"
           >
             <FolderTreeIcon className="size-4" />
             Tree
           </TabsPrimitive.Trigger>
           <TabsPrimitive.Trigger
-            className="data-[state=active]:text-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1"
+            className="data-[state=active]:text-primary focus-visible:outline-primary flex items-center gap-2 rounded-[0.5em] px-1.5 py-1 focus-visible:outline-2 focus-visible:outline-offset-1"
             value="list"
           >
             <ListIcon className="size-4" />
@@ -162,7 +161,8 @@ function SidebarContent(props: { chatTrees: ZeroRow<"chatTrees">[] }) {
           <TabsPrimitive.Content
             key={mode}
             value={mode}
-            className="flex min-h-0 flex-1 flex-col"
+            className="focus-visible:outline-primary flex min-h-0 flex-1 flex-col"
+            tabIndex={-1} // Remove tab stop on the tabpanel: we want focus to go directly to the tree view. Radix adds tabIndex={0} by default and we can't disable it even though it's perfectly fine (https://www.w3.org/WAI/ARIA/apg/patterns/tabs/)
           >
             <div className="min-h-0 flex-1 overflow-y-auto">
               <ChatTree
