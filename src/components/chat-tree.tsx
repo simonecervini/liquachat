@@ -242,12 +242,12 @@ function DynamicTreeItem(props: DynamicTreeItemProps) {
           const isSelected =
             item.kind === "chat" && pathname.startsWith(`/chat/${item.chatId}`);
           return (
-            <Tooltip.Root delay={150}>
+            <Tooltip.Root delay={0}>
               <ContextMenu>
                 <Tooltip.Trigger className="w-full">
                   <ContextMenuTrigger
                     className={cn(
-                      "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm border-2 border-transparent px-2 py-2 text-[0.8125rem]",
+                      "hover:bg-primary/10 flex cursor-default items-center gap-2.5 rounded-sm border-2 border-transparent px-2 py-2 text-[0.8125rem] transition-colors hover:transition-none",
                       isSelected && "text-primary bg-white hover:bg-white",
                       isFocusVisible && "border-primary",
                       isFocusVisible && !isSelected && "bg-primary/10",
