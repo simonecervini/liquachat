@@ -10,7 +10,7 @@ const config = {
   async redirects() {
     return Promise.resolve([
       {
-        source: "(.*)",
+        source: "/(.*)",
         destination: "https://github.com/simonecervini/liquachat",
         // has: [
         //   {
