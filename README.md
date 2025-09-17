@@ -12,9 +12,6 @@
 ![liqua chat_chat_fbc2ad84-bb6c-4cfa-a445-aa4ac9c173dc](https://github.com/user-attachments/assets/9c81adf8-3b6c-47f5-a4cb-e1f74f0cdb2b)
 
 > [!WARNING]
-> For a limited period of time, a public instance of this project is available at `liqua.chat` for demonstration purposes. This instance will be taken down in the future. The project's core incentive is to provide a powerful tool you can run on your own hardware, avoiding the operational costs that would force a subscription model.
-
-> [!WARNING]
 > This project is still experimental and has many rough edges. Until a sensible versioning strategy is defined to ensure backward compatibility for users while maintaining development speed, you should expect breaking changes with every commit. This can lead to data loss, and backup strategies are encouraged if this could be a problem.
 
 ## Core Values & Architecture
@@ -60,11 +57,7 @@ Here are a few highlights:
 
 [Zero](https://zero.rocicorp.dev/) is a new kind of sync engine. It's a new and highly promising technology, currently in alpha. I encourage you to explore the official [Zero documentation](https://zero.rocicorp.dev/docs) to understand its unique architecture and capabilities.
 
-
-
 https://github.com/user-attachments/assets/ee6a6bb1-9a8b-47a4-9479-932ae95f4468
-
-
 
 ### Rethinking Chat Organization: The Tree Structure
 
