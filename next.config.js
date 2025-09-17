@@ -12,12 +12,12 @@ const config = {
       {
         source: "/(.*)",
         destination: "https://github.com/simonecervini/liquachat",
-        // has: [
-        //   {
-        //     type: "host",
-        //     value: "liqua.chat",
-        //   },
-        // ],
+        has: [
+          {
+            type: "host",
+            value: "liqua.chat",
+          },
+        ],
         permanent: false,
       },
     ]);
